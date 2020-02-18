@@ -1,2 +1,2 @@
 # WeeNAS
-WeeNAS = Raspberry Pi + Flash Drive + Samba
+WeeNAS = Raspberry Pi + Flash Drive + FreeBSD + Samba
