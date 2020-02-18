@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+<title>WeeNAS Install Script Generator</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    background: #FFFFFF;
+    color: #333333;
+    font-family: sans-serif;
+  }
+  header {
+    clear: both;
+    text-align: center;
+  }
+  main {
+    float: left;
+	margin-left: 2%;
+	margin-right: 2%;
+    width: 45%;
+  }
+  aside {
+    float: left;
+	margin-left: 2%;
+	margin-right: 2%;
+    width: 45%;
+  }
+  details {
+    border: 1px solid black;
+    box-shadow: 5px 5px 5px #7F7F7F;
+    margin-bottom: 1em;
+  }
+  summary {
+    border-bottom: 1px solid black;
+    font-size: 1em;
+	font-weight: normal;
+	padding-right: 0.5em;
+  }
+
+  .center {
+    text-align: center;
+  }
+  .right-justify {
+    float: right;
+  }
+  
+  #network-static {
+    display: none;
+  }
+  #script-output {
+    background: #336633;
+	border: 3em solid #F5F5DC;
+	border-radius: 15px;
+    box-shadow: 5px 5px 5px #7F7F7F;
+	color: #00FF00;
+	overflow: auto;
+	padding: 0.5em;
+  }
+</style>
+
+<script>
+  function initializeDefaults() {
+    toggleNetworkStatic();
+	identitySummary();
+    networkSummary();
+	dnsSummary();
+	timeSummary();
+	storageSummary();
+    userSummary();
+	sambaSummary();
+    servicesSummary();
+	generateScript();
+  }
+
+  function identitySummary() {
+    var summary = '<b>Identity</b> ';
+	summary += '<span class="right-justify">' + document.getElementById('identity-hostname').value;
+	summary += '.' + document.getElementById('identity-domain').value;
+	summary += '</span>';
+    document.getElementById('identity-summary').innerHTML = summary; 
+	generateScript();
+  }
+
+  function networkSummary() {
+    var summary = '<b>Network</b> ';
+    summary += '<span class="right-justify">';
+	if (document.getElementById('network-dhcp').value == 'yes') {
+	  summary += 'DHCP';
+	}
+	else {
+	  summary += document.getElementById('network-ip').value;
+	  summary += '/' + document.getElementById('network-mask').value;
+	  summary += ', gw' + document.getElementById('network-gateway').value;
+	}
+	summary += '</span>';
+    document.getElementById('network-summary').innerHTML = summary; 
+	generateScript();
+  }
+  
+  function dnsSummary() {
+    var summary = '<b>DNS</b> ';
+    summary += '<span class="right-justify">';
+	if (document.getElementById('network-dhcp').value == 'yes') {
+	  summary += 'DHCP';
+	}
+	else {
+	  summary += document.getElementById('dns-primary').value;
+	  summary += ', ' + document.getElementById('dns-secondary').value;
+	}
+	summary += '</span>';
+    document.getElementById('dns-summary').innerHTML = summary; 
+	generateScript();
+  }
+
+  function timeSummary() {
+    var summary = '<b>Time</b> ';
+	summary += '<span class="right-justify">' + document.getElementById('time-ntp').value;
+	summary += ', ' + document.getElementById('time-area').value;
+	summary += '/' + document.getElementById('time-location').value;
+	summary += '</span>';
+    document.getElementById('time-summary').innerHTML = summary; 
+	generateScript();
+  }
+  
+  function storageSummary() {
+    var summary = '<b>Storage</b> ';
+	summary += '<span class="right-justify">' + document.getElementById('storage-dev').value;
+    summary += ' (' + document.getElementById('storage-label').value + ')';
+	summary += ' on ' + document.getElementById('storage-mount').value;
+	if (document.getElementById('storage-makefs').value == 'Yes') {
+	  summary += ', existing filesystem <b>overwritten</b>';
+	}
+	else {
+	  summary += ', existing filesystem preserved';
+    }	
+	summary += '</span>';
+    document.getElementById('storage-summary').innerHTML = summary; 
+	generateScript();
+  }
+
+  function userSummary() {
+    var summary = '<b>Users</b> ';
+	summary += '<span class="right-justify"><b>' + document.getElementById('user-trusted').value + '</b>';
+	if (document.getElementById('user-regular').value) {
+  	  summary += ' ' + document.getElementById('user-regular').value;
+	}
+    summary += '</span>';
+    document.getElementById('user-summary').innerHTML = summary; 
+	generateScript();
+  }
+  
+  function sambaSummary() {
+    var summary = '<b>Samba</b> <span class="right-justify">';
+	if (document.getElementById('samba-home').checked) {
+      summary += '/home/<i>user</i> ';
+	}
+	if (document.getElementById('samba-shared').checked) {
+      summary += '/home/shared';
+	}
+    summary += '</span>';
+    document.getElementById('samba-summary').innerHTML = summary; 
+	generateScript();
+  }
+  
+  function servicesSummary() {
+    var summary = '<b>Services</b> <span class="right-justify">';
+	if (document.getElementById('services-monit').checked) {
+      summary += 'Monit ';
+	}
+	if (document.getElementById('services-pop3').checked) {
+      summary += 'POP3 ';
+	}
+	if (document.getElementById('services-smtp').checked) {
+      summary += 'SMTP ';
+	}
+	if (document.getElementById('services-web').checked) {
+      summary += 'Web';
+	}
+    summary += '</span>';
+    document.getElementById('services-summary').innerHTML = summary; 
+	generateScript();
+  }
+  
+  function toggleNetworkStatic() {
+    // Show or hide manual configuration fields based on DHCP dropdown.
+    if (document.getElementById('network-dhcp').value === 'yes') {
+	  document.getElementById('network-static').style.display='none';
+	}
+	else {
+	  document.getElementById('network-static').style.display='block';
+	}
+  }
+
+  function generateScript() {
+    var scriptOutput = '# The following commands must be run as root.\n';
+
+	// Network
+	scriptOutput += '\n# Host Identity\n';
+    scriptOutput += 'sysrc hostname="' + document.getElementById('identity-hostname').value + '.' + document.getElementById('identity-domain').value + '"\n';
+	
+	// Network
+	scriptOutput += '\n# Network Configuration\n';
+	if (document.getElementById('network-dhcp').value === 'no') {
+	  var networkInterface = document.getElementById('network-interface').value;
+	  var networkIP = document.getElementById('network-ip').value;
+	  if (networkIP === '') networkIP = document.getElementById('network-ip').placeholder;
+	  var networkMask = document.getElementById('network-mask').value;
+	  if (networkMask === '') networkMask = document.getElementById('network-mask').placeholder;
+  	  scriptOutput += 'sysrc ifconfig_' + networkInterface + '="' + networkIP + ' netmask ' + networkMask + '"\n';
+	  var networkGateway = document.getElementById('network-gateway').value;
+	  if (networkGateway === '') networkGateway = document.getElementById('network-gateway').placeholder;
+	  scriptOutput += 'sysrc defaultrouter="' + networkGateway + '"\n';
+    }
+	else {
+	  scriptOutput += '# DHCP\n'
+	}
+
+    // DNS
+	scriptOutput += '\n# DNS Configuration\n';
+	if (document.getElementById('network-dhcp').value === 'no') {
+	  scriptOutput += 'cp /etc/resolv.conf /etc/resolv.conf~\n';
+	  scriptOutput += 'cat << EOF > /etc/resolv.conf\n';
+	  scriptOutput += 'nameserver ' + document.getElementById('dns-primary').value + '\n';
+	  scriptOutput += 'nameserver ' + document.getElementById('dns-secondary').value + '\n';
+	  scriptOutput += 'EOF\n';
+	}
+	else {
+	  scriptOutput += '# DHCP\n'
+	}
+	
+	// Time
+	scriptOutput += '\n# Time Sychronization\n';
+	scriptOutput += 'sysrc ntpd_enable="YES"\n';
+    scriptOutput += 'sysrc ntpd_sync_on_start="YES"\n';
+	var zoneinfoPath = document.getElementById('time-area').value + '/' + document.getElementById('time-location').value;
+	scriptOutput += 'cp /usr/share/zoneinfo/' + zoneinfoPath + ' /etc/localtime\n';
+	scriptOutput += 'service ntpd start\n';
+
+    // Storage
+    scriptOutput += '\n# Storage Configuration\n';
+    scriptOutput += 'sysrc fsck_y_enable="YES"\n';
+	if (document.getElementById('storage-makefs').value == 'Yes') {
+      scriptOutput += 'makefs -t ufs ' + document.getElementById('storage-dev').value + '\n';
+	}
+    scriptOutput += 'tunefs -L ' + document.getElementById('storage-label').value + ' ' + document.getElementById('storage-dev').value + '\n';
+    scriptOutput += 'echo "/dev/ufs/' + document.getElementById('storage-label').value + ' ' + document.getElementById('storage-mount').value + ' ufs rw noatime" >> /etc/fstab\n';
+    scriptOutput += 'mount ' + document.getElementById('storage-label').value + '\n';
+
+    // Users
+    scriptOutput += '\n# User Configuration\n';
+	var users = document.getElementById('user-trusted').value.split(' ');
+	for (var i=0; i<users.length; i++) {
+      scriptOutput += 'pw group add ' + users[i] + '\n';
+      scriptOutput += 'pw user add -n ' + users[i] + ' -c ' + users[i] + ' -g ' + users[i] + ' -G wheel -w random >> /root/vault.txt' + '\n';
+	}
+	users = document.getElementById('user-regular').value.split(' ');
+	for (var i=0; i<users.length; i++) {
+      scriptOutput += 'pw group add ' + users[i] + '\n';
+      scriptOutput += 'pw user add -n ' + users[i] + ' -c ' + users[i].charAt(0).toUpperCase() + ' -g ' + users[i] + ' -w random >> /root/vault.txt' + '\n';
+	}
+	scriptOutput += 'chmod 400 /root/vault.txt\n';
+	
+	// Samba
+    scriptOutput += '\n# Samba Configuration\n';
+	scriptOutput += 'pkg install -y samba4\n';
+
+    // Reboot
+    scriptOutput += '\n# Initial user passwords reminder\n';
+    scriptOutput += 'cat /root/vault.txt\n';
+    scriptOutput += '\n# Be sure to have users change their passwords and then delete /root/vault.txt\n';
+    scriptOutput += '\n# Restart the system for changes to take effect.\n';
+	scriptOutput += 'shutdown -r now\n';
+
+	// Display Results
+	var output = document.getElementById('script-output');
+	output.innerHTML = scriptOutput;
+	output.style.display = 'block';
+}
+</script>
+</head>
+
+<body onload="initializeDefaults(); generateScript();">
+
+<header>
+<h1>WeeNAS Install Script Generator</h1>
+</header>
+
+<main>
+<h2 class="center">Configuration Options</h2>
+<form action="javascript:generateScript();">
+
+<details open>
+<summary id='identity-summary'>Identity</summary>
+<table>
+  <tr><td><label>Hostname</label></td><td><input id="identity-hostname" onchange="networkSummary();" type="text" value="weenas"></td></tr>
+  <tr><td><label>Domain</label></td><td><input id="identity-domain" onchange="networkSummary();" type="text" value="local"></td></tr>
+</table>
+</details>
+
+<details>
+<summary id="network-summary">Network</summary>
+<table>
+  <tr><td><label>Use automatic configuration (DHCP)?</label></td>
+  <td><select id="network-dhcp" onchange="toggleNetworkStatic(); networkSummary();"><option value="yes">Yes</option><option value="no">No</option></select></td></tr>
+</table>
+
+<!-- Static config stuff.  Hide if DHCP. -->
+<table id="network-static">
+  <tr><td><label>Interface Name</label></td><td><input id="network-interface" onchange="networkSummary();" type="text" value="ue0" readonly></td></tr>
+  <tr><td><label>IPv4 Address</label></td><td><input id="network-ip" onchange="networkSummary();" type="text" value="192.168.0.100" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
+  <tr><td><label>Network Mask</label></td><td><input id="network-mask" onchange="networkSummary();" type="text" value="255.255.255.0" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
+  <tr><td><label>Gateway</label></td><td><input id="network-gateway" onchange="networkSummary();" type="text" value="192.168.0.1" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
+</table>
+</details>
+
+<details>
+<summary id="dns-summary">DNS</summary>
+<table>
+  <tr><td><label>DNS Provider</label></td>
+  <td>
+    <input id="dns-dhcp" name="dns-provider" type="radio">DHCP</input>
+	<input id="dns-custom" name="dns-provider" type="radio">Custom</input>
+	<input id="dns-google" name="dns-provider" type="radio">Google</input>
+    <input id="dns-opendns" name="dns-provider" type="radio">OpenDNS</input>
+  </td></tr>
+  <tr><td><label>Primary DNS</label></td><td><input id="dns-primary" onchange="networkSummary();" type="text" value="208.67.222.222" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
+  <tr><td><label>Secondary DNS</label></td><td><input id="dns-secondary" onchange="networkSummary();" type="text" value="208.67.220.220" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
+</table>
+<ul>
+<li>If DHCP is selected for network configuration, DNS will also be DHCP.</li>
+<li>Google and OpenDNS automatically populate fields and cannot be changed.</li>
+</ul>
+</details>
+
+<details>
+<summary id="time-summary">Time</summary>
+<table>
+<tr><td><label>NTP Server</label></td><td><input id="time-ntp" onchange="timeSummary()" type="text" value="pool.ntp.org"></td></tr>
+<tr><td><label>Zoneinfo Path</label></td><td colspan="2"><select id="time-area" onchange="timeSummary()"><option>America</option></select> / <select id="time-location" onchange="timeSummary()"><option>Chicago</option></select></td></tr>
+</table>
+<ul>
+<li>NTP server can be a DNS name or an IP address.</li>
+<li>Some home routers provide the NTP service. Try setting to your gateway address.</li>
+</ul>
+</details>
+
+<details>
+<summary id="storage-summary">Storage</summary>
+<table>
+<tr><td><label>Device Name</label></td><td><input id="storage-dev" onchange="storageSummary();" type="text" value="/dev/da0p1"></td></tr>
+<tr><td><label>Filesystem Label</label></td><td><input id="storage-label" onchange="storageSummary();" type="text" value="homefs" readonly></td></tr>
+<tr><td><label>Mount Point</label></td><td><input id="storage-mount" onchange="storageSummary();" type="text" value="/home" readonly></td></tr>
+<tr><td>Overwrite with new filesystem (makefs)?</td><td><select id="storage-makefs" onchange="storageSummary();"><option>No</option><option>Yes</option></select></td></tr>
+</table>
+</details>
+
+<details>
+<summary id="user-summary">Users</summary>
+<table>
+<tr><td><label>Trusted Users</label></td><td><input id="user-trusted" onchange="userSummary();" size="32" type="text" pattern="[a-z ]+"></td></tr>
+<tr><td><label>Regular Users</label></td><td><input id="user-regular" onchange="userSummary();" size="64" type="text" pattern="[a-z ]+"></td></tr>
+</table>
+<ul>
+<li>Account names should be lowercase and separated by spaces.</li>
+<li>Trusted users will be added to the wheel group and can su to root.</li>
+<li>Default accounts freebsd and toor will be locked.</li>
+<li>There must be at least one trusted user or you will lose access to root!</li>
+</ul>
+</details>
+
+<details>
+<summary id="samba-summary">Samba</summary>
+<table>
+<tr><td><input id="samba-home" onchange="sambaSummary();" type="checkbox" value="yes" checked></td><td><label>User Home Directories</label></td></tr>
+<tr><td><input id="samba-shared" onchange="sambaSummary();" type="checkbox" value="yes" checked></td><td><label>Shared Directory</label></td></tr>
+</table>
+</details>
+
+<details>
+<summary id="services-summary">Services</summary>
+<table>
+<tr><td><input id="services-monit" onchange="servicesSummary();" type="checkbox" value="yes"></td><td><label>System Monitoring (Monit)</label></td></tr>
+<tr><td><input id="services-pop3" onchange="servicesSummary();" type="checkbox" value="yes"></td><td><label>POP3 Email</label></td></tr>
+<tr><td><input id="services-smtp" onchange="servicesSummary();" type="checkbox" value="yes"></td><td><label>SMTP Email</label></td></tr>
+<tr><td><input id="services-web" onchange="servicesSummary();" type="checkbox" value="yes"></td><td><label>Web Server</label></td></tr>
+</table>
+</details>
+
+<input class="right-justify" type="submit" value="Generate Script">
+</form>
+</main>
+
+<aside>
+<h2 class="center">Script Output</h2>
+<pre id="script-output"></pre>
+<p>Copy the commands from the classic beige box green screen monitor and paste them into your terminal emulator to configure your Raspberry PI.</p>
+<aside>
+
+</body>
+
+</html>
