@@ -5,89 +5,30 @@
 <title>WeeNAS Install Script Generator</title>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-<style>
-  * {
-    box-sizing: border-box;
-  }
-  body {
-    background: #FFFFFF;
-    color: #333333;
-    font-family: sans-serif;
-  }
-  header {
-    clear: both;
-    text-align: center;
-  }
-  main {
-    float: left;
-	margin-left: 2%;
-	margin-right: 2%;
-    width: 45%;
-  }
-  aside {
-    float: left;
-	margin-left: 2%;
-	margin-right: 2%;
-    width: 45%;
-  }
-  details {
-    border: 1px solid black;
-    box-shadow: 5px 5px 5px #7F7F7F;
-    margin-bottom: 1em;
-  }
-  summary {
-    border-bottom: 1px solid black;
-    font-size: 1em;
-	font-weight: normal;
-	padding-right: 0.5em;
-  }
-
-  .center {
-    text-align: center;
-  }
-  .right-justify {
-    float: right;
-  }
-  
-  #network-static {
-    display: none;
-  }
-  #script-output {
-    background: #336633;
-	border: 3em solid #F5F5DC;
-	border-radius: 15px;
-    box-shadow: 5px 5px 5px #7F7F7F;
-	color: #00FF00;
-	overflow: auto;
-	padding: 0.5em;
-  }
-</style>
-
+<link href= "style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="tzNamesLib.js"></script>
 <script>
   function initializeDefaults() {
     toggleNetworkStatic();
-	identitySummary();
-    networkSummary();
-	dnsSummary();
-	timeSummary();
-	storageSummary();
+    summarizeIdentity();
+    summarizeNetwork();
+    summarizeTime();
+    summarizeStorage();
     userSummary();
-	sambaSummary();
+    sambaSummary();
     servicesSummary();
-	generateScript();
+    generateScript();
   }
 
-  function identitySummary() {
+  function summarizeIdentity() {
     var summary = '<b>Identity</b> ';
 	summary += '<span class="right-justify">' + document.getElementById('identity-hostname').value;
 	summary += '.' + document.getElementById('identity-domain').value;
 	summary += '</span>';
     document.getElementById('identity-summary').innerHTML = summary; 
-	generateScript();
-  }
+	}
 
-  function networkSummary() {
+  function summarizeNetwork() {
     var summary = '<b>Network</b> ';
     summary += '<span class="right-justify">';
 	if (document.getElementById('network-dhcp').value == 'yes') {
@@ -100,49 +41,31 @@
 	}
 	summary += '</span>';
     document.getElementById('network-summary').innerHTML = summary; 
-	generateScript();
-  }
+	}
   
-  function dnsSummary() {
-    var summary = '<b>DNS</b> ';
-    summary += '<span class="right-justify">';
-	if (document.getElementById('network-dhcp').value == 'yes') {
-	  summary += 'DHCP';
-	}
-	else {
-	  summary += document.getElementById('dns-primary').value;
-	  summary += ', ' + document.getElementById('dns-secondary').value;
-	}
-	summary += '</span>';
-    document.getElementById('dns-summary').innerHTML = summary; 
-	generateScript();
-  }
-
-  function timeSummary() {
+  function summarizeTime() {
     var summary = '<b>Time</b> ';
-	summary += '<span class="right-justify">' + document.getElementById('time-ntp').value;
-	summary += ', ' + document.getElementById('time-area').value;
-	summary += '/' + document.getElementById('time-location').value;
-	summary += '</span>';
+    summary += '<span class="right-justify">' + document.getElementById('time-ntp').value;
+    summary += ', ' + document.getElementById('time-area').value;
+    summary += '/' + document.getElementById('time-location').value;
+    summary += '</span>';
     document.getElementById('time-summary').innerHTML = summary; 
-	generateScript();
   }
   
-  function storageSummary() {
+  function summarizeStorage() {
     var summary = '<b>Storage</b> ';
-	summary += '<span class="right-justify">' + document.getElementById('storage-dev').value;
+	  summary += '<span class="right-justify">' + document.getElementById('storage-dev').value;
     summary += ' (' + document.getElementById('storage-label').value + ')';
-	summary += ' on ' + document.getElementById('storage-mount').value;
-	if (document.getElementById('storage-makefs').value == 'Yes') {
-	  summary += ', existing filesystem <b>overwritten</b>';
-	}
-	else {
-	  summary += ', existing filesystem preserved';
-    }	
-	summary += '</span>';
-    document.getElementById('storage-summary').innerHTML = summary; 
-	generateScript();
-  }
+	  summary += ' on ' + document.getElementById('storage-mount').value;
+	  if (document.getElementById('storage-makefs').value == 'Yes') {
+	    summary += ', existing filesystem <b>overwritten</b>';
+	  }
+	  else {
+	    summary += ', existing filesystem preserved';
+      }	
+	  summary += '</span>';
+      document.getElementById('storage-summary').innerHTML = summary;
+	  }
 
   function userSummary() {
     var summary = '<b>Users</b> ';
@@ -298,8 +221,8 @@
 <details open>
 <summary id='identity-summary'>Identity</summary>
 <table>
-  <tr><td><label>Hostname</label></td><td><input id="identity-hostname" onchange="networkSummary();" type="text" value="weenas"></td></tr>
-  <tr><td><label>Domain</label></td><td><input id="identity-domain" onchange="networkSummary();" type="text" value="local"></td></tr>
+  <tr><td><label>Hostname</label></td><td><input id="identity-hostname" onchange="summarizeIdentity();" type="text" value="weenas"></td></tr>
+  <tr><td><label>Domain</label></td><td><input id="identity-domain" onchange="summarizeIdentity();" type="text" value="local"></td></tr>
 </table>
 </details>
 
@@ -316,37 +239,44 @@
   <tr><td><label>IPv4 Address</label></td><td><input id="network-ip" onchange="networkSummary();" type="text" value="192.168.0.100" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
   <tr><td><label>Network Mask</label></td><td><input id="network-mask" onchange="networkSummary();" type="text" value="255.255.255.0" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
   <tr><td><label>Gateway</label></td><td><input id="network-gateway" onchange="networkSummary();" type="text" value="192.168.0.1" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
-</table>
-</details>
-
-<details>
-<summary id="dns-summary">DNS</summary>
-<table>
   <tr><td><label>DNS Provider</label></td>
-  <td>
-    <input id="dns-dhcp" name="dns-provider" type="radio">DHCP</input>
-	<input id="dns-custom" name="dns-provider" type="radio">Custom</input>
-	<input id="dns-google" name="dns-provider" type="radio">Google</input>
-    <input id="dns-opendns" name="dns-provider" type="radio">OpenDNS</input>
-  </td></tr>
-  <tr><td><label>Primary DNS</label></td><td><input id="dns-primary" onchange="networkSummary();" type="text" value="208.67.222.222" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
-  <tr><td><label>Secondary DNS</label></td><td><input id="dns-secondary" onchange="networkSummary();" type="text" value="208.67.220.220" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
-</table>
-<ul>
-<li>If DHCP is selected for network configuration, DNS will also be DHCP.</li>
-<li>Google and OpenDNS automatically populate fields and cannot be changed.</li>
-</ul>
+    <td>
+      <input id="dns-google" name="dns-provider" type="radio">Google</input> <!-- 8.8.8.8, 8.8.4.4 -->
+      <input id="dns-opendns" name="dns-provider" type="radio" selected>OpenDNS</input> <!-- 208.67.222.222, 208.67.220.220 -->
+      <input id="dns-custom" name="dns-provider" type="radio">Custom</input>
+    </td></tr>
+    <tr><td><label>Primary DNS</label></td><td><input id="dns-primary" onchange="networkSummary();" type="text" value="208.67.222.222" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
+    <tr><td><label>Secondary DNS</label></td><td><input id="dns-secondary" onchange="networkSummary();" type="text" value="208.67.220.220" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
+  </table>
 </details>
 
 <details>
 <summary id="time-summary">Time</summary>
 <table>
-<tr><td><label>NTP Server</label></td><td><input id="time-ntp" onchange="timeSummary()" type="text" value="pool.ntp.org"></td></tr>
-<tr><td><label>Zoneinfo Path</label></td><td colspan="2"><select id="time-area" onchange="timeSummary()"><option>America</option></select> / <select id="time-location" onchange="timeSummary()"><option>Chicago</option></select></td></tr>
+<tr><td><label>NTP Server</label></td><td><input id="time-ntp" onchange="summarizeTime()" type="text" value="pool.ntp.org"></td></tr>
+<tr><td><label>Zoneinfo Path</label></td><td colspan="2">
+  <select id="time-area" onchange="tzUpdateLocations('time-area', 'time-location'); summarizeTime();">
+    <option>Africa</option>
+    <option>America</option>
+    <option>Antarctica</option>
+    <option>Asia</option>
+    <option>Atlantic</option>
+    <option>Australia</option>
+    <option selected>Etc</option>
+    <option>Europe</option>
+    <option>Indian</option>
+    <option>Pacific</option>
+  </select>
+  /
+  <select id="time-location" onchange="summarizeTime()">
+    <option>UTC</option>
+  </select>
+</td></tr>
 </table>
 <ul>
-<li>NTP server can be a DNS name or an IP address.</li>
-<li>Some home routers provide the NTP service. Try setting to your gateway address.</li>
+  <li>NTP server can be a DNS name or an IP address.</li>
+  <li>Some home routers provide the NTP service. Try setting to your gateway address.</li>
+  <li>For the zoneinfo path, choose the location closest to where you live.</li>
 </ul>
 </details>
 
