@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>WeeNAS Project</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="style.css" rel="stylesheet" type="text/css">
+  </head>
+  
+  <body>
+    <header>
+      <h1>WeeNAS</h1>
+      <p>Raspberry Pi + flash drive + FreeBSD + Samba</p>
+    </header>
+    <nav>
+      <h2>Quick Links</h2>
+      <ul>
+        <li><a href="https://github.com/DavesCodeMusings/WeeNAS/" target="_blank">WeeNAS GitHub Repo</a></li>
+        <li><a href="https://www.raspberrypi.org/" target="_blank">Raspberry Pi Project</a></li>
+        <li><a href="https://www.freebsd.org/platforms/arm.html" target="_blank">FreeBSD ARM Project</a></li>
+        <li><a href="https://www.samba.org/" target="_blank">The Samba Project</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <h2>About</h2>
+      <p>The play on the FreeNAS name is intentional.  FreeNAS is an incredibly robust open-source network-attached storage software distribution based on FreeBSD and OpenZFS.  It also has correspondingly robust system requirements, and that in turn drives up the cost of ownership.</p>
+      <p>WeeNAS, on the other hand, eschews all that fancy, high-performance hardware and ZFS filesystem.  WeeNAS is designed to run on a cheap Raspberry Pi 2 and uses a UFS filesystem on a common USB flash drive for storage.</p>
+
+      <h2>Comparison to FreeNAS</h2>
+      <ul>
+        <li>Is WeeNAS faster?  No.</li>
+        <li>Is WeeNAS more fault tollerant?  No.</li>
+        <li>Should you entrust your most precious files to WeeNAS?  No.</li>
+      </ul>
+
+      <h2>So what is WeeNAS good for?</h2>
+      <p>WeeNAS is basically a network attached flash drive.  Use it like a flash drive.  Plus, it's fun to say.</p>
+      <p>Personally, I created WeeNAS as a way to keep a second copy of the documents and other files I have on my PC.  The hardware is so inexpensive, I'm seriously considering building another, identical system with a scheduled rsync between them.</p>
+      <p>In other words, I'm banking on having multiple copies of my important files in case something goes sideways, rather than a one copy on a single super-robust system.</p>
+
+      <h2>All of this and more!</h2>
+      <p>WeeNAS is a do-it-yourself project lover's dream.  You supply the hardware, and WeeNAS guides you through the rest.</p>
+      <p>WeeNAS will provide you with:</p>
+      <ul>
+        <li>Customizable, automated install script to get you started quickly (work in progress)</li>
+        <li>REST API for easy management of the system without needing the command-line (planning phase)</li>
+        <li>Web-based administration system for day to day tasks (planning phase)</li>
+      </ul>
+
+      <h2>System requirements</h2>
+      <p>Here's what you'll need for hardware:</p>
+      <ul>
+        <li>Raspberry Pi 2 Model B and suitable power supply</li>
+        <li>32G micro-sd card compatible with Raspberry Pi</li>
+        <li>A USB flash drive compatible with Raspberry Pi *</li>
+        <li>An Ethernet cable and home router with at least one free RJ-45 LAN connection</li>
+        <li>Optional, externally-powered spinning disk for backups</li>
+        <li>A client computer capable of attaching to SMB (CIFS) shares</li>
+      </ul>
+      <p>* The USB flash drive is where your home directories are stored.  Get the largest capacity that fits your budget.</p>
+
+
+      <h2>Client Software</h2>
+      <p>Here's what you'll need for software:</p>
+      <ul>
+        <li><a href="https://www.7-zip.org/" target="_blank">7-Zip</a> or similar tool to decompress the FreeBSD image file</li>
+        <li><a href="https://sourceforge.net/projects/win32diskimager/" target="blank">Win32DiskImager</a> or similar software to write the image file to the SD card</li>
+        <li><a href="https://angryip.org/" target="_blank">AngryIP Scanner</a> to help you find the DHCP address of your Raspberry Pi</li>
+        <li><a href="https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html" target="_blank">PuTTY</a> or other SSH client to log in for the initial configuration</li>
+      </ul>
+
+      <h2>Getting Started</h2>
+      <p>The first step is to assemble your hardware and download the latest <a href="https://ftp.freebsd.org/pub/FreeBSD/releases/ISO-IMAGES/" target="_blank">FreeBSD software image</a>.</p>
+      <p><i>Stay tuned for more...</i></p>
+    </main>
+
+    <footer>
+      <p>WeeNAS is not associated with, nor is it endorsed by: FreeNAS, the Raspberry Pi Foundation, FreeBSD, or the Samba project.</p>
+    </footer>
+  </body>
+</html>
+  
