@@ -10,62 +10,98 @@
 <script>
   function initializeDefaults() {
     toggleNetworkStatic();
-    summarizeIdentity();
-    summarizeNetwork();
-    summarizeTime();
-    summarizeStorage();
+    identity();
+    network();
+    dns();
+    time();
+    storage();
     userSummary();
     sambaSummary();
     servicesSummary();
-    generateScript();
   }
 
-  function summarizeIdentity() {
-    var summary = '<b>Identity</b> ';
-	summary += '<span class="right-justify">' + document.getElementById('identity-hostname').value;
-	summary += '.' + document.getElementById('identity-domain').value;
-	summary += '</span>';
+  function identity() {
+    var hostname = document.getElementById('identity-hostname').value;
+    var domain = document.getElementById('identity-domain').value;
+    var summary = '<b>Identity</b> <span class="right-justify">' + hostname + '.' + domain + '</span>';
+    var commands = 'sysrc hostname="' + hostname + '.' + domain + '"\n';
     document.getElementById('identity-summary').innerHTML = summary; 
+    document.getElementById('identity-commands').innerHTML = commands;
 	}
 
-  function summarizeNetwork() {
-    var summary = '<b>Network</b> ';
-    summary += '<span class="right-justify">';
-	if (document.getElementById('network-dhcp').value == 'yes') {
-	  summary += 'DHCP';
-	}
-	else {
-	  summary += document.getElementById('network-ip').value;
-	  summary += '/' + document.getElementById('network-mask').value;
-	  summary += ', gw' + document.getElementById('network-gateway').value;
-	}
-	summary += '</span>';
+  function network() {
+    var summary = '<b>Network</b> <span class="right-justify">';
+    var commands = '';
+	  if (document.getElementById('network-dhcp').value == 'Yes') {
+      summary += 'DHCP';
+      commands = '# DHCP\n';
+    }
+	  else {
+      var interface = document.getElementById('network-interface').value;
+      var ipv4 = document.getElementById('network-ip').value;
+      var mask = document.getElementById('network-mask').value;
+      var gateway = document.getElementById('network-gateway').value;
+      summary += ipv4 + '/' + mask + ' &rarr; ' + gateway;
+      commands = 'sysrc ifconfig_' + interface + ' ' + ipv4 + ' netmask ' + mask + '\n';
+      commands += 'sysrc defaultrouter="' + gateway + '\n';
+    }
+	  summary += '</span>';
     document.getElementById('network-summary').innerHTML = summary; 
+    document.getElementById('network-commands').innerHTML = commands;
 	}
   
-  function summarizeTime() {
-    var summary = '<b>Time</b> ';
-    summary += '<span class="right-justify">' + document.getElementById('time-ntp').value;
-    summary += ', ' + document.getElementById('time-area').value;
-    summary += '/' + document.getElementById('time-location').value;
+  function dns() {
+    var summary = '<b>DNS</b> <span class="right-justify">';
+    var commands = '';
+	  if (document.getElementById('network-dhcp').value == 'Yes') {
+      summary += 'DHCP';
+      commands = '# DHCP\n';
+    }
+	  else {
+      var dnsPrimary = document.getElementById('dns-primary').value;
+      var dnsSecondary = document.getElementById('dns-secondary').value;
+      summary += dnsPrimary + ', ' + dnsSecondary + '\n';
+	    commands += 'echo "nameserver ' + dnsPrimary + '" > /etc/resolv.conf\n';
+	    commands += 'echo "nameserver ' + dnsSecondary + '" >> /etc/resolv.conf\n';
+    }
     summary += '</span>';
-    document.getElementById('time-summary').innerHTML = summary; 
+    document.getElementById('dns-summary').innerHTML = summary;
+    document.getElementById('dns-commands').innerHTML = commands;
+  }
+
+  function time() {
+    var summary = '<b>Time</b> <span class="right-justify">';
+    var commands = ''
+    var timezone = document.getElementById('time-area').value + '/' + document.getElementById('time-location').value;
+    summary += timezone + '</span>';
+    commands += 'ntpd_enable="YES"\n'
+    commands += 'ntpd_sync_on_start="YES"\n';
+    commands += 'cp /usr/share/zoneinfo/' + timezone + '/etc/localtime\n'
+    commands += 'service ntpd start\n'
+    document.getElementById('time-summary').innerHTML = summary;
+    document.getElementById('time-commands').innerHTML = commands;
   }
   
-  function summarizeStorage() {
-    var summary = '<b>Storage</b> ';
-	  summary += '<span class="right-justify">' + document.getElementById('storage-dev').value;
-    summary += ' (' + document.getElementById('storage-label').value + ')';
-	  summary += ' on ' + document.getElementById('storage-mount').value;
+  function storage() {
+    var summary = '<b>Storage</b> <span class="right-justify"> ';
+    var commands = '';
+	  var dev = document.getElementById('storage-dev').value;
+    var label = document.getElementById('storage-label').value;
+	  var mount = document.getElementById('storage-mount').value;
+    summary += dev + '(' + label + ') on ' + mount;
 	  if (document.getElementById('storage-makefs').value == 'Yes') {
 	    summary += ', existing filesystem <b>overwritten</b>';
+      commands += 'makefs -L ' + label + ' ' + dev + '\n';
 	  }
 	  else {
 	    summary += ', existing filesystem preserved';
-      }	
+      commands += 'tunefs -L ' + label + ' ' + dev + '\n';
+    }	
 	  summary += '</span>';
-      document.getElementById('storage-summary').innerHTML = summary;
-	  }
+    commands += 'echo "/dev/ufs/' + label + ' ' + mount + ' ufs rw,noatime 0 0" >> /etc/fstab\n';
+    document.getElementById('storage-summary').innerHTML = summary;
+    document.getElementById('storage-commands').innerHTML = commands;
+	}
 
   function userSummary() {
     var summary = '<b>Users</b> ';
@@ -123,48 +159,6 @@
   function generateScript() {
     var scriptOutput = '# The following commands must be run as root.\n';
 
-	// Network
-	scriptOutput += '\n# Host Identity\n';
-    scriptOutput += 'sysrc hostname="' + document.getElementById('identity-hostname').value + '.' + document.getElementById('identity-domain').value + '"\n';
-	
-	// Network
-	scriptOutput += '\n# Network Configuration\n';
-	if (document.getElementById('network-dhcp').value === 'no') {
-	  var networkInterface = document.getElementById('network-interface').value;
-	  var networkIP = document.getElementById('network-ip').value;
-	  if (networkIP === '') networkIP = document.getElementById('network-ip').placeholder;
-	  var networkMask = document.getElementById('network-mask').value;
-	  if (networkMask === '') networkMask = document.getElementById('network-mask').placeholder;
-  	  scriptOutput += 'sysrc ifconfig_' + networkInterface + '="' + networkIP + ' netmask ' + networkMask + '"\n';
-	  var networkGateway = document.getElementById('network-gateway').value;
-	  if (networkGateway === '') networkGateway = document.getElementById('network-gateway').placeholder;
-	  scriptOutput += 'sysrc defaultrouter="' + networkGateway + '"\n';
-    }
-	else {
-	  scriptOutput += '# DHCP\n'
-	}
-
-    // DNS
-	scriptOutput += '\n# DNS Configuration\n';
-	if (document.getElementById('network-dhcp').value === 'no') {
-	  scriptOutput += 'cp /etc/resolv.conf /etc/resolv.conf~\n';
-	  scriptOutput += 'cat << EOF > /etc/resolv.conf\n';
-	  scriptOutput += 'nameserver ' + document.getElementById('dns-primary').value + '\n';
-	  scriptOutput += 'nameserver ' + document.getElementById('dns-secondary').value + '\n';
-	  scriptOutput += 'EOF\n';
-	}
-	else {
-	  scriptOutput += '# DHCP\n'
-	}
-	
-	// Time
-	scriptOutput += '\n# Time Sychronization\n';
-	scriptOutput += 'sysrc ntpd_enable="YES"\n';
-    scriptOutput += 'sysrc ntpd_sync_on_start="YES"\n';
-	var zoneinfoPath = document.getElementById('time-area').value + '/' + document.getElementById('time-location').value;
-	scriptOutput += 'cp /usr/share/zoneinfo/' + zoneinfoPath + ' /etc/localtime\n';
-	scriptOutput += 'service ntpd start\n';
-
     // Storage
     scriptOutput += '\n# Storage Configuration\n';
     scriptOutput += 'sysrc fsck_y_enable="YES"\n';
@@ -198,13 +192,8 @@
     scriptOutput += 'cat /root/vault.txt\n';
     scriptOutput += '\n# Be sure to have users change their passwords and then delete /root/vault.txt\n';
     scriptOutput += '\n# Restart the system for changes to take effect.\n';
-	scriptOutput += 'shutdown -r now\n';
-
-	// Display Results
-	var output = document.getElementById('script-output');
-	output.innerHTML = scriptOutput;
-	output.style.display = 'block';
-}
+	  scriptOutput += 'shutdown -r now\n';
+  }
 </script>
 </head>
 
@@ -221,8 +210,8 @@
 <details open>
 <summary id='identity-summary'>Identity</summary>
 <table>
-  <tr><td><label>Hostname</label></td><td><input id="identity-hostname" onchange="summarizeIdentity();" type="text" value="weenas"></td></tr>
-  <tr><td><label>Domain</label></td><td><input id="identity-domain" onchange="summarizeIdentity();" type="text" value="local"></td></tr>
+  <tr><td><label>Hostname</label></td><td><input id="identity-hostname" onchange="identity();" type="text" value="weenas"></td></tr>
+  <tr><td><label>Domain</label></td><td><input id="identity-domain" onchange="identity();" type="text" value="local"></td></tr>
 </table>
 </details>
 
@@ -230,32 +219,37 @@
 <summary id="network-summary">Network</summary>
 <table>
   <tr><td><label>Use automatic configuration (DHCP)?</label></td>
-  <td><select id="network-dhcp" onchange="toggleNetworkStatic(); networkSummary();"><option value="yes">Yes</option><option value="no">No</option></select></td></tr>
+  <td><select id="network-dhcp" onchange="toggleNetworkStatic(); network(); dns();"><option>Yes</option><option>No</option></select></td></tr>
 </table>
 
 <!-- Static config stuff.  Hide if DHCP. -->
 <table id="network-static">
-  <tr><td><label>Interface Name</label></td><td><input id="network-interface" onchange="networkSummary();" type="text" value="ue0" readonly></td></tr>
-  <tr><td><label>IPv4 Address</label></td><td><input id="network-ip" onchange="networkSummary();" type="text" value="192.168.0.100" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
-  <tr><td><label>Network Mask</label></td><td><input id="network-mask" onchange="networkSummary();" type="text" value="255.255.255.0" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
-  <tr><td><label>Gateway</label></td><td><input id="network-gateway" onchange="networkSummary();" type="text" value="192.168.0.1" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
+  <tr><td><label>Interface Name</label></td><td><input id="network-interface" onchange="network();" type="text" value="ue0" readonly></td></tr>
+  <tr><td><label>IPv4 Address</label></td><td><input id="network-ip" onchange="network();" type="text" value="192.168.0.100" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
+  <tr><td><label>Network Mask</label></td><td><input id="network-mask" onchange="network();" type="text" value="255.255.255.0" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
+  <tr><td><label>Gateway</label></td><td><input id="network-gateway" onchange="network();" type="text" value="192.168.0.1" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
+  </table>
+</details>
+
+<details>
+<summary id="dns-summary">DNS</summary>
+<table>
   <tr><td><label>DNS Provider</label></td>
     <td>
       <input id="dns-google" name="dns-provider" type="radio">Google</input> <!-- 8.8.8.8, 8.8.4.4 -->
       <input id="dns-opendns" name="dns-provider" type="radio" selected>OpenDNS</input> <!-- 208.67.222.222, 208.67.220.220 -->
       <input id="dns-custom" name="dns-provider" type="radio">Custom</input>
     </td></tr>
-    <tr><td><label>Primary DNS</label></td><td><input id="dns-primary" onchange="networkSummary();" type="text" value="208.67.222.222" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
-    <tr><td><label>Secondary DNS</label></td><td><input id="dns-secondary" onchange="networkSummary();" type="text" value="208.67.220.220" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
-  </table>
+    <tr><td><label>Primary DNS</label></td><td><input id="dns-primary" onchange="network();" type="text" value="208.67.222.222" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
+    <tr><td><label>Secondary DNS</label></td><td><input id="dns-secondary" onchange="network();" type="text" value="208.67.220.220" pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td></tr>
+</table>
 </details>
 
 <details>
 <summary id="time-summary">Time</summary>
 <table>
-<tr><td><label>NTP Server</label></td><td><input id="time-ntp" onchange="summarizeTime()" type="text" value="pool.ntp.org"></td></tr>
 <tr><td><label>Zoneinfo Path</label></td><td colspan="2">
-  <select id="time-area" onchange="tzUpdateLocations('time-area', 'time-location'); summarizeTime();">
+  <select id="time-area" onchange="tzUpdateLocations('time-area', 'time-location'); time();">
     <option>Africa</option>
     <option>America</option>
     <option>Antarctica</option>
@@ -268,25 +262,23 @@
     <option>Pacific</option>
   </select>
   /
-  <select id="time-location" onchange="summarizeTime()">
+  <select id="time-location" onchange="time()">
     <option>UTC</option>
   </select>
 </td></tr>
 </table>
 <ul>
-  <li>NTP server can be a DNS name or an IP address.</li>
-  <li>Some home routers provide the NTP service. Try setting to your gateway address.</li>
   <li>For the zoneinfo path, choose the location closest to where you live.</li>
 </ul>
 </details>
 
 <details>
-<summary id="storage-summary">Storage</summary>
-<table>
-<tr><td><label>Device Name</label></td><td><input id="storage-dev" onchange="storageSummary();" type="text" value="/dev/da0p1"></td></tr>
-<tr><td><label>Filesystem Label</label></td><td><input id="storage-label" onchange="storageSummary();" type="text" value="homefs" readonly></td></tr>
-<tr><td><label>Mount Point</label></td><td><input id="storage-mount" onchange="storageSummary();" type="text" value="/home" readonly></td></tr>
-<tr><td>Overwrite with new filesystem (makefs)?</td><td><select id="storage-makefs" onchange="storageSummary();"><option>No</option><option>Yes</option></select></td></tr>
+  <summary id="storage-summary">Storage</summary>
+  <table>
+<tr><td><label>Device Name</label></td><td><input id="storage-dev" onchange="storage();" type="text" value="/dev/da0p1"></td></tr>
+<tr><td><label>Filesystem Label</label></td><td><input id="storage-label" onchange="storage();" type="text" value="homefs" readonly></td></tr>
+<tr><td><label>Mount Point</label></td><td><input id="storage-mount" onchange="storage();" type="text" value="/home" readonly></td></tr>
+<tr><td>Overwrite with new filesystem (makefs)?</td><td><select id="storage-makefs" onchange="storage();"><option>No</option><option>Yes</option></select></td></tr>
 </table>
 </details>
 
@@ -328,9 +320,22 @@
 
 <aside>
 <h2 class="center">Script Output</h2>
-<pre id="script-output"></pre>
+<div id="script-output">
+# The following commands must be run as root.
+
+# Identity
+<span id='identity-commands'></span>
+# Network
+<span id='network-commands'></span>
+# DNS
+<span id='dns-commands'></span>
+# Time
+<span id='time-commands'></span>
+# Storage
+<span id='storage-commands'></span></span>
+</div>
 <p>Copy the commands from the classic beige box green screen monitor and paste them into your terminal emulator to configure your Raspberry PI.</p>
-<aside>
+</aside>
 
 </body>
 

@@ -54,6 +54,8 @@ summary {
   border-radius: 15px;
   box-shadow: 5px 5px 5px #7F7F7F;
   color: #00FF00;
+  font-family: monospace;
   overflow: auto;
   padding: 0.5em;
+  white-space: pre;
 }
