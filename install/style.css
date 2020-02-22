@@ -43,6 +43,15 @@ summary {
 .right-justify {
   float: right;
 }
+.reverse-divider {
+  background: #333333;
+  color: #FFFFFF;
+  border: 1px solid black;
+  box-shadow: 5px 5px 5px #7F7F7F;
+  margin-bottom: 1em;
+  padding-left: 0.25em;
+  text-align: center;
+}
 
 /* Ids */
 #network-static {
