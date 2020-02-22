@@ -21,15 +21,47 @@
     <form action="javascript:copyScript();">
 
       <details open>
-        <summary><b>Identity</b> <span class='right-justify' id='identity-summary'></span></summary>
+        <summary><b>Users</b> <span class="right-justify" id="user-summary"></span></summary>
+        <table>
+          <tr>
+            <td><label>Trusted Users</label></td>
+            <td><input id="user-trusted" onchange="users(); mail();" size="32" type="text" pattern="[a-z ]+"></td>
+          </tr>
+          <tr>
+            <td><label>Regular Users</label></td>
+            <td><input id="user-regular" onchange="users();" size="64" type="text" pattern="[a-z ]+"></td>
+          </tr>
+        </table>
+        <ul>
+          <li>Account names should be lowercase and separated by spaces.</li>
+          <li>Trusted users will be added to the wheel group and can su to root.</li>
+          <li>Default accounts freebsd and toor will be locked, so there must be at least one trusted user or you will lose access to root!</li>
+        </ul>
+      </details>
+
+      <details open>
+        <summary><b>Mail</b> <span class="right-justify" id="mail-summary"></span></summary>
+        <table>
+          <tr>
+            <td><label>System mail recipient</label></td>
+            <td><input id="mail-alias" onchange="mail();" size="16" type="text" pattern="[a-z]+"</td>
+          </tr>
+        </table>
+        <ul>
+          <li>One trusted user must be set up to receive system mail sent to root.</li>
+        </ul>
+      </details>
+
+      <details open>
+        <summary><b>Hostname</b> <span class='right-justify' id='hostname-summary'></span></summary>
         <table>
           <tr>
             <td><label>Host Name</label></td>
-            <td><input id="identity-hostname" onchange="identity();" type="text" value="weenas"></td>
+            <td><input id="hostname-host" onchange="hostname();" type="text" value="weenas"></td>
           </tr>
           <tr>
             <td><label>Domain Name</label></td>
-            <td><input id="identity-domain" onchange="identity();" type="text" value="local"></td>
+            <td><input id="hostname-domain" onchange="hostname();" type="text" value="local"></td>
           </tr>
         </table>
         <ul>
@@ -67,38 +99,6 @@
         </table>
         <ul>
           <li>For the timezone path, choose the location closest to where you live.</li>
-        </ul>
-      </details>
-
-      <details open>
-        <summary><b>Users</b> <span class="right-justify" id="user-summary"></span></summary>
-        <table>
-          <tr>
-            <td><label>Trusted Users</label></td>
-            <td><input id="user-trusted" onchange="users(); mail();" size="32" type="text" pattern="[a-z ]+"></td>
-          </tr>
-          <tr>
-            <td><label>Regular Users</label></td>
-            <td><input id="user-regular" onchange="users();" size="64" type="text" pattern="[a-z ]+"></td>
-          </tr>
-        </table>
-        <ul>
-          <li>Account names should be lowercase and separated by spaces.</li>
-          <li>Trusted users will be added to the wheel group and can su to root.</li>
-          <li>Default accounts freebsd and toor will be locked, so there must be at least one trusted user or you will lose access to root!</li>
-        </ul>
-      </details>
-
-      <details open>
-        <summary><b>Mail</b> <span class="right-justify" id="mail-summary"></span></summary>
-        <table>
-          <tr>
-            <td><label>System mail recipient</label></td>
-            <td><input id="mail-alias" onchange="mail();" size="16" type="text" pattern="[a-z]+"</td>
-          </tr>
-        </table>
-        <ul>
-          <li>One trusted user must be set up to receive system mail sent to root.</li>
         </ul>
       </details>
 
@@ -257,8 +257,8 @@
 # https://davescodemusings.github.io/WeeNAS/
 # The following commands must be run as root.
 
-# Identity
-<span id="identity-commands"></span>
+# Hostname
+<span id="hostname-commands"></span>
 # Network
 <span id="network-commands"></span>
 # DNS
@@ -277,6 +277,8 @@
 -->
 # Users
 <span id="user-commands"></span>
+
+head -1 /root/vault
     </div>
     <p>Copy the commands from the classic beige box green screen monitor and paste them into your terminal emulator to
       configure your Raspberry PI for WeeNAS.</p>

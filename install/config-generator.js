@@ -2,14 +2,14 @@ var networkGateway = '';  /* Also used as a DNS provider choice. */
 var firstTrustedUser = '';  /* The first user in the list of trusted users get the email alias for root. */
 
 function refreshAll() {
-    identity();
-    time();
     users();
+    mail();
+    hostname();
+    time();
     network();
     dns();
     storage();
     samba();
-    mail();
 }
 
 // Highlight any fields that are left blank.
@@ -22,15 +22,15 @@ function warnBlank(element) {
     }
 }
 
-function identity() {
-    var hostname = document.getElementById('identity-hostname');
-    var domain = document.getElementById('identity-domain');
+function hostname() {
+    var hostname = document.getElementById('hostname-host');
+    var domain = document.getElementById('hostname-domain');
     warnBlank(hostname);
     warnBlank(domain);
     var summary = hostname.value + '.' + domain.value;
     var commands = 'sysrc hostname="' + hostname.value + '.' + domain.value + '"\n';
-    document.getElementById('identity-summary').innerHTML = summary;
-    document.getElementById('identity-commands').innerHTML = commands;
+    document.getElementById('hostname-summary').innerHTML = summary;
+    document.getElementById('hostname-commands').innerHTML = commands;
 }
 
 function time() {
@@ -72,6 +72,8 @@ function users() {
         }
     }
     commands += 'chmod 400 /root/vault';
+    commands += 'pw lock toor';
+    commands += 'pw lock freebsd';
     document.getElementById('user-summary').innerHTML = summary;
     document.getElementById('user-commands').innerHTML = commands;
 }
