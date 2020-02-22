@@ -75,7 +75,7 @@
         <table>
           <tr>
             <td><label>Trusted Users</label></td>
-            <td><input id="user-trusted" onchange="users();" size="32" type="text" pattern="[a-z ]+"></td>
+            <td><input id="user-trusted" onchange="users(); mail();" size="32" type="text" pattern="[a-z ]+"></td>
           </tr>
           <tr>
             <td><label>Regular Users</label></td>
@@ -85,8 +85,20 @@
         <ul>
           <li>Account names should be lowercase and separated by spaces.</li>
           <li>Trusted users will be added to the wheel group and can su to root.</li>
-          <li>Default accounts freebsd and toor will be locked.</li>
-          <li>There must be at least one trusted user or you will lose access to root!</li>
+          <li>Default accounts freebsd and toor will be locked, so there must be at least one trusted user or you will lose access to root!</li>
+        </ul>
+      </details>
+
+      <details open>
+        <summary><b>Mail</b> <span class="right-justify" id="mail-summary"></span></summary>
+        <table>
+          <tr>
+            <td><label>System mail recipient</label></td>
+            <td><input id="mail-alias" onchange="mail();" size="16" type="text" pattern="[a-z]+"</td>
+          </tr>
+        </table>
+        <ul>
+          <li>One trusted user must be set up to receive system mail sent to root.</li>
         </ul>
       </details>
 
@@ -131,7 +143,6 @@
       <details>
         <summary><b>DNS</b> <span class="right-justify" id="dns-summary"></span></summary>
         <table>
-          <thead>
           <tr>
             <td><label>DNS Provider</label></td>
             <td>
@@ -142,8 +153,9 @@
               <input id="dns-other" name="dns-provider" type="radio" onchange="dns();">Other</input>
             </td>
           </tr>
-          </thead>
-          <!-- Hidden if DHCP. -->
+        </table>
+        <!-- Hidden if DHCP. -->
+        <table>
           <tbody id="dns-static">
             <tr>
               <td><label>Primary DNS</label></td>
@@ -152,7 +164,7 @@
             </tr>
             <tr>
               <td><label>Secondary DNS</label></td>
-              <td><input id="dns-secondary" onchange="dns();" type="text" value="192.168.0.1"
+              <td><input id="dns-secondary" onchange="dns();" type="text"
                   pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td>
             </tr>
           <tbody>
@@ -208,6 +220,7 @@
         </table>
       </details>
 
+<!-- TODO
       <details>
         <summary><b>Services</b> <span class="right-justify" id="services-summary"></span></summary>
         <table>
@@ -215,7 +228,6 @@
             <td><input id="services-smtp" onchange="services();" type="checkbox" value="yes"></td>
             <td><label>SMTP Email (Sendmail)</label></td>
           </tr>
-<!--
           <tr>
             <td><input id="services-pop3" onchange="services();" type="checkbox" value="yes"></td>
             <td><label>POP3 Email</label></td>
@@ -228,12 +240,11 @@
             <td><input id="services-monit" onchange="services();" type="checkbox" value="yes"></td>
             <td><label>System Monitoring (Monit)</label></td>
           </tr>
--->
         </table>
       </details>
 
       <input class="right-justify" type="submit" value="Copy Script to Clipboard">
-
+-->
     </form>
   </main>
 
@@ -258,12 +269,14 @@
 <span id="storage-commands"></span>
 # Samba
 <span id="samba-commands"></span>
+# Mail
+<span id="mail-commands"></span>
+<!-- TODO
 # Services
 <span id="services-commands"></span>
+-->
 # Users
 <span id="user-commands"></span>
-# Reboot
-shutdown -r now
     </div>
     <p>Copy the commands from the classic beige box green screen monitor and paste them into your terminal emulator to
       configure your Raspberry PI for WeeNAS.</p>

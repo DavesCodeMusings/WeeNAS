@@ -9,14 +9,26 @@ function refreshAll() {
     dns();
     storage();
     samba();
-    services();
+    mail();
+}
+
+// Highlight any fields that are left blank.
+function warnBlank(element) {
+    if (!element.value) {
+        element.style.backgroundColor = "yellow";
+    }
+    else {
+        element.style.backgroundColor = "white";
+    }
 }
 
 function identity() {
-    var hostname = document.getElementById('identity-hostname').value;
-    var domain = document.getElementById('identity-domain').value;
-    var summary = hostname + '.' + domain;
-    var commands = 'sysrc hostname="' + hostname + '.' + domain + '"\n';
+    var hostname = document.getElementById('identity-hostname');
+    var domain = document.getElementById('identity-domain');
+    warnBlank(hostname);
+    warnBlank(domain);
+    var summary = hostname.value + '.' + domain.value;
+    var commands = 'sysrc hostname="' + hostname.value + '.' + domain.value + '"\n';
     document.getElementById('identity-summary').innerHTML = summary;
     document.getElementById('identity-commands').innerHTML = commands;
 }
@@ -34,50 +46,59 @@ function time() {
 }
 
 function users() {
-    var trusted = document.getElementById('user-trusted').value;
-    var regular = document.getElementById('user-regular').value;
-    var summary = '<em>' + trusted + '</em> ' + regular;
-    var commands = '';
+    var trusted = document.getElementById('user-trusted');
+    var regular = document.getElementById('user-regular');
+    warnBlank(trusted);
+    var summary = '<em>' + trusted.value + '</em> ' + regular.value;
+    var commands = 'pw group add -g 1000 shared\n';  /* user groups start at 1001 and go up, 1000 is unused. */
 
     // .split(' ') on an empty string results in a length of 1, hence the conditional below.
-    if (trusted) {
-        var userList = trusted.split(' ');
+    if (trusted.value) {
+        var userList = trusted.value.split(' ');
         firstTrustedUser = userList[0];
         for (var i = 0; i < userList.length; i++) {
-            commands += 'pw user add -n ' + userList[i] + ' -c ' + userList[i] + ' -g ' + userList[i] + ' -G wheel -w random >> /root/vault.txt' + '\n';
+            commands += 'pw user add -n ' + userList[i] + ' -c ' + userList[i] + ' -g ' + userList[i] + ' -G wheel,shared -w random >> /root/vault' + '\n';
+            commands += 'smbpasswd -a ' + userList[i] + '\n';
         }
     }
     else {
-        commands += "# Check the configuration!  There must be at least one trusted user."
+        commands += "\n# Check the configuration!  There must be at least one trusted user.\n"
     }
-    if (regular) {
-        userList = regular.split(' ');
+    if (regular.value) {
+        userList = regular.value.split(' ');
         for (var i = 0; i < userList.length; i++) {
-            commands += 'pw user add -n ' + userList[i] + ' -c ' + userList[i] + ' -g ' + userList[i] + ' -w random >> /root/vault.txt' + '\n';
+            commands += 'pw user add -n ' + userList[i] + ' -c ' + userList[i] + ' -g ' + userList[i] + ' -G shared -w random >> /root/vault' + '\n';
+            commands += 'smbpasswd -a ' + userList[i] + '\n';
         }
     }
+    commands += 'chmod 400 /root/vault';
     document.getElementById('user-summary').innerHTML = summary;
     document.getElementById('user-commands').innerHTML = commands;
 }
 
 function network() {
+    var dhcp = document.getElementById('network-dhcp');
     var interface = document.getElementById('network-interface');
     var ipv4 = document.getElementById('network-ip');
     var mask = document.getElementById('network-mask');
     var gateway = document.getElementById('network-gateway');
     var summary = '';
     var commands = '';
-    if (document.getElementById('network-dhcp').value == 'Yes') {
+    if (dhcp.value == 'Yes') {
         document.getElementById('network-static').style.display = 'none';
         summary += 'DHCP';
         commands = '# DHCP\n';
     }
     else {
         document.getElementById('network-static').style.display = 'block';
+        warnBlank(interface);
+        warnBlank(ipv4);
+        warnBlank(mask);
+        warnBlank(gateway);
         networkGateway = gateway.value;
         summary += ipv4.value + '/' + mask.value + ' &rarr; ' + gateway.value;
-        commands = 'sysrc ifconfig_' + interface + ' ' + ipv4.value + ' netmask.value ' + mask.value + '\n';
-        commands += 'sysrc defaultrouter="' + gateway + '\n';
+        commands = 'sysrc ifconfig_' + interface.value + ' ' + ipv4.value + ' netmask ' + mask.value + '\n';
+        commands += 'sysrc defaultrouter="' + gateway.value + '"\n';
     }
     document.getElementById('network-summary').innerHTML = summary;
     document.getElementById('network-commands').innerHTML = commands;
@@ -133,6 +154,7 @@ function dns() {
             primary.readOnly = false;
             secondary.readOnly = false;
         }
+        warnBlank(primary);
         summary += primary.value + ', ' + secondary.value + '\n';
         commands += 'echo "nameserver ' + primary.value + '" > /etc/resolv.conf\n';
         commands += 'echo "nameserver ' + secondary.value + '" >> /etc/resolv.conf\n';
@@ -144,26 +166,28 @@ function dns() {
 function storage() {
     var summary = '';
     var commands = '';
-    var dev = document.getElementById('storage-dev').value;
-    var label = document.getElementById('storage-label').value;
-    var mount = document.getElementById('storage-mount').value;
-    summary += '/dev/ufs/' + label + ' on ' + mount + '</span>';
+    var dev = document.getElementById('storage-dev');
+    var label = document.getElementById('storage-label');
+    var mount = document.getElementById('storage-mount');
+    warnBlank(dev);
+    summary += '/dev/ufs/' + label.value + ' on ' + mount.value + '</span>';
     commands += 'sysrc fsck_y_enable="YES"\n';
-    commands += 'if [ "$(gpart show ' + dev + ' | grep -i FreeBSD)" == "" ]; then\n';
+    commands += 'if [ "$(gpart show ' + dev.value + ' | grep -i FreeBSD)" == "" ]; then\n';
     commands += '\n  # Delete existing partition scheme.\n'
-    commands += '  gpart delete -i 1 ' + dev + '\n';
-    commands += '  gpart destroy ' + dev + '\n';
+    commands += '  gpart delete -i 1 ' + dev.value + '\n';
+    commands += '  gpart destroy ' + dev.value + '\n';
     commands += '\n  # Create FreeBSD partition scheme.\n'
-    commands += '  gpart create -s GPT ' + dev + '\n';
-    commands += '  gpart add -t freebsd-ufs ' + dev + '\n';
+    commands += '  gpart create -s GPT ' + dev.value + '\n';
+    commands += '  gpart add -t freebsd-ufs ' + dev.value + '\n';
     commands += '\n  # Create UFS filesystem (aka format.)\n'
-    commands += '  newfs ' + label + ' ' + dev + 'p1\n';
+    commands += '  newfs ' + label.value + ' ' + dev.value + 'p1\n';
     commands += 'fi\n';
-    commands += '\n# Label as ' + label + ' and set soft journaling.\n'
-    commands += 'tunefs -j -L ' + label + ' ' + dev + 'p1\n';
+    commands += '\n# Label as ' + label.value + ' and set soft journaling.\n'
+    commands += 'tunefs -j -L ' + label.value + ' ' + dev.value + 'p1\n';
     commands += '\n# Write to fstab and mount\n';
-    commands += 'echo "/dev/ufs/' + label + ' ' + mount + ' ufs rw,noatime 0 0" >> /etc/fstab\n';
-    commands += 'mount ' + label + '\n';
+    commands += 'echo "/dev/ufs/' + label.value + ' ' + mount.value + ' ufs rw,noatime 0 0" >> /etc/fstab\n';
+    commands += 'fsck -fpy /dev/ufs/homefs\n';
+    commands += 'mount ' + label.value + '\n';
     document.getElementById('storage-summary').innerHTML = summary;
     document.getElementById('storage-commands').innerHTML = commands;
 }
@@ -174,6 +198,7 @@ function samba() {
     var shared = document.getElementById('samba-shared');
     var summary = workgroup.value.toUpperCase();
     var commands = 'pkg install -y samba48\n';
+    warnBlank(workgroup);
     commands += 'cat << EOF > /usr/share/etc/smb4.conf\n';
     commands += '[global]\n';
     commands += '  workgroup = ' + workgroup.value.toUpperCase() + '\n';
@@ -205,24 +230,35 @@ function samba() {
     document.getElementById('samba-commands').innerHTML = commands;
 }
 
+function mail() {
+    var alias = document.getElementById('mail-alias');
+    var summary = '';
+    var commands = '';
+    if (!alias.value) {
+        alias.value = firstTrustedUser;
+    }
+    warnBlank(alias);
+    summary += alias.value;
+    commands += 'sed -i~ \'s/^# root:.*/root: ' + firstTrustedUser + '/\' /etc/mail/aliases\n';
+    commands += 'newaliases\n';
+    document.getElementById('mail-summary').innerHTML = summary;
+    document.getElementById('mail-commands').innerHTML = commands;
+}
+
+/* TODO
 function services() {
     var smtp = document.getElementById('services-smtp');
-/*
+
     var pop3 = document.getElementById('services-pop3');
     var www = document.getElementById('services-www');
     var monit = document.getElementById('services-monit');
-*/
     var summary = '';
     var commands = '';
     if (smtp.checked) {
         summary += 'SMTP ';
-        commands += '\n#SMTP\n';
-        commands += 'sed -i~ \'s/^# root:.*/root: ' + firstTrustedUser + '/\' /etc/mail/aliases\n';
-        commands += 'newaliases\n'
         commands += 'sysrc sendmail_enable="YES"\n';
         commands += 'sysrc sendmail_msp_queue_enable="YES"\n';
     }
-/*
     if (pop3.checked) {
         summary += 'POP3 ';
     }
@@ -232,11 +268,11 @@ function services() {
     if (monit.checked) {
         summary += 'Monit ';
     }
-*/
     summary += '</span>';
     document.getElementById('services-summary').innerHTML = summary;
     document.getElementById('services-commands').innerHTML = commands;
 }
+*/
 
 function copyScript() {
 }
