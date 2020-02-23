@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <title>WeeNAS Install Script Generator</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="style.css" rel="stylesheet" type="text/css">
+  <script type="text/javascript" src="tzNamesLib.js"></script>
+  <script type="text/javascript" src="config-generator.js"></script>
+</head>
+
+<body onload="refreshAll();">
+
+  <header>
+    <h1>WeeNAS Install Script Generator</h1>
+    <p>Fill out the config sheet. Be amazed as commands magically appear on the classic, green screen monitor.
+       Paste the commands into your terminal emulator to configure your Raspberry PI for WeeNAS.</p>
+  </header>
+
+  <main>
+    <h2 class="center">Configuration Options</h2>
+    <form action="javascript:copyScript();">
+
+      <details open>
+        <summary><b>Users</b> <span class="right-justify" id="user-summary"></span></summary>
+        <table>
+          <tr>
+            <td><label>Trusted Users</label></td>
+            <td><input id="user-trusted" onchange="users(); mail();" size="32" type="text" pattern="[a-z ]+"></td>
+          </tr>
+          <tr>
+            <td><label>Regular Users</label></td>
+            <td><input id="user-regular" onchange="users();" size="64" type="text" pattern="[a-z ]+"></td>
+          </tr>
+        </table>
+        <ul>
+          <li>Account names should be lowercase and separated by spaces.</li>
+          <li>Trusted users will be added to the wheel group and can su to root.</li>
+          <li>Default accounts freebsd and toor will be locked, so there must be at least one trusted user or you will lose access to root!</li>
+        </ul>
+      </details>
+
+      <details open>
+        <summary><b>Mail</b> <span class="right-justify" id="mail-summary"></span></summary>
+        <table>
+          <tr>
+            <td><label>System mail recipient</label></td>
+            <td><input id="mail-alias" onchange="mail();" size="16" type="text" pattern="[a-z]+"</td>
+          </tr>
+        </table>
+        <ul>
+          <li>One trusted user must be set up to receive system mail sent to root.</li>
+        </ul>
+      </details>
+
+      <details open>
+        <summary><b>Hostname</b> <span class='right-justify' id='hostname-summary'></span></summary>
+        <table>
+          <tr>
+            <td><label>Host Name</label></td>
+            <td><input id="hostname-host" onchange="hostname();" type="text" value="weenas"></td>
+          </tr>
+          <tr>
+            <td><label>Domain Name</label></td>
+            <td><input id="hostname-domain" onchange="hostname();" type="text" value="local"></td>
+          </tr>
+        </table>
+        <ul>
+          <li>Host name and domain name should be lowercase.</li>
+          <li>The dot will be automatically inserted between host and domain names.</li>
+          <li>If you do not have a domain name, leave it as 'local'.</li>
+          </li>
+        </ul>
+      </details>
+
+      <details open>
+        <summary><b>Time</b> <span class="right-justify" id="time-summary"></span></summary>
+        <table>
+          <tr>
+            <td><label>Timezone Path</label></td>
+            <td colspan="2">
+              <select id="time-area" onchange="tzUpdateLocations('time-area', 'time-location'); time();">
+                <option>Africa</option>
+                <option>America</option>
+                <option>Antarctica</option>
+                <option>Asia</option>
+                <option>Atlantic</option>
+                <option>Australia</option>
+                <option selected>Etc</option>
+                <option>Europe</option>
+                <option>Indian</option>
+                <option>Pacific</option>
+              </select>
+              /
+              <select id="time-location" onchange="time()">
+                <option>UTC</option>
+              </select>
+            </td>
+          </tr>
+        </table>
+        <ul>
+          <li>For the timezone path, choose the location closest to where you live.</li>
+        </ul>
+      </details>
+
+      <p class="reverse-divider">Any configuration below this point is optional and may be left at default values.</p>
+
+      <details>
+        <summary><b>Network</b> <span class="right-justify" id="network-summary"></span></summary>
+        <table>
+          <tr>
+            <td><label>Use automatic configuration (DHCP)?</label></td>
+            <td><select id="network-dhcp" onchange="network(); dns();">
+                <option>Yes</option>
+                <option>No</option>
+              </select></td>
+          </tr>
+        </table>
+
+        <!-- Hidden if DHCP. -->
+        <table id="network-static">
+          <tr>
+            <td><label>Interface Name</label></td>
+            <td><input id="network-interface" onchange="network();" type="text" value="ue0" readonly></td>
+          </tr>
+          <tr>
+            <td><label>IPv4 Address</label></td>
+            <td><input id="network-ip" onchange="network();" type="text" value="192.168.0.100"
+                pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td>
+          </tr>
+          <tr>
+            <td><label>Network Mask</label></td>
+            <td><input id="network-mask" onchange="network();" type="text" value="255.255.255.0"
+                pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td>
+          </tr>
+          <tr>
+            <td><label>Gateway</label></td>
+            <td><input id="network-gateway" onchange="network(); dns();" type="text" value="192.168.0.1"
+                pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td>
+          </tr>
+        </table>
+      </details>
+
+      <details>
+        <summary><b>DNS</b> <span class="right-justify" id="dns-summary"></span></summary>
+        <table>
+          <tr>
+            <td><label>DNS Provider</label></td>
+            <td>
+              <input id="dns-dhcp" name="dns-provider" type="radio" onchange="dns();">DHCP</input>
+              <input id="dns-router" name="dns-provider" type="radio" onchange="dns();">Router</input>
+              <input id="dns-google" name="dns-provider" type="radio" onchange="dns();">Google</input>
+              <input id="dns-opendns" name="dns-provider" type="radio" onchange="dns();">OpenDNS</input>
+              <input id="dns-other" name="dns-provider" type="radio" onchange="dns();">Other</input>
+            </td>
+          </tr>
+        </table>
+        <!-- Hidden if DHCP. -->
+        <table>
+          <tbody id="dns-static">
+            <tr>
+              <td><label>Primary DNS</label></td>
+              <td><input id="dns-primary" onchange="dns();" type="text" value="192.168.0.1"
+                  pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td>
+            </tr>
+            <tr>
+              <td><label>Secondary DNS</label></td>
+              <td><input id="dns-secondary" onchange="dns();" type="text"
+                  pattern="[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}"></td>
+            </tr>
+          <tbody>
+        </table>
+        <ul>
+          <li>If DHCP network configuration is chosen, DNS will also be DHCP.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary><b>Storage</b> <span class="right-justify" id="storage-summary"></span></summary>
+        <table>
+          <tr>
+            <td><label>Device Name</label></td>
+            <td><input id="storage-dev" onchange="storage();" type="text" value="da0" pattern="[a-z]{2}[0-9]{1}"></td>
+          </tr>
+          <tr>
+            <td><label>Filesystem Label</label></td>
+            <td><input id="storage-label" onchange="storage();" type="text" value="homefs" readonly></td>
+          </tr>
+          <tr>
+            <td><label>Mount Point</label></td>
+            <td><input id="storage-mount" onchange="storage();" type="text" value="/home" readonly></td>
+          </tr>
+        </table>
+        <ul>
+          <li>If an existing FreeBSD partition is found, the flash drive will be used as-is without overwriting.
+            Otherwise, the entire contents will be erased!</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary><b>Samba</b> <span class="right-justify" id="samba-summary"></span></summary>
+        <table>
+          <tr>
+            <td><label>Workgroup Name</label></td>
+            <td><input id="samba-workgroup" onchange="samba();" type="text" value="workgroup"></td>
+          </tr>
+          <tr>
+            <td><label>Home Directories</label></td>
+            <td><select id="samba-home" onchange="samba();">
+                <option>Yes</option>
+                <option>No</option>
+              </select></td>
+          </tr>
+          <tr>
+            <td><label>Shared Directory</label></td>
+            <td><select id="samba-shared" onchange="samba();">
+                <option>Yes</option>
+                <option>No</option>
+              </select></td>
+          </tr>
+        </table>
+      </details>
+
+<!-- TODO
+      <details>
+        <summary><b>Services</b> <span class="right-justify" id="services-summary"></span></summary>
+        <table>
+          <tr>
+            <td><input id="services-smtp" onchange="services();" type="checkbox" value="yes"></td>
+            <td><label>SMTP Email (Sendmail)</label></td>
+          </tr>
+          <tr>
+            <td><input id="services-pop3" onchange="services();" type="checkbox" value="yes"></td>
+            <td><label>POP3 Email</label></td>
+          </tr>
+          <tr>
+            <td><input id="services-www" onchange="services();" type="checkbox" value="yes"></td>
+            <td><label>Web Server (Apache)</label></td>
+          </tr>
+          <tr>
+            <td><input id="services-monit" onchange="services();" type="checkbox" value="yes"></td>
+            <td><label>System Monitoring (Monit)</label></td>
+          </tr>
+        </table>
+      </details>
+
+      <input class="right-justify" type="submit" value="Copy Script to Clipboard">
+-->
+    </form>
+  </main>
+
+  <aside>
+    <h2 class="center">Script Output</h2>
+    <!-- Treat this DIV like a PRE when it comes to whitespace, because that's the way it's styled. -->
+    <div id="script-output">
+#!/bin/sh
+# Auto-generated WeeNAS installer script.
+# https://davescodemusings.github.io/WeeNAS/
+# The following commands must be run as root.
+
+# Hostname
+<span id="hostname-commands"></span>
+# Network
+<span id="network-commands"></span>
+# DNS
+<span id="dns-commands"></span>
+# Time
+<span id="time-commands"></span>
+# Storage
+<span id="storage-commands"></span>
+# Samba
+<span id="samba-commands"></span>
+# Mail
+<span id="mail-commands"></span>
+<!-- TODO
+# Services
+<span id="services-commands"></span>
+-->
+# Users
+<span id="user-commands"></span>
+
+# Temporary password for first trusted user.
+head -1 /root/vault
+    </div>
+  </aside>
+
+  <footer>
+    <p>Visit the <a href="https://davescodemusings.github.io/WeeNAS/">WeeNAS Project Site</a> on GitHub.</p>
+  </footer>
+</body>
+
+</html>
