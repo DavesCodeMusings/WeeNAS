@@ -2,9 +2,6 @@
 * {
     box-sizing: border-box;
 }
-html {
-    background: #666666;
-}
 body {
     background: #FFFFFF;
     color: #333333;
@@ -14,17 +11,20 @@ body {
     max-width: 1280px;
 }
 header {
-    background: #cccccc;
+    background: #CCCCCC;
     border-bottom: 1px solid #666666;
     clear: both;
     padding: 0.5em;
     text-align: center;
 }
+nav, main, aside {
+    padding: 0.25em;
+}
 nav li {
     padding-top: 0.5em;
 }
 footer {
-    background: #cccccc;
+    background: #CCCCCC;
     border-top: 1px solid #666666;
     clear: both;
     font-size: smaller;
@@ -34,6 +34,9 @@ footer {
 
 /* Tweaks for tablets and larger. */
 @media screen and (min-width: 768px) {
+    html {
+        background: #666666;
+    }
     body {
         border-radius: 1em;
         box-shadow: 0 0 1em #333333;    
@@ -42,6 +45,9 @@ footer {
         border-radius: 1em 1em 0 0;
         padding: 2em;
     } 
+    header h1 {
+        font-size: 300%;
+    }
     footer {
         border-radius: 0 0 1em 1em;
         padding: 1em;
