@@ -1,7 +1,11 @@
-/* Minimal styling for mobile. */
+/* Same sizing rules for all browsers */
 * {
     box-sizing: border-box;
 }
+
+/* Start with styling for mobile. */
+
+/* Constrain width on anything wider than 720p (720x1280) */
 body {
     background: #FFFFFF;
     color: #333333;
@@ -10,62 +14,96 @@ body {
     margin-right: auto;
     max-width: 1280px;
 }
-header {
-    background: #CCCCCC;
-    border-bottom: 1px solid #666666;
-    clear: both;
-    padding: 0.5em;
-    text-align: center;
+
+/* Choose a link color to coordinate. Same as header/footer looks nice. */
+a {
+    color: firebrick;
 }
-nav, main, aside {
+
+/* Keep content away from the very edge of the screen. */
+header, nav, main, aside, footer {
     padding: 0.25em;
 }
-nav li {
+
+/* Adjust background: and color: to your liking. Clear right and left to keep
+   margins from creeping in. */
+header {
+    background: firebrick;
+    color: whitesmoke;
+    border-bottom: 1px solid #666666;
+    clear: both;
+    text-align: center;
+}
+
+/* Spread out lists of links a little more, making them easier to tap with
+   a touch screen. */
+nav li, aside li {
     padding-top: 0.5em;
 }
+
+/* Adjust color, same as header.  Shrink font for less prominence. */
 footer {
-    background: #CCCCCC;
+    background: firebrick;
+    color: whitesmoke;
     border-top: 1px solid #666666;
     clear: both;
     font-size: smaller;
-    padding: 0.25em;
     text-align: center;
 }
 
 /* Tweaks for tablets and larger. */
 @media screen and (min-width: 768px) {
+
+    /* Dark color for anything outside body to make page stand out. */
     html {
         background: #666666;
     }
+
+    /* Give the page a slightly rounded look with a little shadow. */
     body {
         border-radius: 1em;
         box-shadow: 0 0 1em #333333;    
     }
+
+    /* Mimic the rounding of the body, but just on the top.  More padding
+       makes header stand out. */
     header {
         border-radius: 1em 1em 0 0;
         padding: 2em;
-    } 
+    }
+
+    /* Make the title of the page bigger on bigger screens. */
     header h1 {
         font-size: 300%;
     }
-    footer {
-        border-radius: 0 0 1em 1em;
-        padding: 1em;
-    }
-    nav {
+
+    /* Nav and aside get a narrow slice of screen and float into position
+       as margins alongside the main content. Padding all around pushes them
+       away and slightly lower than main. */
+    nav, aside {
         float: left;
         max-width: 20%;
         padding: 1em;
     }
-    nav ul {
+    
+    /* Assuming links are organized in lists, this hides bullet points. */
+    nav ul, aside ul {
         list-style: none;
     }
+
+    /* Main gets the most screen area.  Padding on left and right keeps
+       content from bumping into margins, but no padding on top makes it
+       slightly higher than the margins, giving it more visual prominence. */
     main {
         float: left;
-        margin-left: 5%;
-        max-width: 50%;
+        max-width: 60%;
+        padding-left: 1em;
+        padding-right: 1em;
     }
+
+    /* Mimic the rounding of the body, but just on the bottom. */
     footer {
+        border-radius: 0 0 1em 1em;
         padding: 1em;
     }
 }
