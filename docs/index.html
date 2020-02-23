@@ -16,6 +16,9 @@
     <nav>
       <h2>Quick Links</h2>
       <ul>
+        <li>About</li>
+        <li><a href="prerequisites.html">Prerequisites</a></li>
+        <li><a href="initial-config.html">Initial configuration</a></li>
         <li><a href="https://github.com/DavesCodeMusings/WeeNAS/" target="_blank">WeeNAS GitHub Repo</a></li>
       </ul>
     </nav>
@@ -37,7 +40,7 @@
       <p>Personally, I created WeeNAS as a way to keep a second copy of the documents and other files I have on my PC.  The hardware is so inexpensive, I'm seriously considering building another, identical system with a scheduled rsync between them.</p>
       <p>In other words, I'm banking on having multiple copies of my important files in case something goes sideways, rather than a one copy on a single super-robust system.</p>
 
-      <h2>All of this and more!</h2>
+      <h2>DIY bliss and more!</h2>
       <p>WeeNAS is a do-it-yourself project lover's dream.  You supply the hardware, and WeeNAS guides you through the rest.</p>
       <p>WeeNAS will provide you with:</p>
       <ul>
@@ -46,41 +49,19 @@
         <li>Web-based administration system for day to day tasks (planning phase)</li>
       </ul>
 
-      <h2>System requirements</h2>
-      <p>Here's what you'll need for hardware:</p>
-      <ul>
-        <li>Raspberry Pi 2 Model B and suitable power supply</li>
-        <li>32G micro-sd card compatible with Raspberry Pi</li>
-        <li>A USB flash drive compatible with Raspberry Pi *</li>
-        <li>An Ethernet cable and home router with at least one free RJ-45 LAN connection</li>
-        <li>Optional, externally-powered spinning disk for backups</li>
-        <li>A client computer capable of attaching to SMB (CIFS) shares</li>
-      </ul>
-      <p>* The USB flash drive is where your home directories are stored.  Get the largest capacity that fits your budget.</p>
-
-
-      <h2>Client Software</h2>
-      <p>Here's what you'll need for software:</p>
-      <ul>
-        <li><a href="https://www.7-zip.org/" target="_blank">7-Zip</a> or similar tool to decompress the FreeBSD image file</li>
-        <li><a href="https://sourceforge.net/projects/win32diskimager/" target="blank">Win32DiskImager</a> or similar software to write the image file to the SD card</li>
-        <li><a href="https://angryip.org/" target="_blank">AngryIP Scanner</a> to help you find the DHCP address of your Raspberry Pi</li>
-        <li><a href="https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html" target="_blank">PuTTY</a> or other SSH client to log in for the initial configuration</li>
-      </ul>
-
-      <h2>Getting Started</h2>
-      <p>The first step is to assemble your hardware and download the latest <a href="https://ftp.freebsd.org/pub/FreeBSD/releases/ISO-IMAGES/" target="_blank">FreeBSD software image</a>.</p>
-      <p><i>Stay tuned for more...</i></p>
+      <h2>What are you waiting for?</h2>
+      <p>Get started by assembling your Raspberry Pi hardware and gathering the required software. It's all outlined in <a href="prerequisites.html">prerequisites</a>.</p>
     </main>
 
     <aside>
       <h2>Related Projects</h2>
-      <p>These are the pieces that WeeNAS depends upon.</p>
       <ul>
         <li><a href="https://www.raspberrypi.org/" target="_blank">Raspberry Pi Project</a></li>
         <li><a href="https://www.freebsd.org/platforms/arm.html" target="_blank">FreeBSD ARM Project</a></li>
         <li><a href="https://www.samba.org/" target="_blank">The Samba Project</a></li>
+        <li><a href="https://davescodemusings.github.io/tzText/" target="_blank">tzText</a></li>
       </ul>
+      <p>Without these projects, WeeNAS could not exist.</p>
     </aside>
 
     <footer>
