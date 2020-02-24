@@ -27,17 +27,18 @@
         <table>
           <tr>
             <td><label>Trusted Users</label></td>
-            <td><input id="user-trusted" onchange="users(); mail();" size="32" type="text" pattern="[a-z ]+"></td>
+            <td><input id="user-trusted" onchange="users(); mail();" size="32" type="text" pattern="[A-Za-z ]+"></td>
           </tr>
           <tr>
             <td><label>Regular Users</label></td>
-            <td><input id="user-regular" onchange="users();" size="64" type="text" pattern="[a-z ]+"></td>
+            <td><input id="user-regular" onchange="users();" size="64" type="text" pattern="[A-Za-z ]+"></td>
           </tr>
         </table>
         <ul>
-          <li>Account names should be lowercase and separated by spaces.</li>
+          <li>Account names should be separated by spaces.</li>
+          <li>Uppercase letters will be converted to lowercase for account names.</li>
           <li>Trusted users will be added to the wheel group and can su to root.</li>
-          <li>Default accounts freebsd and toor will be locked, so there must be at least one trusted user or you will lose access to root!</li>
+          <li>There must be at least one trusted user or you will lose access to root!</li>
         </ul>
       </details>
 
@@ -279,9 +280,6 @@
 -->
 # Users
 <span id="user-commands"></span>
-
-# Temporary password for first trusted user.
-head -1 /root/vault
     </div>
   </aside>
 

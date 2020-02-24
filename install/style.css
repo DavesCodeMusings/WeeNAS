@@ -5,7 +5,7 @@
 /* Elements */
 body {
   background: white;
-  color: dimgray;
+  color: black;
   font-family: sans-serif;
 }
 h1, h2, b {
@@ -36,7 +36,7 @@ summary {
   float: right;
 }
 .reverse-divider {
-  background: dimgray;
+  background: black;
   color: white;
   border: 1px solid black;
   box-shadow: 5px 5px 5px dimgray;
@@ -51,9 +51,9 @@ summary {
 }
 #script-output {
   background: darkgreen;
-  border: 3em solid #F5F5DC;
+  border: 3em solid beige;
   border-radius: 15px;
-  box-shadow: 5px 5px 5px #7F7F7F;
+  box-shadow: 5px 5px 5px dimgray;
   color: lime;
   font-family: monospace;
   overflow: auto;

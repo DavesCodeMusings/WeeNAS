@@ -49,31 +49,38 @@ function users() {
     var trusted = document.getElementById('user-trusted');
     var regular = document.getElementById('user-regular');
     warnBlank(trusted);
-    var summary = '<em>' + trusted.value + '</em> ' + regular.value;
-    var commands = 'pw group add -g 1000 shared\n';  /* user groups start at 1001 and go up, 1000 is unused. */
-
+    var summary = '<em>' + trusted.value.toLowerCase() + '</em> ' + regular.value.toLowerCase();
+    var commands = '\n# Creating shared group.\n';
+    commands += 'pw group add -g 1000 shared\n';  /* user groups start at 1001 and go up, 1000 is unused. */
+    commands += '\n# Creating trusted user accounts. These are the users that can su to root.\n';
     // .split(' ') on an empty string results in a length of 1, hence the conditional below.
     if (trusted.value) {
         var userList = trusted.value.split(' ');
         firstTrustedUser = userList[0];
         for (var i = 0; i < userList.length; i++) {
-            commands += 'pw user add -n ' + userList[i] + ' -c ' + userList[i] + ' -g ' + userList[i] + ' -G wheel,shared -w random >> /root/vault' + '\n';
+            commands += 'pw group add ' + userList[i].toLowerCase() + '\n';
+            commands += 'pw user add -m -p 01-Jan-1970 -n ' + userList[i] + ' -c ' + userList[i] + ' -g ' + userList[i] + ' -G wheel,shared -w random >> /root/vault' + '\n';
             commands += 'smbpasswd -a ' + userList[i] + '\n';
         }
     }
     else {
         commands += "\n# Check the configuration!  There must be at least one trusted user.\n"
     }
+    commands += '\n# Creating regular user accounts.\n';
     if (regular.value) {
         userList = regular.value.split(' ');
         for (var i = 0; i < userList.length; i++) {
-            commands += 'pw user add -n ' + userList[i] + ' -c ' + userList[i] + ' -g ' + userList[i] + ' -G shared -w random >> /root/vault' + '\n';
-            commands += 'smbpasswd -a ' + userList[i] + '\n';
+            commands += 'pw group add ' + userList[i].toLowerCase() + '\n';
+            commands += 'pw user add -m -p 01-Jan-1970 -n ' + userList[i].toLowerCase() + ' -c ' + userList[i] + ' -g ' + userList[i].toLowerCase() + ' -G shared -w random >> /root/vault' + '\n';
+            commands += 'smbpasswd -a ' + userList[i].toLowerCase() + '\n';
         }
     }
-    commands += 'chmod 400 /root/vault';
-    commands += 'pw lock toor';
-    commands += 'pw lock freebsd';
+    commands += '\n# Securing initial password vault and disabling built-in backdoor accounts.\n';
+    commands += 'chmod 400 /root/vault\n';
+    commands += 'pw lock toor\n';
+    commands += 'pw lock freebsd\n';
+    commands += '\n# Temporary passwords for users in the order they were created.\n';
+    commands += 'cat /root/vault\n';
     document.getElementById('user-summary').innerHTML = summary;
     document.getElementById('user-commands').innerHTML = commands;
 }
@@ -237,7 +244,7 @@ function mail() {
     var summary = '';
     var commands = '';
     if (!alias.value) {
-        alias.value = firstTrustedUser;
+        alias.value = firstTrustedUser.toLowerCase();
     }
     warnBlank(alias);
     summary += alias.value;
