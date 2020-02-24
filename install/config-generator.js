@@ -197,6 +197,10 @@ function storage() {
     commands += 'echo "/dev/ufs/' + label.value + ' ' + mount.value + ' ufs rw,noatime 0 0" >> /etc/fstab\n';
     commands += 'fsck -fpy /dev/ufs/homefs\n';
     commands += 'mount ' + label.value + '\n';
+    commands += '\n# Create a shared directory with sticky bit to help protect files.\n';
+    commands += 'mkdir /home/shared\n';
+    commands += 'chgrp 1000 /home/shared\n';
+    commands += 'chmod 1775 /home/shared\n';
     document.getElementById('storage-summary').innerHTML = summary;
     document.getElementById('storage-commands').innerHTML = commands;
 }
@@ -214,7 +218,7 @@ function samba() {
     commands += '  server string = %h\n';
     commands += '  security = user\n';
     if (home.value == 'Yes') {
-        summary += ' <i>username</i>';
+        summary += ' homes';
         commands += '[homes]\n';
         commands += '  comment = Home Directories\n';
         commands += '  browseable = no\n';
