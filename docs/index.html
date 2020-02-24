@@ -1,75 +1,85 @@
 <!DOCTYPE html>
 
 <html>
-  <head>
-    <title>WeeNAS Project</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="style.css" rel="stylesheet" type="text/css">
-  </head>
-  
-  <body>
-    <header>
-      <h1>WeeNAS</h1>
-      <p>Raspberry Pi + Flash Drive + FreeBSD + Samba</p>
-    </header>
-    <nav>
-      <h2>Quick Links</h2>
-      <ul>
-        <li>About</li>
-        <li><a href="prerequisites.html">Prerequisites</a></li>
-        <li><a href="initial-config.html">Initial configuration</a></li>
-        <li><a href="admin-cli.html">Command-line Administration</a></li>
-        <li><a href="admin-api.html">Administration via API</a></li>
-        <li><a href="https://github.com/DavesCodeMusings/WeeNAS/" target="_blank">WeeNAS GitHub Repo</a></li>
-      </ul>
-    </nav>
 
-    <main>
-      <h2>About</h2>
-      <p>The play on the FreeNAS name is intentional.  FreeNAS is an incredibly robust open-source network-attached storage software distribution based on FreeBSD and OpenZFS.  It also has correspondingly robust system requirements, and that in turn drives up the cost of ownership.</p>
-      <p>WeeNAS, on the other hand, eschews all that fancy, high-performance hardware and ZFS filesystem.  WeeNAS is designed to run on a cheap Raspberry Pi 2 and uses a UFS filesystem on a common USB flash drive for storage.</p>
+<head>
+  <title>WeeNAS Project</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="style.css" rel="stylesheet" type="text/css">
+</head>
 
-      <h2>Comparison to FreeNAS</h2>
-      <ul>
-        <li>Is WeeNAS faster?  No.</li>
-        <li>Is WeeNAS more fault tollerant?  No.</li>
-        <li>Should you entrust your most precious files to WeeNAS?  No.</li>
-      </ul>
+<body>
+  <header>
+    <h1>WeeNAS</h1>
+    <p>Raspberry Pi + Flash Drive + FreeBSD + Samba</p>
+  </header>
+  <nav>
+    <h2>Quick Links</h2>
+    <ul>
+      <li>About</li>
+      <li><a href="prerequisites.html">Prerequisites</a></li>
+      <li><a href="initial-config.html">Initial configuration</a></li>
+      <li><a href="admin-cli.html">Command-line Administration</a></li>
+      <li><a href="admin-api.html">Administration via API</a></li>
+      <li><a href="https://github.com/DavesCodeMusings/WeeNAS/" target="_blank">WeeNAS GitHub Repo</a></li>
+    </ul>
+  </nav>
 
-      <h2>So what is WeeNAS good for?</h2>
-      <p>WeeNAS is basically a network attached flash drive.  Use it like a flash drive.  Plus, it's fun to say.</p>
-      <p>Personally, I created WeeNAS as a way to keep a second copy of the documents and other files I have on my PC.  The hardware is so inexpensive, I'm seriously considering building another, identical system with a scheduled rsync between them.</p>
-      <p>In other words, I'm banking on having multiple copies of my important files in case something goes sideways, rather than a one copy on a single super-robust system.</p>
+  <main>
+    <h2>About</h2>
+    <p>The play on the <a href="https://www.freenas.org/" target="_blank">FreeNAS</a> name is intentional. FreeNAS is an
+      incredibly robust open-source network-attached storage software distribution based on FreeBSD and OpenZFS. It also
+      has correspondingly robust system requirements, and that in turn drives up the cost of ownership.</p>
+    <p>WeeNAS, on the other hand, eschews all that fancy, high-performance hardware and sets its sites on the inexpensive
+      Raspberry Pi with a UFS filesystem and common USB flash drive for storage.</p>
 
-      <h2>DIY bliss and more!</h2>
-      <p>WeeNAS is a do-it-yourself project lover's dream.  You supply the hardware, and WeeNAS guides you through the rest.</p>
-      <p>WeeNAS will provide you with:</p>
-      <ul>
-        <li>Easy to follow documentation to guide you on your journey. (Work in progress)</li>
-        <li>Customizable, automated install script to get you started quickly. (Work in progress)</li>
-        <li>REST API for easy management of the system without needing the command-line. (Planning phase)</li>
-        <li>Web-based administration pages communicating with REST API for day to day tasks. (Planning phase)</li>
-      </ul>
+    <h2>Comparison to FreeNAS</h2>
+    <ul>
+      <li>Is WeeNAS faster? No.</li>
+      <li>Is WeeNAS more fault tollerant? No.</li>
+      <li>Should you entrust your most precious files to WeeNAS? No.</li>
+    </ul>
 
-      <h2>What are you waiting for?</h2>
-      <p>Get started by assembling your Raspberry Pi hardware and gathering the required software. It's all outlined in <a href="prerequisites.html">prerequisites</a>.</p>
-    </main>
+    <h2>So what is WeeNAS good for?</h2>
+    <p>WeeNAS is basically a network attached flash drive. Use it like a flash drive.</p>
+    <p>Personally, I created WeeNAS as a way to keep a second copy of the documents and other files I have on my PC. The
+      hardware is so inexpensive, I'm seriously considering building another, identical system with a scheduled rsync
+      between them.</p>
+    <p>In other words, I'm banking on having multiple copies of my important files in case something goes sideways,
+      rather than a one copy on a single super-robust system.</p>
 
-    <aside>
-      <h2>Related Projects</h2>
-      <ul>
-        <li><a href="https://www.raspberrypi.org/" target="_blank">Raspberry Pi Project</a></li>
-        <li><a href="https://www.freebsd.org/platforms/arm.html" target="_blank">FreeBSD ARM Project</a></li>
-        <li><a href="https://www.samba.org/" target="_blank">The Samba Project</a></li>
-        <li><a href="https://davescodemusings.github.io/tzText/" target="_blank">tzText</a></li>
-      </ul>
-      <p>Without these projects, WeeNAS could not exist.</p>
-    </aside>
+    <h2>DIY bliss and more!</h2>
+    <p>WeeNAS is a do-it-yourself project lover's dream. You supply the hardware, and WeeNAS guides you through the
+      rest.</p>
+    <p>WeeNAS is in its infancy now, but soon it will provide you with:</p>
+    <ul>
+      <li>Easy to follow documentation to guide you on your journey. (Work in progress)</li>
+      <li>Customizable, automated install script to get you started quickly. (Finished but untested)</li>
+      <li>REST API for easy management of the system without needing the command-line. (Planning phase)</li>
+      <li>Web-based administration page leveraing REST API for day to day tasks. (Planning phase)</li>
+    </ul>
 
-    <footer>
-      <p>WeeNAS is not associated with, nor is it endorsed by: FreeNAS, the Raspberry Pi Foundation, FreeBSD, or the Samba project.</p>
-    </footer>
-  </body>
+    <h2>What are you waiting for?</h2>
+    <p>Get started by assembling your Raspberry Pi hardware and gathering the required software. It's all outlined in <a
+        href="prerequisites.html">prerequisites</a>.</p>
+  </main>
+
+  <aside>
+    <h2>Related Projects</h2>
+    <ul>
+      <li><a href="https://www.raspberrypi.org/" target="_blank">Raspberry Pi Project</a></li>
+      <li><a href="https://www.freebsd.org/platforms/arm.html" target="_blank">FreeBSD ARM Project</a></li>
+      <li><a href="https://www.samba.org/" target="_blank">The Samba Project</a></li>
+      <li><a href="https://davescodemusings.github.io/tzText/" target="_blank">tzText</a></li>
+    </ul>
+    <p>Without these projects, WeeNAS could not exist.</p>
+  </aside>
+
+  <footer>
+    <p>WeeNAS is not associated with, nor is it endorsed by: FreeNAS, the Raspberry Pi Foundation, FreeBSD, or the Samba
+      project.</p>
+  </footer>
+</body>
+
 </html>
-  
