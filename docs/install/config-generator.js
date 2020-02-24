@@ -23,12 +23,12 @@ function warnBlank(element) {
 }
 
 function hostname() {
-    var hostname = document.getElementById('hostname-host');
+    var host = document.getElementById('hostname-host');
     var domain = document.getElementById('hostname-domain');
-    warnBlank(hostname);
+    warnBlank(host);
     warnBlank(domain);
-    var summary = hostname.value + '.' + domain.value;
-    var commands = 'sysrc hostname="' + hostname.value + '.' + domain.value + '"\n';
+    var summary = host.value + '.' + domain.value;
+    var commands = 'sysrc hostname="' + host.value + '.' + domain.value + '"\n';
     document.getElementById('hostname-summary').innerHTML = summary;
     document.getElementById('hostname-commands').innerHTML = commands;
 }
@@ -37,10 +37,10 @@ function time() {
     var timezone = document.getElementById('time-area').value + '/' + document.getElementById('time-location').value;
     var summary = timezone;
     var commands = '';
-    commands += 'ntpd_enable="YES"\n'
+    commands += 'ntpd_enable="YES"\n';
     commands += 'ntpd_sync_on_start="YES"\n';
-    commands += 'cp /usr/share/zoneinfo/' + timezone + ' /etc/localtime\n'
-    commands += 'service ntpd start\n'
+    commands += 'cp /usr/share/zoneinfo/' + timezone + ' /etc/localtime\n';
+    commands += 'service ntpd start\n';
     document.getElementById('time-summary').innerHTML = summary;
     document.getElementById('time-commands').innerHTML = commands;
 }
@@ -53,14 +53,14 @@ function users() {
     var commands = '\n# Creating shared group.\n';
     commands += 'pw group add -g 1000 shared\n';  /* user groups start at 1001 and go up, 1000 is unused. */
     commands += '\n# Creating trusted user accounts. These are the users that can su to root.\n';
-    // .split(' ') on an empty string results in a length of 1, hence the conditional below.
+    /* .split(' ') on an empty string results in a length of 1, hence the conditional below. */
     if (trusted.value) {
         var userList = trusted.value.split(' ');
         firstTrustedUser = userList[0];
-        for (var i = 0; i < userList.length; i++) {
+        for (let i = 0; i < userList.length; i++) {
             commands += 'pw group add ' + userList[i].toLowerCase() + '\n';
-            commands += 'pw user add -m -p 01-Jan-1970 -n ' + userList[i] + ' -c ' + userList[i] + ' -g ' + userList[i] + ' -G wheel,shared -w random >> /root/vault' + '\n';
-            commands += 'smbpasswd -a ' + userList[i] + '\n';
+            commands += 'pw user add -m -p 01-Jan-1970 -n ' + userList[i].toLowerCase() + ' -c ' + userList[i] + ' -g ' + userList[i].toLowerCase() + ' -G wheel,shared -w random >> /root/vault' + '\n';
+            commands += 'smbpasswd -a -n ' + userList[i].toLowerCase() + '\n';
         }
     }
     else {
@@ -69,7 +69,7 @@ function users() {
     commands += '\n# Creating regular user accounts.\n';
     if (regular.value) {
         userList = regular.value.split(' ');
-        for (var i = 0; i < userList.length; i++) {
+        for (let i = 0; i < userList.length; i++) {
             commands += 'pw group add ' + userList[i].toLowerCase() + '\n';
             commands += 'pw user add -m -p 01-Jan-1970 -n ' + userList[i].toLowerCase() + ' -c ' + userList[i] + ' -g ' + userList[i].toLowerCase() + ' -G shared -w random >> /root/vault' + '\n';
             commands += 'smbpasswd -a ' + userList[i].toLowerCase() + '\n';
@@ -251,8 +251,8 @@ function mail() {
         alias.value = firstTrustedUser.toLowerCase();
     }
     warnBlank(alias);
-    summary += alias.value;
-    commands += 'sed -i~ \'s/^# root:.*/root: ' + firstTrustedUser + '/\' /etc/mail/aliases\n';
+    summary += alias.value.toLowerCase();
+    commands += 'sed -i~ \'s/^# root:.*/root: ' + alias.value.toLowerCase() + '/\' /etc/mail/aliases\n';
     commands += 'newaliases\n';
     document.getElementById('mail-summary').innerHTML = summary;
     document.getElementById('mail-commands').innerHTML = commands;
