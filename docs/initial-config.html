@@ -26,16 +26,18 @@
 
   <main>
     <h2>Initial Configuration</h2>
-    <p>In this section, we'll be using a Windows client computer to log into the Raspberry Pi using PuTTY and run an
-      initial set of commands to get the Pi into a state for serving up files. Don't worry, all the commands are
-      scripted out using a handy online configuration tool. Minimal brain cells are required.</p>
-    <p>If you haven't plugged in the flash drive yet, do it now.</p>
+    <p>In this section, we'll be logging into the Raspberry Pi with PuTTY on a Windows client. We'll then run an
+      initial set of commands that will get the Pi into a state for serving up files. Don't worry, all the commands
+      are scripted out using a handy online configuration tool. Only minimal system admin experience is required.</p>
+    <p>If you haven't plugged in the flash drive yet, do it now. Don't plug in any other storage devices at this time.
+    </p>
 
     <h2>Find the IP Address of Your Raspberry Pi</h2>
     <ol>
       <li>Start up Angry IP Scanner.</li>
       <li>Click Tools > Fetchers, from the menu bar.</li>
-      <li>Select MAC Vendor from Available Fetchers column and use the arrow to place move it to Selected Fetchers column.</li>
+      <li>Select MAC Vendor from Available Fetchers column and use the arrow to place move it to Selected Fetchers
+        column.</li>
       <li>Run a scan of your home network's IP range.</li>
       <li>Look in the MAC Vendor column of the output for Raspberry Pi Foundation.</li>
     </ol>
@@ -48,34 +50,53 @@
       <li>Click the Open button.</li>
       <li>Say yes to any messages about new host keys.</li>
       <li>Log in with the initial username/password combination of <em>freebsd/freebsd</em></li>
-      <li>Type su - and use the default root password of <em>root</em></li>
+      <li>Change to the root user with the command 'su -'. Use the default password of <em>root</em></li>
     </ol>
 
     <h2>Generate the Initial Configuration Script</h2>
     <ol>
       <li>Open the <a href="./install/index.html" target="_blank">WeeNAS Install web page</a>.</li>
-      <li>Type in the required trusted username(s) for anyone who will be administering WeeNAS.</li>
-      <li>Regular users can be added for anyone using WeeNAS for file storage who is not a system admin.</li>
-      <li>Browse the remaining options if you wish to customize the setup.</li>
+      <li>Type in the required trusted username(s) for anyone who will be administering WeeNAS. Uppercase letters are
+        okay, but accounts will be generated in lowercase.</li>
+      <li>Regular users can be added for anyone using WeeNAS for file storage who will not be performing system
+        administration.</li>
+      <li>Set the timezone to a location close to you. This will keep date-time stamps consistent with client machines.
+      </li>
+      <li>Browse the remaining options if you wish to customize the setup further.</li>
     </ol>
 
-    <p>All of the commands you need to configure WeeNAS are displayed on the green screen monitor of the installer web page.</p>
+    <p>All of the commands you need to configure WeeNAS are now displayed on the green screen monitor of the installer
+      web page. Keep this information handy or simply leave the configuration web page open for later reference.</p>
 
-    <h2>Configuring the Raspberry Pi</h2>
+    <h2>Configuring FreeBSD</h2>
+    <p>If you are familiar with Unix on the command-line, you may want to open a file on the Raspberry Pi, copy all of
+      the commands to it, and run it as a single script. You can also copy the commands, one at a time, from the
+      installer page and paste them into the PuTTY window.</p>
     <ol>
-      <li>If you are familiar with Unix on the command-line, you may want to open a file on the Raspberry Pi, copy all of the commands to it, and run it as a script.</li>
-      <li>You can also copy the commands, one at a time, from the installer page and paste them into the PuTTY window.</li>
-      <li>Pay close attention to the last command.  It will display the randomly assigned password for the first trusted user. <em>Remember this password!</em></li>
-      <li>When all of the commands have been run, you can log out of PuTTY with the command 'exit'.  If you changed to a static IP address, restart with 'shutdown -r now'.</li>
+      <li>Ensure you are logged in as root by running the command 'whoami'.</li>
+      <li>Run each of the commands from the install script on the Raspberry Pi via PuTTY.</li>
+      <li>Pay close attention to the last command. It will display the randomly assigned passwords for the trusted
+        users. <em>Remember these passwords!</em></li>
+      <li>When all of the commands have been run, you can log out of PuTTY with the command 'exit'. If you configured a
+        static IP address, restart with 'shutdown -r now'.</li>
     </ol>
 
-    <h2>Verify SSH Connectivity</h2>
+    <h2>Verify Access for Trusted User</h2>
     <ol>
       <li>Use PuTTY to once again connect to the Raspberry Pi.</li>
       <li>Log in with the first trusted user and the random password displayed by the previous steps.</li>
+      <li>Use the command 'su -' to switch to the root user.</li>
+      <li>This is a good time to change the root password using the 'passwd' command.</li>
     </ol>
 
-    <p><i>More to come...</i></p>
+    <h2>Verifying Access to CIFS (Samba) Shares</h2>
+    <ol>
+      <li>Open up This PC or File Explorer.</li>
+      <li>In the left side list, locate This PC.</li>
+      <li>Right-click on This PC and choose 'Add a network location' from the list of choices on the context menu.</li>
+      <li>More to come...</li>
+    </ol>
+
   </main>
 
   <footer>
