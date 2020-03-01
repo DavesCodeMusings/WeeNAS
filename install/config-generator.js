@@ -58,9 +58,8 @@ function users() {
         var userList = trusted.value.split(' ');
         firstTrustedUser = userList[0];
         for (let i = 0; i < userList.length; i++) {
-            commands += 'pw group add ' + userList[i].toLowerCase() + '\n';
-            commands += 'pw user add -m -p 01-Jan-1970 -n ' + userList[i].toLowerCase() + ' -c ' + userList[i] + ' -g ' + userList[i].toLowerCase() + ' -G wheel,shared -w random >> /root/vault' + '\n';
-            commands += 'smbpasswd -a -n ' + userList[i].toLowerCase() + '\n';
+            commands += 'smbpasswd -a ' + userList[i].toLowerCase() + '\n';
+            commands += 'pw user mod -G wheel ' + userList[i].toLowerCase() + '\n';
         }
     }
     else {
@@ -70,8 +69,6 @@ function users() {
     if (regular.value) {
         userList = regular.value.split(' ');
         for (let i = 0; i < userList.length; i++) {
-            commands += 'pw group add ' + userList[i].toLowerCase() + '\n';
-            commands += 'pw user add -m -p 01-Jan-1970 -n ' + userList[i].toLowerCase() + ' -c ' + userList[i] + ' -g ' + userList[i].toLowerCase() + ' -G shared -w random >> /root/vault' + '\n';
             commands += 'smbpasswd -a ' + userList[i].toLowerCase() + '\n';
         }
     }
@@ -212,11 +209,34 @@ function samba() {
     var summary = workgroup.value.toUpperCase();
     var commands = 'pkg install -y samba48\n';
     warnBlank(workgroup);
+    commands += '\n# Create user account helper scripts.\n';
+    commands += 'mkdir /root/weenas\n';
+    commands += 'cat << EOF > /root/weenas/smbuseradd.sh\n';
+    commands += '#!/bin/sh\n';
+    commands += 'pw groupadd $1 && pw useradd $1 -m -c $1 -g $1 -G shared -w random >>/root/vault\n';
+    commands += 'EOF\n';
+    commands += 'cat << EOF > /root/weenas/smbuserdel.sh\n';
+    commands += '#!/bin/sh\n';
+    commands += 'pw userdel $1\n';
+    commands += 'EOF\n';
+    commands += '\n# Create default password for new users.\n';
+    commands += 'cat << EOF > /root/weenas/defaultpass.sh\n';
+    commands += '#!/bin/sh\n';
+    commands += 'INITPASS=$(md5 -q -s $1 | sed \'s/MD5.* = //\')\n';
+    commands += 'echo $INITPASS';
+    commands += '[ -t 1 ] || echo $INITPASS  ## echo again if piped (eg. to smbpasswd -s)';
+    commands += 'EOF\n';
+    commands += '\n# Create a place to store first time passwords.\n';
+    commands += 'touch /root/vault\n';
+    commands += 'chmod 600 /root/vault\n';
+    commands += '\n# Create Samba config file.\n';
     commands += 'cat << EOF > /usr/share/etc/smb4.conf\n';
     commands += '[global]\n';
     commands += '  workgroup = ' + workgroup.value.toUpperCase() + '\n';
     commands += '  server string = %h\n';
     commands += '  security = user\n';
+    commands += '  add user script = /root/weenas/smbuseradd.sh %u\n';
+    commands += '  delete user script = /root/weenas/smbuserdel.sh %u\n';
     if (home.value == 'Yes') {
         summary += ' homes';
         commands += '[homes]\n';
@@ -258,34 +278,3 @@ function mail() {
     document.getElementById('mail-commands').innerHTML = commands;
 }
 
-/* TODO
-function services() {
-    var smtp = document.getElementById('services-smtp');
-
-    var pop3 = document.getElementById('services-pop3');
-    var www = document.getElementById('services-www');
-    var monit = document.getElementById('services-monit');
-    var summary = '';
-    var commands = '';
-    if (smtp.checked) {
-        summary += 'SMTP ';
-        commands += 'sysrc sendmail_enable="YES"\n';
-        commands += 'sysrc sendmail_msp_queue_enable="YES"\n';
-    }
-    if (pop3.checked) {
-        summary += 'POP3 ';
-    }
-    if (www.checked) {
-        summary += 'Web';
-    }
-    if (monit.checked) {
-        summary += 'Monit ';
-    }
-    summary += '</span>';
-    document.getElementById('services-summary').innerHTML = summary;
-    document.getElementById('services-commands').innerHTML = commands;
-}
-*/
-
-function copyScript() {
-}
