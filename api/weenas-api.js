@@ -12,7 +12,10 @@ var apiCmdPatternDict = {
   '^set user ([a-z0-9]+) locked$' : 'smbpasswd -d %1',
   '^set user ([a-z0-9]+) unlocked$' : 'smbpasswd -e %1',
   '^set user ([a-z0-9]+) default-passwd$' : '/root/weenas/defaultpass.sh %1 | smbpasswd -s %1',
-  '^del user ([a-z0-9]+)$' : 'smbpasswd -x %1'
+  '^del user ([a-z0-9]+)$' : 'smbpasswd -x %1',
+  '^get datetime$' : 'date -Iminutes',
+  '^set datetime (20[0-9][0-9]-(?:0[1-9]|1[0-2])-(?:0[1-9]|1[0-9]|3[0-1])T(?:[0-1][0-9]|2[0-3]):[0-5][0-9])$' : 'date -Iminutes %1',
+  '^set timezone ([A-Za-z]+/[A-Za-z]+)' : 'cp /usr/share/zoneinfo/%1 /etc/localtime'
 };
 
 // Parse and validate the command string sent in this format:
@@ -53,7 +56,7 @@ function stamp(msg) {
 // Create a Unix-domain IPC server to receive and execute commands.
 const server = net.createServer((c) => {
   console.log(stamp('Client connect.'));
-  c.write('READY\n> ');
+  c.write('READY.\n> ');
 
   c.on('data', (d) => {
     if (d.slice(-1) == '\n') d = d.slice(0, -1);  // like Perl chomp()
