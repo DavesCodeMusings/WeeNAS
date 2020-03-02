@@ -1,38 +1,84 @@
 <!DOCTYPE html>
 
 <html>
-  <head>
-    <title>WeeNAS Project</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="style.css" rel="stylesheet" type="text/css">
-  </head>
-  
-  <body>
-    <header>
-      <h1>WeeNAS</h1>
-      <p>Raspberry Pi + Flash Drive + FreeBSD + Samba</p>
-    </header>
-    <nav>
-      <h2>Navigation</h2>
-      <ul>
-        <li><a href="index.html">About</a></li>
-        <li><a href="prerequisites.html">Prerequisites</a></li>
-        <li><a href="initial-config.html">Initial configuration</a></li>
-        <li><a href="admin-cli.html">Command-line Administration</a></li>
-        <li>Administration via API</li>
-        <li><a href="https://github.com/DavesCodeMusings/WeeNAS/" target="_blank">WeeNAS GitHub Repo</a></li>
-      </ul>
-    </nav>
 
-    <main>
-      <h2>Administration via API</h2>
-      <p>Coming soon.</p>
-    </main>
+<head>
+  <title>WeeNAS Project</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="style.css" rel="stylesheet" type="text/css">
+</head>
 
-    <footer>
-      <p>WeeNAS is not associated with, nor is it endorsed by: FreeNAS, the Raspberry Pi Foundation, FreeBSD, or the Samba project.</p>
-    </footer>
-  </body>
+<body>
+  <header>
+    <h1>WeeNAS</h1>
+    <p>Raspberry Pi + Flash Drive + FreeBSD + Samba</p>
+  </header>
+  <nav>
+    <h2>Navigation</h2>
+    <ul>
+      <li><a href="index.html">About</a></li>
+      <li><a href="prerequisites.html">Prerequisites</a></li>
+      <li><a href="initial-config.html">Initial configuration</a></li>
+      <li><a href="admin-cli.html">Command-line Administration</a></li>
+      <li>Administration via API</li>
+      <li><a href="https://github.com/DavesCodeMusings/WeeNAS/" target="_blank">WeeNAS GitHub Repo</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <h2>Administration via API</h2>
+    <p>WeeNAS has an API, built on Node.js, that can be used to administer the system using a simple set of commands.
+      Administration can be performed by any of the trusted user accounts (those in the wheel group) and does not
+      require any knowledge of Samba or FreeBSD commands.</p>
+    <p>The admin API is incomplete at this time.</p>
+
+    <h2>Installing and Starting the API</h2>
+    <ol>
+      <li>Log in as a trusted user and su to root.</li>
+      <li>Install Node.js with the command 'pkg install node-13'.</li>
+      <li>Copy the weenas-api.js program into /root/weenas</li>
+      <li>Run 'node /root/weenas/weenas-api.js</li>
+    </ol>
+
+    <h2>Connecting to the API</h2>
+    <p>There is no client program as this time. Netcat is used in the interim.</p>
+    <ol>
+      <li>Log into the system as one of the trusted user accounts (member of the wheel group.)</li>
+      <li>'nc -U /var/run/weenas.sock' is the command to connect Netcat to the API's filesystem socket.</li>
+      <li>Commands that can be used are described below.</li>
+    </ol>
+
+    <h2>Commands</h2>
+    <p>All commands take on a form of <i>verb-noun</i> with the verb being the operation you are performing and the noun
+      being the system resource you are performing it on. There are also identifiers and states that come into play.</p>
+    <p>Most API commands are in a format like this: <i>operation resource identifier state</i>. Operations are new, get,
+      set, and del. Below are samples of common commands for user accounts.</p>
+    <ul>
+      <li>'new user cthulhu' creates an account for Cthulhu, the great old one.</li>
+      <li>'get user cthulhu' retrieves the great old one's account details.</li>
+      <li>'set user cthulhu default-password' resets the great old one's password to its initial default value.</li>
+      <li>'set user cthulhu locked' and 'set user cthulhu unlocked' lock and unlock, respectively.</li>
+      <li>'del user cthulhu' will delete the great old one's account.</li>
+    </ul>
+
+    <h2>Future Plans</h2>
+    <p>The next efforts for the API will be to include an HTML REST interface that can be used for web-based
+      administration.</p>
+  </main>
+
+  <aside>
+    <h2>Quick Links</h2>
+    <ul>
+      <li><a href="https://github.com/DavesCodeMusings/WeeNAS/tree/master/api" target="_blank">The WeeNAS API on
+          GitHub</a></li>
+    </ul>
+  </aside>
+
+  <footer>
+    <p>WeeNAS is not associated with, nor is it endorsed by: FreeNAS, the Raspberry Pi Foundation, FreeBSD, or the Samba
+      project.</p>
+  </footer>
+</body>
+
 </html>
-  

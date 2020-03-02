@@ -6,12 +6,13 @@ const socket = '/var/run/weenas.sock';
 
 // Command dictionary
 var apiCmdPatternDict = {
-  '^new user ([a-z0-9]+)' : '/root/weenas/defaultpass.sh %1 | smbpasswd -s -a %1',
-  '^get user ([a-z0-9]+)' : 'grep ^%1: /etc/passwd',
-  '^set user ([a-z0-9]+) locked' : 'smbpasswd -d %1',
-  '^set user ([a-z0-9]+) unlocked' : 'smbpasswd -e %1',
-  '^set user ([a-z0-9]+) default-passwd' : '/root/weenas/defaultpass.sh %1 | smbpasswd -s %1',
-  '^del user ([a-z0-9]+)' : 'smbpasswd -x %1'
+  '^new user ([a-z0-9]+)$' : '/root/weenas/defaultpass.sh %1 | smbpasswd -s -a %1',
+  '^get user$' : 'awk -F: \'{ if ($3>1001 && $3<32000) print $1 }\' /etc/passwd',
+  '^get user ([a-z0-9]+)$' : 'grep ^%1: /etc/passwd',
+  '^set user ([a-z0-9]+) locked$' : 'smbpasswd -d %1',
+  '^set user ([a-z0-9]+) unlocked$' : 'smbpasswd -e %1',
+  '^set user ([a-z0-9]+) default-passwd$' : '/root/weenas/defaultpass.sh %1 | smbpasswd -s %1',
+  '^del user ([a-z0-9]+)$' : 'smbpasswd -x %1'
 };
 
 // Parse and validate the command string sent in this format:
