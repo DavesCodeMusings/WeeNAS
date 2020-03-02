@@ -59,7 +59,7 @@ function users() {
         firstTrustedUser = userList[0];
         for (let i = 0; i < userList.length; i++) {
             commands += 'smbpasswd -a ' + userList[i].toLowerCase() + '\n';
-            commands += 'pw user mod -G wheel ' + userList[i].toLowerCase() + '\n';
+            commands += 'pw groupmod wheel -m ' + userList[i].toLowerCase() + '\n';
         }
     }
     else {
