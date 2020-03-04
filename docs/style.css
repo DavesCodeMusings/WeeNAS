@@ -32,6 +32,8 @@ h2, h3, h4, h5 {  /* h1 color is inherited from header, footer */
 
 /* Center the page. */
 body {
+    margin-top: 0px;
+    margin-bottom: 0px;
     margin-left: auto;
     margin-right: auto;
 }
@@ -93,6 +95,8 @@ footer {
     body {
         border-radius: 1em;
         box-shadow: 0 0 1em black;
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
         max-width: 1280px;
     }
 
