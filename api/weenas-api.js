@@ -6,7 +6,7 @@ const childProcess = require('child_process');
 const socket = '/var/run/weenas.sock';
 
 // Command dictionary
-var apiCmdPatternDict = {
+var apiCmdDict = {
   '^new user ([a-z0-9]+)$' : '/root/weenas/defaultpass.sh %1 | smbpasswd -s -a %1',
   '^get users$' : 'awk -F: \'{ if ($3>1001 && $3<32000) print $1 }\' /etc/passwd',
   '^get user ([a-z0-9]+)$' : 'grep ^%1: /etc/passwd',
@@ -16,33 +16,40 @@ var apiCmdPatternDict = {
   '^del user ([a-z0-9]+)$' : 'smbpasswd -x %1',
   '^get datetime$' : 'date -Iminutes',
   '^set datetime (20[0-9][0-9]-(?:0[1-9]|1[0-2])-(?:0[1-9]|1[0-9]|3[0-1])T(?:[0-1][0-9]|2[0-3]):[0-5][0-9])$' : 'date -Iminutes %1',
-  '^get timezone$' : 'ls -l localtime | awk \'{ print $NF }\' | sed \'s|/usr/share/zoneinfo/||\'',
+  '^get timezone$' : 'ls -l /etc/localtime | awk \'{ print $NF }\' | sed \'s|/usr/share/zoneinfo/||\'',
   '^set timezone ([A-Za-z]+/[A-Za-z]+)' : 'ln -s /usr/share/zoneinfo/%1 /etc/localtime',
-  '^get disks$': 'sysctl -n kern.geom.conftxt | grep DISK',
-  '^get disk (da[0-9]|mmcsd0)$': 'sysctl -n kern.geom.conftxt | grep %1 | grep PART',
-  '^get disk (da[0-9]|mmcsd0) part ([0-9])$': 'sysctl -n kern.geom.conftxt | grep %1p%2',
-  '^get disk (da[0-9]|mmcsd0) part ([0-9]) filesystem$': 'fstyp -l /dev/%1p%2 | awk \'{ print $1 }\'',
-  '^get disk (da[0-9]|mmcsd0) part ([0-9]) label$': 'fstyp -l /dev/%1p%2 | awk \'{ print $2 }\'',
-  '^get cpu temperature$' : 'sysctl -n dev.cpu.0.temperature'
+  '^get disks$': 'sysctl -n kern.geom.conftxt | awk \'/DISK/ { print $3 }\'',
+  '^get disk (da[0-9]|mmcsd0) size$': 'sysctl -n kern.geom.conftxt | awk \'/DISK %1/ { print $4 }\'',
+  '^get disk (da[0-9]|mmcsd0) parts$': 'sysctl -n kern.geom.conftxt | awk \'/PART %1/ { print $3 }\'',
+  '^get disk (da[0-9]|mmcsd0) part ([0-9]) size$': 'sysctl -n kern.geom.conftxt | awk \'/PART %1/ { print $4 }\'',
+  '^get disk (da[0-9]|mmcsd0) part ([0-9]) type$': 'sysctl -n kern.geom.conftxt | awk \'/PART %1/ { print $11 }\'',
+  '^get disk (da[0-9]|mmcsd0) part ([0-9]) filesystem$': 'sysctl -n kern.geom.conftxt | awk -F\'[ /]\' \'/PART da0p1/ { getline; print $3 }\'',  
+  '^get disk (da[0-9]|mmcsd0) part ([0-9]) filesystem label$': 'sysctl -n kern.geom.conftxt | awk -F\'[ /]\' \'/PART da0p1/ { getline; print $4 }\'',
+  '^get cpu temperature$' : 'sysctl -n dev.cpu.0.temperature',
+  '^get cpu type$' : 'sysctl -n hw.model | awk \'{ print $1 " " $2 }\'',
+  '^get load average$' : 'sysctl -n vm.loadavg | awk \'{ print $2 " " $3 " " $4 } \'',
+  '^get memory installed$' : 'sysctl -n hw.realmem',
+  '^get memory system$' : 'sysctl -n hw.usermem',
+  '^get memory free$' : 'sysctl -a vm.vmtotal | awk \'/Free Memory/{ print $3 }\''
 };
 
 // Parse and validate the command string sent in this format:
 // operation resource [identifier] [key=value]
-function parse(apiCmd) {
+function parse(input) {
   let result = 'SYNTAX ERROR.';  // Assume the worst.
   let shellCmd = '';
 
   // Parse user input by looping through available commands until a regex matches.
-  for (var cmdPattern in apiCmdPatternDict) {
-    if (apiCmd.match(cmdPattern)) {
+  for (var cmdPattern in apiCmdDict) {
+    if (input.match(cmdPattern)) {
 
       // Apply the matching regex pattern to the user input to capture group matches.
       let cmdPatternRegEx = new RegExp(cmdPattern);
-      let match = cmdPatternRegEx.exec(apiCmd);
-      console.log(stamp('Received: ' + apiCmd));
+      let match = cmdPatternRegEx.exec(input);
+      console.log(stamp('Received: ' + input));
 
       // Substitute regex group matches into shell command %1 and %2 place holders.
-      shellCmd = apiCmdPatternDict[cmdPattern];
+      shellCmd = apiCmdDict[cmdPattern];
       if (match[1]) shellCmd = shellCmd.replace(/%1/g, match[1]);
       if (match[2]) shellCmd = shellCmd.replace(/%2/g, match[2]);
       console.log(stamp('Running: ' + shellCmd));
