@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const net = require('net');
+const childProcess = require('child_process');
 
 const socket = '/var/run/weenas.sock';
 
@@ -21,7 +22,8 @@ var apiCmdPatternDict = {
   '^get disk (da[0-9]|mmcsd0)$': 'sysctl -n kern.geom.conftxt | grep %1 | grep PART',
   '^get disk (da[0-9]|mmcsd0) part ([0-9])$': 'sysctl -n kern.geom.conftxt | grep %1p%2',
   '^get disk (da[0-9]|mmcsd0) part ([0-9]) filesystem$': 'fstyp -l /dev/%1p%2 | awk \'{ print $1 }\'',
-  '^get disk (da[0-9]|mmcsd0) part ([0-9]) label$': 'fstyp -l /dev/%1p%2 | awk \'{ print $2 }\''
+  '^get disk (da[0-9]|mmcsd0) part ([0-9]) label$': 'fstyp -l /dev/%1p%2 | awk \'{ print $2 }\'',
+  '^get cpu temperature$' : 'sysctl -n dev.cpu.0.temperature'
 };
 
 // Parse and validate the command string sent in this format:
@@ -29,7 +31,6 @@ var apiCmdPatternDict = {
 function parse(apiCmd) {
   let result = 'SYNTAX ERROR.';  // Assume the worst.
   let shellCmd = '';
-  apiCmd = apiCmd.toString();
 
   // Parse user input by looping through available commands until a regex matches.
   for (var cmdPattern in apiCmdPatternDict) {
@@ -45,8 +46,10 @@ function parse(apiCmd) {
       if (match[1]) shellCmd = shellCmd.replace(/%1/g, match[1]);
       if (match[2]) shellCmd = shellCmd.replace(/%2/g, match[2]);
       console.log(stamp('Running: ' + shellCmd));
-      
-       result = 'OK.';
+
+      // Run the shell command, capturing stdout.
+      result = childProcess.execSync(shellCmd);
+      if (result.slice(-1) == '\n') result = result.slice(0, -1);  // like Perl chomp()
     }
   }
 
@@ -67,7 +70,7 @@ const server = net.createServer((c) => {
   // Send anything received to the command parser.
   c.on('data', (d) => {
     if (d.slice(-1) == '\n') d = d.slice(0, -1);  // like Perl chomp()
-    let response = parse(d);
+    let response = parse(d.toString());
     c.write(response + '\n> ');
   });
 
