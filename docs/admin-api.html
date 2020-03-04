@@ -51,20 +51,23 @@
 
     <h2>Commands</h2>
     <p>All commands take on a form of <i>verb-noun</i> with the verb being the operation you are performing and the noun
-      being the system resource you are performing it on. There are also identifiers and states that come into play.</p>
-    <p>Most API commands are in a format like this: <i>operation resource identifier state</i>. Operations are new, get,
-      set, and del. Below are samples of common commands for user accounts.</p>
+      being the system resource you are performing it on. The verbs are limited to the operations: new, get, set, and
+      delete. The noun potion is heirarchial in its structure and can get quite lengthy, particularly when it comes to
+      specifying disks and partitions.</p>
+    <p>Some samples of common commands are shown below.</p>
     <ul>
-      <li>'new user cthulhu' creates an account for Cthulhu, the great old one.</li>
-      <li>'get user cthulhu' retrieves the great old one's account details.</li>
-      <li>'set user cthulhu default-password' resets the great old one's password to its initial default value.</li>
-      <li>'set user cthulhu locked' and 'set user cthulhu unlocked' lock and unlock, respectively.</li>
+      <li>'new user cthulhu' creates a user account for Cthulhu.</li>
       <li>'del user cthulhu' will delete the great old one's account.</li>
+      <li>'get disks' shows all of the available storage devices by device name.</li>
+      <li>'get disk da0 part 1 filesystem label' would return the label associated with /dev/da0p1</li>
+      <li>'set disk da0 part 1 filesystem label homefs' would assign homefs to the filesytem on /dev/da0p1</li>
     </ul>
+    <p>The command interpreter is not very friendly. No help option is given and there is no command history.  This will
+      most likely be built into the client when it comes around.</p>
 
     <h2>Future Plans</h2>
-    <p>The next efforts for the API will be to include an HTML REST interface that can be used for web-based
-      administration.</p>
+    <p>The next efforts for the API will be focused on providing an HTML REST interface that can be used for web-based
+      administration.  Once that is complete, work on a web client and command-line client will follow.</p>
   </main>
 
   <aside>
