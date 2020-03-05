@@ -1,15 +1,19 @@
 'use strict';
 const fs = require('fs');
+const path = require('path');
 const net = require('net');
+const http = require('http');
 const childProcess = require('child_process');
 
 const socket = '/var/run/weenas.sock';
+const port = process.argv[2];  // TCP port to listen on, if given, otherwise unix socket only
+const ESYNTAX = 'SYNTAX ERROR.';
 
-// Command dictionary
+// Command Dictionary
 var apiCmdDict = {
   '^new user ([a-z0-9]+)$' : '/root/weenas/defaultpass.sh %1 | smbpasswd -s -a %1',
   '^get users$' : 'awk -F: \'{ if ($3>1001 && $3<32000) print $1 }\' /etc/passwd',
-  '^get user ([a-z0-9]+)$' : 'grep ^%1: /etc/passwd',
+  '^get user ([a-z0-9]+)$' : 'grep ^%1: /etc/passwd | tr ":" "\n"',
   '^set user ([a-z0-9]+) locked$' : 'smbpasswd -d %1',
   '^set user ([a-z0-9]+) unlocked$' : 'smbpasswd -e %1',
   '^set user ([a-z0-9]+) default-passwd$' : '/root/weenas/defaultpass.sh %1 | smbpasswd -s %1',
@@ -33,10 +37,18 @@ var apiCmdDict = {
   '^get memory free$' : 'sysctl -a vm.vmtotal | awk \'/Free Memory/{ print $3 }\''
 };
 
+// REST Dictionary
+var RESTMethodDict = {
+  'GET' : 'get',
+  'PUT' : 'set',
+  'POST' : 'new',
+  'DELETE' : 'del'
+}
+
 // Parse and validate the command string sent in this format:
-// operation resource [identifier] [key=value]
+// operation resource [identifier] [value]
 function parse(input) {
-  let result = 'SYNTAX ERROR.';  // Assume the worst.
+  let result = ESYNTAX;  // Assume the worst.
   let shellCmd = '';
 
   // Parse user input by looping through available commands until a regex matches.
@@ -69,7 +81,7 @@ function stamp(msg) {
   return d.toISOString() + ' ' + msg;
 }
 
-// Create a Unix-domain IPC server to receive and execute commands.
+// Create a Unix-domain API server to receive and execute commands.
 const server = net.createServer((c) => {
   console.log(stamp('Client connect.'));
   c.write('READY.\n> ');
@@ -86,7 +98,7 @@ const server = net.createServer((c) => {
   });
 });
 
-// Start listening on a socket restricted to user:group.
+// Start listening on a unix socket restricted to user:group.
 server.listen(socket, () => {
   fs.chmod(socket, 0o660, (e) => {
     if (e) throw e;
@@ -97,10 +109,62 @@ server.listen(socket, () => {
 // Error handler (specifically for stale socket due to unclean shutdown.)
 server.on('error', (e) => {
   if (e.code == 'EADDRINUSE')
-    console.error('Stale socket detected. Remove ' + e.address + ' and try again.'
-);
+    console.error('Stale socket detected. Remove ' + e.address + ' and try again.');
   else throw e;
 });
+
+// Start listening on a TCP port if a port number was given as a command-line parameter.
+if (port) {
+  const RESTServer = http.createServer((request, response) => {
+    let method = request.method.toString();
+    let urlPath = request.url.toString();
+
+    // Check if the request looks like '/page.html'.
+    let staticHTMLRegEx = new RegExp(/^\/([A-Za-z0-9]+\.html)$/);  // Matches file.html from /file.html
+    let match = staticHTMLRegEx.exec(urlPath);
+
+    // Requests like '/page.html' are served up from /root/weenas/html
+    // Everything else is processed like an API call.
+    if (method === 'GET' && match !== null) {
+      let filePath = path.join('/root/weenas/html' , match[0]);
+      if(fs.existsSync(filePath)) {
+        console.log(stamp('Serving page: ' + filePath));
+        let data = fs.readFileSync(filePath, 'utf-8');
+        response.writeHead(200, {'Content-Type': 'text/html'});
+        response.write(data);
+      }
+      else {
+        response.writeHead(404, {'Content-Type': 'text/plain'});
+        response.write('Sorry, Charlie.');          
+      }
+    }
+    else {
+
+      // Replace all forward slashes wih spaces and parse the command using these
+      // substitutions for verbs: POST = new, GET = get, PUT = set, DELETE = del.
+      let cmd = RESTMethodDict[method] + urlPath.replace(/\//g, ' ').trimEnd();
+      console.log(stamp('REST API: ' + method + ' ' + urlPath + ' => ' + cmd));
+      let result = parse(cmd);
+      if (result.includes(ESYNTAX) === false) {
+        response.writeHead(200, {'Content-Type': 'text/plain'}); 
+        response.write(result + '\r\n');
+      }
+      else {
+        response.writeHead(404, {'Content-Type': 'text/plain'});
+        response.write('Sorry, Charlie.');
+      }
+    }
+    response.end();
+  });
+  RESTServer.listen(port, () => {
+    console.log(stamp('Server listening on: tcp/' + port));
+  });
+  RESTServer.on('error', (e) => {
+    if (e.code == 'EADDRINUSE')
+      console.error('Port ' + port + ' in use. REST API not available.');
+    else throw e;
+  });
+}
 
 // Catch SIGINT and SIGTERM in order to exit cleanly.
 function sigHandler(s) {
