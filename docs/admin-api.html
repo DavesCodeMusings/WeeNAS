@@ -38,7 +38,7 @@
       <li>Log in as a trusted user and su to root.</li>
       <li>Install Node.js with the command 'pkg install node-13'.</li>
       <li>Copy the weenas-api.js program into /root/weenas</li>
-      <li>Run 'node /root/weenas/weenas-api.js</li>
+      <li>Run 'node /root/weenas/weenas-api.js'</li>
     </ol>
 
     <h2>Connecting to the API</h2>
@@ -46,7 +46,7 @@
     <ol>
       <li>Log into the system as one of the trusted user accounts (member of the wheel group.)</li>
       <li>'nc -U /var/run/weenas.sock' is the command to connect Netcat to the API's filesystem socket.</li>
-      <li>Commands that can be used are described below.</li>
+      <li>API commands that can be used are described below.</li>
     </ol>
 
     <h2>Commands</h2>
@@ -65,9 +65,26 @@
     <p>The command interpreter is not very friendly. No help option is given and there is no command history.  This will
       most likely be built into the client when it comes around.</p>
 
+    <h2>REST API</h2>
+    <p>The REST portion of the API is now complete.  It can be activated by supplying a port number when starting the API.
+      For example, 'node weenas-api.js 9000' will make the REST API available on tcp port 9000. Just point your web
+      browser there to access WeeNAS resources.</p>
+    <p>The REST API also takes on the <i>verb-noun</i> format with the verbs being supplied by the HTML method. An HTTP
+      GET corresponds to a get command when using the command-line API. As an example, the 'get disks' command issued to
+      the command-line API would show the names of storage devices installed.  Pointing a browser to http://wenass:9000/disks
+      would do the same thing.</p>
+    <p>Any 'get' command that can be issued to the command-line API can be used with the REST API and a browser.  Simply
+      type everything after the 'get' as a URL separated by slashes.  For example, http://weenas:9000/cpu/temperature will
+      return the temperature of the Raspberry Pi's CPU.  http://weenas:9000/disk/da0/part/1/filesystem/label will return
+      the label given to /dev/da0p1's filesystem.</p>
+    <p>Commands that involve the actions of new, set, or del correspond to the HTTP verbs POST, PUT and DELETE.  These can
+      currently only be issued by a tool like <a href="https://en.wikipedia.org/wiki/CURL" target="_blank">curl</a> and its
+      -X option to set the request type.  For example, 'curl -X POST http://127.0.0.1:9000/user/test' will create a new user
+      by the name of 'test'.  The forthcoming administration web page will allow this to be done in a browser.</p>
+
     <h2>Future Plans</h2>
-    <p>The next efforts for the API will be focused on providing an HTML REST interface that can be used for web-based
-      administration.  Once that is complete, work on a web client and command-line client will follow.</p>
+    <p>The next efforts will be focused on providing an HTML page for web-based administration and an authentication
+      mechanism to prevent accidental or malicious changes being made through the API.</p>
   </main>
 
   <aside>
