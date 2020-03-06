@@ -119,12 +119,13 @@ if (port) {
     let method = request.method.toString();
     let urlPath = request.url.toString();
 
-    // Check if the request looks like '/page.html'.
-    let staticHTMLRegEx = new RegExp(/^\/([A-Za-z0-9]+\.html)$/);  // Matches file.html from /file.html
-    let match = staticHTMLRegEx.exec(urlPath);
+    // Serve up an index.html if a blank path was given.
+    if (urlPath == '/') urlPath = '/index.html';
 
-    // Requests like '/page.html' are served up from /root/weenas/html
+    // Check for requests that look like '/file.ext'. These are served as static content.
     // Everything else is processed like an API call.
+    let staticHTMLRegEx = new RegExp(/^\/([A-Za-z0-9]+\.(?:html|css|js|ico|png|jpg))$/);
+    let match = staticHTMLRegEx.exec(urlPath);
     if (method === 'GET' && match !== null) {
       let filePath = path.join('/root/weenas/html' , match[0]);
       if(fs.existsSync(filePath)) {
