@@ -23,12 +23,17 @@ var apiCmdDict = {
   '^get timezone$' : 'ls -l /etc/localtime | awk \'{ print $NF }\' | sed \'s|/usr/share/zoneinfo/||\'',
   '^set timezone ([A-Za-z]+/[A-Za-z]+)' : 'ln -s /usr/share/zoneinfo/%1 /etc/localtime',
   '^get disks$': 'sysctl -n kern.geom.conftxt | awk \'/DISK/ { print $3 }\'',
-  '^get disk (da[0-9]|mmcsd0) size$': 'sysctl -n kern.geom.conftxt | awk \'/DISK %1/ { print $4 }\'',
-  '^get disk (da[0-9]|mmcsd0) partitions$': 'sysctl -n kern.geom.conftxt | awk \'/PART %1/ { print $3 }\'',
-  '^get disk (da[0-9]|mmcsd0) partition ([0-9]) size$': 'sysctl -n kern.geom.conftxt | awk \'/PART %1/ { print $4 }\'',
-  '^get disk (da[0-9]|mmcsd0) partition ([0-9]) type$': 'sysctl -n kern.geom.conftxt | awk \'/PART %1/ { print $11 }\'',
-  '^get disk (da[0-9]|mmcsd0) partition ([0-9]) filesystem$': 'sysctl -n kern.geom.conftxt | awk -F\'[ /]\' \'/PART da0p1/ { getline; print $3 }\'',  
-  '^get disk (da[0-9]|mmcsd0) partition ([0-9]) filesystem label$': 'sysctl -n kern.geom.conftxt | awk -F\'[ /]\' \'/PART da0p1/ { getline; print $4 }\'',
+  '^get disk (da[0-9])$' : 'dmesg | grep %1: | sed \'s/%1: //\'',
+  '^get disk (da[0-9]) size$': 'sysctl -n kern.geom.conftxt | awk \'/DISK %1/ { print $4 }\'',
+  '^get disk (da[0-9]) partitions$': 'sysctl -n kern.geom.conftxt | awk \'/PART %1/ { print $3 }\'',
+  '^get disk (da[0-9]) partition ([0-9])$' : 'sysctl -n kern.geom.conftxt | awk \'/%1p%2/ { print $4 " " $11 " " $13 }\'',
+  '^get disk (da[0-9]) partition ([0-9]) size$': 'sysctl -n kern.geom.conftxt | awk \'/PART %1p%2/ { print $4 }\'',
+  '^get disk (da[0-9]) partition ([0-9]) type$': 'sysctl -n kern.geom.conftxt | awk \'/PART %1p%2/ { print $11 }\'',
+  '^get disk (da[0-9]) partition ([0-9]) filesystem$': 'sysctl -n kern.geom.conftxt | awk -F\'[ /]\' \'/PART %1p%2/ { getline; print $3 }\'',  
+  '^get disk (da[0-9]) partition ([0-9]) filesystem label$': 'sysctl -n kern.geom.conftxt | awk -F\'[ /]\' \'/PART %1p%2/ { getline; print $4 }\'',
+  '^get filesystem ufs$' : 'ls -1 /dev/ufs',
+  '^get filesystem ufs ([a-z]+)$' : 'mount | grep ^/dev/ufs/%1',
+  '^get filesystem ufs ([a-z]+) mountpoint$' : 'mount | awk \'/^\\/dev\\/ufs\\/%1/ { print $3 }\'',
   '^get cpu temperature$' : 'sysctl -n dev.cpu.0.temperature',
   '^get cpu type$' : 'sysctl -n hw.model | awk \'{ print $1 " " $2 }\'',
   '^get load average$' : 'sysctl -n vm.loadavg | awk \'{ print $2 " " $3 " " $4 } \'',
@@ -122,9 +127,9 @@ if (port) {
     // Serve up an index.html if a blank path was given.
     if (urlPath == '/') urlPath = '/index.html';
 
-    // Check for requests that look like '/file.ext'. These are served as static content.
+    // Check for requests that look like '/page.html'. These are served as static pages.
     // Everything else is processed like an API call.
-    let staticHTMLRegEx = new RegExp(/^\/([A-Za-z0-9]+\.(?:html|css|js|ico|png|jpg))$/);
+    let staticHTMLRegEx = new RegExp(/^\/([A-Za-z0-9]+\.(?:html|ico|png|jpg))$/);  // Matches /file.ext
     let match = staticHTMLRegEx.exec(urlPath);
     if (method === 'GET' && match !== null) {
       let filePath = path.join('/root/weenas/html' , match[0]);
