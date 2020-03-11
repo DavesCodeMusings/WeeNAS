@@ -37,7 +37,7 @@ class AnalogGauge {
       scaleCenterX = width / 2;
       scaleCenterY = height / 2;
       radius = height / 2;
-      labelY = height * 0.75;
+      labelY = height * 0.85;
     }
     else if (height < width && !this.antiClockwise) {
       scaleZero = 1.25 * Math.PI;
@@ -94,7 +94,7 @@ class AnalogGauge {
     // Label it.
     context.beginPath();
     context.fillStyle = 'black';
-    context.textBaseline = 'middle';
+    context.textBaseline = 'bottom';
     context.textAlign = 'center';
     context.fillText(this.label, width / 2, labelY);
 

@@ -9,16 +9,13 @@
   <link href="style.css" rel="stylesheet" type="text/css">
   <style>
     details {
-      float: left;
       padding-bottom: 1em;
-      width: 320px;
     }
-    summary {
-      width: 320px;
-    }
-    #system-load, #top {
-      float: left;
+    main details, main summary {
       width: 640px;
+    }
+    aside details, aside summary {
+      width: 320px;
     }
   </style>
   <script src="htmlGauges.js"></script>
@@ -47,25 +44,45 @@
 </nav>
 
 <main>
+  <h2>System</h2>
   <details id="system-load" open>
     <summary>System Load</summary>
-    <canvas id="load-one" height=80 width=80 style="padding-bottom:25px;"></canvas>
-    <canvas id="load-five" height=80 width=80 style="padding-bottom:25px;"></canvas>
-    <canvas id="load-fifteen" height=80 width=80 style="padding-bottom:25px;"></canvas>
+    <canvas id="load-one" height=100 width=100 style="padding-bottom:25px;"></canvas>
+    <canvas id="load-five" height=100 width=100 style="padding-bottom:25px;"></canvas>
+    <canvas id="load-fifteen" height=100 width=100 style="padding-bottom:25px;"></canvas>
     <canvas id="cpu-use" height=200 width=200></canvas>
-    <canvas id="cpu-temp" height=80 width=80 style="padding-bottom:25px;"></canvas>
+    <canvas id="cpu-temp" height=100 width=100 style="padding-bottom:25px;"></canvas>
     <script>
       new AnalogGauge('load-one', '1m', 0.5);
       new AnalogGauge('load-five', '5m', 0.3);
       new AnalogGauge('load-fifteen', '15m', 0.2);
-      new AnalogGauge('cpu-use', '10% CPU', 0.1);
+      new AnalogGauge('cpu-use', 'CPU %', 0.1);
       new AnalogGauge('cpu-temp', 'CPU ℃', 0.34);
+    </script>
+  </details>
+
+  <details id="system-memory" open>
+    <summary>Memory</summary>
+    <canvas id="active" height=100 width=100 style="padding-bottom:25px;"></canvas>
+    <canvas id="inactive" height=100 width=100 style="padding-bottom:25px;"></canvas>
+    <canvas id="laundry" height=100 width=100 style="padding-bottom:25px;"></canvas>
+    <canvas id="wired" height=100 width=100 style="padding-bottom:25px;"></canvas>
+    <canvas id="buffer" height=100 width=100 style="padding-bottom:25px;"></canvas>
+    <canvas id="free" height=100 width=100 style="padding-bottom:25px;"></canvas>
+    <script>
+      new AnalogGauge('active', 'Active', 0.5);
+      new AnalogGauge('inactive', 'Inactive', 0.3);
+      new AnalogGauge('laundry', 'Laundry', 0.2);
+      new AnalogGauge('wired', 'Wired', 0.1);
+      new AnalogGauge('buffer', 'Buffer', 0.3);
+      new AnalogGauge('free', 'Free', 0.34);
     </script>
   </details>
 
   <details id="top">
     <summary>Top</summary>
     <pre>
+
 last pid:  3361;  load averages:  0.00,  0.00,  0.00  up 59+07:11:16    19:37:19
 30 processes:  1 running, 29 sleeping
 CPU:  0.0% user,  0.0% nice,  0.1% system,  0.0% interrupt,  0.0% idle
@@ -96,26 +113,47 @@ Swap:
 </main>
 
 <aside>
-  <details id="da0" >
-    <summary>Storage da0</summary>
-    <canvas id="da0-read" height=75 width=75 style="padding-bottom:20px;"></canvas>
-    <canvas id="da0-use" height=150 width=150></canvas>
-    <canvas id="da0-write" height=75 width=75 style="padding-bottom:20px;"></canvas>
+  <h2>Storage</h2>
+  <details id="rootfs">
+    <summary>rootfs on /</summary>
+    <canvas id="rootfs-use" height=200 width=200></canvas>
+    <script>
+      new AnalogGauge('rootfs-use', '% Full', 0.67);
+    </script>
+  </details>
+
+  <details id="homefs">
+    <summary>homefs on /home</summary>
+    <canvas id="homefs-use" height=200 width=200></canvas>
+    <script>
+      new AnalogGauge('homefs-use', '% Full', 0.34);
+    </script>
+  </details>
+
+  <details id="backupfs">
+    <summary>backupfs on /media/backup</summary>
+    <canvas id="backupfs-use" height=200 width=200></canvas>
+    <script>
+      new AnalogGauge('backupfs-use', '% Full', 0.85);
+    </script>
+  </details>
+
+  <details id="da0">
+    <summary>da0</summary>
+    <canvas id="da0-read" height=100 width=100></canvas>
+    <canvas id="da0-write" height=100 width=100></canvas>
     <script>
       new AnalogGauge('da0-read', 'Read', 0.1);
-      new AnalogGauge('da0-use', '34% Full', 0.34);
       new AnalogGauge('da0-write', 'Write', 0);
     </script>
   </details>
 
   <details id="da1">
-    <summary>Storage da1</summary>
-    <canvas id="da1-read" height=75 width=75 style="padding-bottom:20px;"></canvas>
-    <canvas id="da1-use" height=150 width=150></canvas>
-    <canvas id="da1-write" height=75 width=75 style="padding-bottom:20px;"></canvas>
+    <summary>da1</summary>
+    <canvas id="da1-read" height=100 width=100></canvas>
+    <canvas id="da1-write" height=100 width=100></canvas>
     <script>
       new AnalogGauge('da1-read', 'Read', 0);
-      new AnalogGauge('da1-use', '75% Full', 0.75);
       new AnalogGauge('da1-write', 'Write', 0.6);
     </script>
   </details>
