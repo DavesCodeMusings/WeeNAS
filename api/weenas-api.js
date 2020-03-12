@@ -34,9 +34,14 @@ var apiCmdDict = {
   '^get disk (da[0-9])p([0-9]) type$': 'sysctl -n kern.geom.conftxt | awk \'/PART %1p%2/ { print $11 }\'',
   '^get disk (da[0-9])p([0-9]) filesystem$': 'sysctl -n kern.geom.conftxt | awk -F\'[ /]\' \'/PART %1p%2/ { getline; print $3 }\'',  
   '^get disk (da[0-9])p([0-9]) filesystem label$': 'sysctl -n kern.geom.conftxt | awk -F\'[ /]\' \'/PART %1p%2/ { getline; print $4 }\'',
-  '^get disk filesystem ufs$' : 'ls -1 /dev/ufs',
-  '^get disk filesystem ufs ([a-z]+)$' : 'mount | grep ^/dev/ufs/%1',
-  '^get disk filesystem ufs ([a-z]+) mountpoint$' : 'mount | awk \'/^\\/dev\\/ufs\\/%1/ { print $3 }\'',
+  '^get filesystems$' : 'df -h | awk \'/^\\/dev/\'',
+  '^get filesystems ufs$' : 'df -h | awk \'/^\\/dev\\/ufs/\'',
+  '^get filesystem ufs ([a-z]+)$' : 'df -h | awk \'/^\\/dev\\/ufs\\/%1/\'',
+  '^get filesystem ufs ([a-z]+) size$' : 'df -h | awk \'/^\\/dev\\/ufs\\/%1/ { print $2 }\'',
+  '^get filesystem ufs ([a-z]+) used$' : 'df -h | awk \'/^\\/dev\\/ufs\\/%1/ { print $3 }\'',
+  '^get filesystem ufs ([a-z]+) available$' : 'df -h | awk \'/^\\/dev\\/ufs\\/%1/ { print $4 }\'',
+  '^get filesystem ufs ([a-z]+) capacity$' : 'df -h | awk \'/^\\/dev\\/ufs\\/%1/ { print $5 }\'',
+  '^get filesystem ufs ([a-z]+) mountpoint$' : 'df -h | awk \'/^\\/dev\\/ufs\\/%1/ { print $6 }\'',
   '^get system$' : 'sysctl -n hw.model | awk \'{ print $1 " " $2 }\'',
   '^get system cpu cores$' : 'sysctl -n hw.ncpu',
   '^get system cpu clock$' : 'sysctl -n hw.cpu.0.freq',
@@ -44,17 +49,26 @@ var apiCmdDict = {
   '^get system cpu iostat idle$' : 'iostat -x -C | awk \'FNR == 3 { print $5 }\'',
   '^get system cpu temperature$' : 'sysctl -n dev.cpu.0.temperature',
   '^get system load average$' : 'sysctl -n vm.loadavg | awk \'{ print $2 " " $3 " " $4 } \'',
-  '^get system memory installed$' : 'sysctl -n hw.realmem',
+  '^get system memory installed$' : 'sysctl -n hw.physmem',
   '^get system memory user$' : 'sysctl -n hw.usermem',
-  '^get system memory free$' : 'sysctl -a vm.vmtotal | awk \'/Free Memory/{ print $3 }\''
+  '^get system memory free$' : 'sysctl -a vm.vmtotal | awk \'/Free Memory/{ print $3 }\'',
+  '^get system top' : 'top -bt'
 };
 
-// REST Dictionary
-var RESTMethodDict = {
+// REST verb to API verb dictionary
+var restMethodDict = {
   'GET' : 'get',
   'PUT' : 'set',
   'POST' : 'new',
   'DELETE' : 'del'
+}
+
+// A minimal file extention to MIME type dictionary.
+var mimeTypeDict = {
+  'css' : 'text/css',
+  'html' : 'text/html',
+  'ico' : 'image/x-icon',
+  'js' : 'text/javascript'
 }
 
 // Parse and validate the command string sent in this format:
@@ -136,14 +150,14 @@ if (port) {
 
     // Check for requests that look like '/page.html'. These are served as static pages.
     // Everything else is processed like an API call.
-    let staticHTMLRegEx = new RegExp(/^\/([A-Za-z0-9]+\.(?:html|ico|png|jpg))$/);  // Matches /file.ext
-    let match = staticHTMLRegEx.exec(urlPath);
+    let staticFileRegEx = new RegExp(/^\/([A-Za-z0-9]+)\.(html|css|js|ico)$/);  // Matches /file.ext
+    let match = staticFileRegEx.exec(urlPath);
     if (method === 'GET' && match !== null) {
-      let filePath = path.join('/root/weenas/html' , match[0]);
+      let filePath = path.join('/root/weenas/html' , match[1] + '.' + match[2]);
       if(fs.existsSync(filePath)) {
-        console.log(stamp('Serving page: ' + filePath));
+        console.log(stamp('Serving file: ' + filePath + ' as ' + mimeTypeDict[match[2]]));
         let data = fs.readFileSync(filePath, 'utf-8');
-        response.writeHead(200, {'Content-Type': 'text/html'});
+        response.writeHead(200, {'Content-Type': mimeTypeDict[match[2]]});
         response.write(data);
       }
       else {
@@ -155,7 +169,7 @@ if (port) {
 
       // Replace all forward slashes wih spaces and parse the command using these
       // substitutions for verbs: POST = new, GET = get, PUT = set, DELETE = del.
-      let cmd = RESTMethodDict[method] + urlPath.replace(/\//g, ' ').trimEnd();
+      let cmd = restMethodDict[method] + urlPath.replace(/\//g, ' ').trimEnd();
       console.log(stamp('REST API: ' + method + ' ' + urlPath + ' => ' + cmd));
       let result = parse(cmd);
       if (result.includes(ESYNTAX) === false) {

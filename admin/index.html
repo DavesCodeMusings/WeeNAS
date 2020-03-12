@@ -17,36 +17,57 @@
     aside details, aside summary {
       width: 320px;
     }
+    .rt-just {
+      text-align: right;
+    }
   </style>
   <script src="htmlGauges.js"></script>
   <script>
-    /* Open up <details> on larger screens. */
-    function openDetails() {
-      let mediaQueryList = window.matchMedia('(min-width: 1024px)');
-      if (mediaQueryList.matches) {
-        let elements = document.getElementsByTagName('details');
-        for (let i=1; i<elements.length; i++) {
-          elements[i].setAttribute('open', '');
-        }
+    /* Figure out whence we came and put the hostname in the header. */
+    function showHostname () {
+      if (window.location.hostname) {
+        document.getElementById('hostname').innerHTML = window.location.hostname;
       }
     }
-  </script>
+
+    /* Open up <details> all at once. */
+    function openDetails() {
+      let elements = document.getElementsByTagName('details');
+      for (let i=1; i<elements.length; i++) {
+        elements[i].setAttribute('open', '');
+      }
+    }
+
+    /* AJAX statistic fetcher. */
+    function getStat(url, element) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById(element).innerHTML = this.responseText;
+        }
+      };
+      xhttp.open("GET", url, true);
+      xhttp.send();
+    }
+</script>
 </head>
 
-<body onload="openDetails();">
+<body onload="showHostname(); getStat('/system/memory/free', 'system-memory-summary'); getStat('/system/top', 'system-top');">
 <header>
-<h1>weenas.local</h1>
+<h1 id="hostname">WeeNAS</h1>
 </header>
 <nav>
-  <ul>
-    <li><a href="admin.html">Administrator Login</a></li>
-  </ul>
+  <p>
+    <a href="javascript:openDetails();">Expand All</a>
+    |
+    <a href="admin.html">Administrator Login</a>
+  </p>
 </nav>
 
 <main>
   <h2>System</h2>
-  <details id="system-load" open>
-    <summary>System Load</summary>
+  <details id="system-cpu-load" open>
+    <summary>CPU Load</summary>
     <canvas id="load-one" height=100 width=100 style="padding-bottom:25px;"></canvas>
     <canvas id="load-five" height=100 width=100 style="padding-bottom:25px;"></canvas>
     <canvas id="load-fifteen" height=100 width=100 style="padding-bottom:25px;"></canvas>
@@ -61,8 +82,8 @@
     </script>
   </details>
 
-  <details id="system-memory" open>
-    <summary>Memory</summary>
+  <details id="system-memory">
+    <summary>Memory <span id="system-memory-summary"></span> free</summary>
     <canvas id="active" height=100 width=100 style="padding-bottom:25px;"></canvas>
     <canvas id="inactive" height=100 width=100 style="padding-bottom:25px;"></canvas>
     <canvas id="laundry" height=100 width=100 style="padding-bottom:25px;"></canvas>
@@ -80,34 +101,8 @@
   </details>
 
   <details id="top">
-    <summary>Top</summary>
-    <pre>
-
-last pid:  3361;  load averages:  0.00,  0.00,  0.00  up 59+07:11:16    19:37:19
-30 processes:  1 running, 29 sleeping
-CPU:  0.0% user,  0.0% nice,  0.1% system,  0.0% interrupt,  0.0% idle
-Mem: 7836K Active, 480M Inact, 2004K Laundry, 204M Wired, 98M Buf, 96M Free
-Swap:
-    
-  PID USERNAME    THR PRI NICE   SIZE    RES STATE    C   TIME    WCPU COMMAND
- 3358 dave          1  27    0  5336K  2680K wait     3   0:00   0.98% sh
- 3357 dave          1  22    0    12M  7720K select   1   0:00   0.88% sshd
- 3355 root          1  38    0    12M  7700K select   2   0:00   0.68% sshd
-  904 root          1  22    0   160M   132M select   1  13:43   0.00% smbd
-  888 ntpd          1  20    0    11M    11M select   1   9:13   0.00% ntpd
-  900 root          1  20    0    27M  6580K select   0   5:05   0.00% nmbd
-  974 root          1  20    0  9020K  5344K select   0   4:29   0.00% sendmail
-  981 root          1  20    0  4832K  1392K nanslp   0   1:38   0.00% cron
-  820 root          1  20    0  4824K  2268K select   0   0:40   0.00% syslogd
- 1046 root          1  20    0   160M   131M select   0   0:32   0.00% smbd
- 1026 root          2  20    0   121M    91M select   2   0:20   0.00% smbd
-99729 root          1  20    0   163M   136M select   0   0:15   0.00% smbd
- 1045 root          1  20    0   119M    90M select   1   0:12   0.00% smbd
-  977 smmsp         1  20    0  8804K  1376K pause    3   0:09   0.00% sendmail
- 1009 root          1  21    0  4940K  2280K select   0   0:08   0.00% inetd
-  677 root          1  20    0  3928K   744K select   3   0:06   0.00% devd
-  599 root          1  52    0  5056K  2220K select   3   0:01   0.00% dhclient
-  961 root          1  20    0    11M  5124K select   3   0:01   0.00% sshd
+    <summary>Top Tasks</summary>
+    <pre id='system-top'>
     </pre>
   </details>
 </main>
