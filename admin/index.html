@@ -21,7 +21,8 @@
       text-align: right;
     }
   </style>
-  <script src="htmlGauges.js"></script>
+  <!-- Rounded270Gauge from https://davescodemusings.github.io/htmlGauges/ -->
+  <script src="Rounded270Gauge.js"></script>
   <script>
     /* Figure out whence we came and put the hostname in the header. */
     function showHostname () {
@@ -74,11 +75,11 @@
     <canvas id="cpu-use" height=200 width=200></canvas>
     <canvas id="cpu-temp" height=100 width=100 style="padding-bottom:25px;"></canvas>
     <script>
-      new AnalogGauge('load-one', '1m', 0.5);
-      new AnalogGauge('load-five', '5m', 0.3);
-      new AnalogGauge('load-fifteen', '15m', 0.2);
-      new AnalogGauge('cpu-use', 'CPU %', 0.1);
-      new AnalogGauge('cpu-temp', 'CPU ℃', 0.34);
+      new Rounded270Gauge('load-one', '1m', 0.5, true);
+      new Rounded270Gauge('load-five', '5m', 0.3, true);
+      new Rounded270Gauge('load-fifteen', '15m', 0.2, true);
+      new Rounded270Gauge('cpu-use', 'CPU %', 0.1, true);
+      new Rounded270Gauge('cpu-temp', 'CPU ℃', 0.34, true);
     </script>
   </details>
 
@@ -91,12 +92,12 @@
     <canvas id="buffer" height=100 width=100 style="padding-bottom:25px;"></canvas>
     <canvas id="free" height=100 width=100 style="padding-bottom:25px;"></canvas>
     <script>
-      new AnalogGauge('active', 'Active', 0.5);
-      new AnalogGauge('inactive', 'Inactive', 0.3);
-      new AnalogGauge('laundry', 'Laundry', 0.2);
-      new AnalogGauge('wired', 'Wired', 0.1);
-      new AnalogGauge('buffer', 'Buffer', 0.3);
-      new AnalogGauge('free', 'Free', 0.34);
+      new Rounded270Gauge('active', 'Active', 0.5, true);
+      new Rounded270Gauge('inactive', 'Inactive', 0.3, true);
+      new Rounded270Gauge('laundry', 'Laundry', 0.2, true);
+      new Rounded270Gauge('wired', 'Wired', 0.1, true);
+      new Rounded270Gauge('buffer', 'Buffer', 0.3, true);
+      new Rounded270Gauge('free', 'Free', 0.34, true);
     </script>
   </details>
 
@@ -113,7 +114,7 @@
     <summary>rootfs on /</summary>
     <canvas id="rootfs-use" height=200 width=200></canvas>
     <script>
-      new AnalogGauge('rootfs-use', '% Full', 0.67);
+      new Rounded270Gauge('rootfs-use', '% Full', 0.67, true);
     </script>
   </details>
 
@@ -121,7 +122,7 @@
     <summary>homefs on /home</summary>
     <canvas id="homefs-use" height=200 width=200></canvas>
     <script>
-      new AnalogGauge('homefs-use', '% Full', 0.34);
+      new Rounded270Gauge('homefs-use', '% Full', 0.34, true);
     </script>
   </details>
 
@@ -129,7 +130,7 @@
     <summary>backupfs on /media/backup</summary>
     <canvas id="backupfs-use" height=200 width=200></canvas>
     <script>
-      new AnalogGauge('backupfs-use', '% Full', 0.85);
+      new Rounded270Gauge('backupfs-use', '% Full', 0.85, true);
     </script>
   </details>
 
@@ -138,8 +139,8 @@
     <canvas id="da0-read" height=100 width=100></canvas>
     <canvas id="da0-write" height=100 width=100></canvas>
     <script>
-      new AnalogGauge('da0-read', 'Read', 0.1);
-      new AnalogGauge('da0-write', 'Write', 0);
+      new Rounded270Gauge('da0-read', 'Read', 0.1, true);
+      new Rounded270Gauge('da0-write', 'Write', 0, true);
     </script>
   </details>
 
@@ -148,8 +149,8 @@
     <canvas id="da1-read" height=100 width=100></canvas>
     <canvas id="da1-write" height=100 width=100></canvas>
     <script>
-      new AnalogGauge('da1-read', 'Read', 0);
-      new AnalogGauge('da1-write', 'Write', 0.6);
+      new Rounded270Gauge('da1-read', 'Read', 0, true);
+      new Rounded270Gauge('da1-write', 'Write', 0.6, true);
     </script>
   </details>
 </aside>
