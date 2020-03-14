@@ -11,14 +11,14 @@ const ESYNTAX = 'SYNTAX ERROR.';
 
 // Command Dictionary
 var apiCmdDict = {
-  '^new user ([a-z0-9]+)$' : '/root/weenas/defaultpass.sh %1 | smbpasswd -s -a %1',
-  '^get users$' : 'awk -F: \'{ if ($3>1001 && $3<32000) print $1 }\' /etc/passwd',
-  '^get user ([a-z0-9]+)$' : 'grep ^%1: /etc/passwd | tr ":" "\n"',
-  '^set user ([a-z0-9]+) locked$' : 'smbpasswd -d %1',
-  '^set user ([a-z0-9]+) unlocked$' : 'smbpasswd -e %1',
-  '^set user ([a-z0-9]+) default-passwd$' : '/root/weenas/defaultpass.sh %1 | smbpasswd -s %1',
+  '^new user ([a-z0-9]+)$' : './lib/defaultpass.sh %1 | smbpasswd -s -a %1',
+  '^get users$' : 'awk -F: \'BEGIN { printf "[ " } { if ($3>1001 && $3<32000) printf "%s\\"%s\\"", ($3==1002)?"":", ", $1 } END { printf " ]\\n" }\' /etc/passwd',
+  '^get user ([a-z0-9]+)$' : 'grep ^%1: /etc/passwd | awk  -F: \'{ printf "[ \\"%s\\", \\"%s\\", \\"%s\\", \\"%s\\", \\"%s\\", \\"%s\\", \\"%s\\" ]\\n", $1, $2, $3, $4, $5, $6, $7 }\'',
+  '^set user ([a-z0-9]+) disabled$' : 'smbpasswd -d %1',
+  '^set user ([a-z0-9]+) enabled$' : 'smbpasswd -e %1',
+  '^set user ([a-z0-9]+) default password$' : './lib/defaultpass.sh %1 | smbpasswd -s %1',
   '^del user ([a-z0-9]+)$' : 'smbpasswd -x %1',
-  '^get datetime$' : 'date -Iminutes',
+  '^get datetime$' : 'echo "\\"$(date -Iminutes)\\""',
   '^set datetime (20[0-9][0-9]-(?:0[1-9]|1[0-2])-(?:0[1-9]|1[0-9]|3[0-1])T(?:[0-1][0-9]|2[0-3]):[0-5][0-9])$' : 'date -Iminutes %1',
   '^get timezone$' : 'ls -l /etc/localtime | awk \'{ print $NF }\' | sed \'s|/usr/share/zoneinfo/||\'',
   '^set timezone ([A-Za-z]+/[A-Za-z]+)' : 'ln -s /usr/share/zoneinfo/%1 /etc/localtime',
@@ -34,7 +34,7 @@ var apiCmdDict = {
   '^get disk (da[0-9])p([0-9]) type$': 'sysctl -n kern.geom.conftxt | awk \'/PART %1p%2/ { print $11 }\'',
   '^get disk (da[0-9])p([0-9]) filesystem$': 'sysctl -n kern.geom.conftxt | awk -F\'[ /]\' \'/PART %1p%2/ { getline; print $3 }\'',  
   '^get disk (da[0-9])p([0-9]) filesystem label$': 'sysctl -n kern.geom.conftxt | awk -F\'[ /]\' \'/PART %1p%2/ { getline; print $4 }\'',
-  '^get filesystems$' : 'df -h | awk \'/^\\/dev/\'',
+  '^get filesystems$' : 'df -h | awk \'/^\\/dev|Filesystem/\'',
   '^get filesystems ufs$' : 'df -h | awk \'/^\\/dev\\/ufs/\'',
   '^get filesystem ufs ([a-z]+)$' : 'df -h | awk \'/^\\/dev\\/ufs\\/%1/\'',
   '^get filesystem ufs ([a-z]+) size$' : 'df -h | awk \'/^\\/dev\\/ufs\\/%1/ { print $2 }\'',
@@ -44,12 +44,13 @@ var apiCmdDict = {
   '^get filesystem ufs ([a-z]+) mountpoint$' : 'df -h | awk \'/^\\/dev\\/ufs\\/%1/ { print $6 }\'',
   '^get system$' : 'sysctl -n hw.model | awk \'{ print $1 " " $2 }\'',
   '^get system cpu cores$' : 'sysctl -n hw.ncpu',
-  '^get system cpu clock$' : 'sysctl -n hw.cpu.0.freq',
+  '^get system cpu speed$' : 'sysctl -n dev.cpu.0.freq',
   '^get system cpu iostats$' : 'iostat -C -x | awk \'FNR == 2; FNR ==3 { gsub("-", " "); print $0; }\'',
   '^get system cpu iostat idle$' : 'iostat -x -C | awk \'FNR == 3 { print $5 }\'',
   '^get system cpu temperature$' : 'sysctl -n dev.cpu.0.temperature',
-  '^get system load average$' : 'sysctl -n vm.loadavg | awk \'{ print $2 " " $3 " " $4 } \'',
-  '^get system memory installed$' : 'sysctl -n hw.physmem',
+  '^get system load$' : 'sysctl -n vm.loadavg | awk \'{ printf "[ %s, %s, %s ]\\n", $2, $3, $4 } \'',
+  '^get system memory available$' : 'sysctl -n hw.physmem',
+  '^get system memory installed$' : 'printf "\\"%1.f GB\\"\\n" $(echo "scale=2; $(sysctl -n hw.physmem) / 1073741824" | bc)',
   '^get system memory user$' : 'sysctl -n hw.usermem',
   '^get system memory free$' : 'sysctl -a vm.vmtotal | awk \'/Free Memory/{ print $3 }\'',
   '^get system top' : 'top -bt'
@@ -93,7 +94,7 @@ function parse(input) {
       console.log(stamp('Running: ' + shellCmd));
 
       // Run the shell command, capturing stdout.
-      result = childProcess.execSync(shellCmd);
+      result = childProcess.execSync(shellCmd, { cwd: __dirname });
       if (result.slice(-1) == '\n') result = result.slice(0, -1);  // like Perl chomp()
     }
   }
@@ -153,7 +154,7 @@ if (port) {
     let staticFileRegEx = new RegExp(/^\/([A-Za-z0-9]+)\.(html|css|js|ico)$/);  // Matches /file.ext
     let match = staticFileRegEx.exec(urlPath);
     if (method === 'GET' && match !== null) {
-      let filePath = path.join('/root/weenas/html' , match[1] + '.' + match[2]);
+      let filePath = path.join(__dirname, 'htdocs' , match[1] + '.' + match[2]);
       if(fs.existsSync(filePath)) {
         console.log(stamp('Serving file: ' + filePath + ' as ' + mimeTypeDict[match[2]]));
         let data = fs.readFileSync(filePath, 'utf-8');
