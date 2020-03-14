@@ -13,7 +13,7 @@ const ESYNTAX = 'SYNTAX ERROR.';
 var apiCmdDict = {
   '^new user ([a-z0-9]+)$' : './lib/defaultpass.sh %1 | smbpasswd -s -a %1',
   '^get users$' : 'awk -F: \'BEGIN { printf "[ " } { if ($3>1001 && $3<32000) printf "%s\\"%s\\"", ($3==1002)?"":", ", $1 } END { printf " ]\\n" }\' /etc/passwd',
-  '^get user ([a-z0-9]+)$' : 'grep ^%1: /etc/passwd | awk  -F: \'{ printf "[ \\"%s\\", \\"%s\\", \\"%s\\", \\"%s\\", \\"%s\\", \\"%s\\", \\"%s\\" ]\\n", $1, $2, $3, $4, $5, $6, $7 }\'',
+  '^get user ([a-z0-9]+)$' : 'awk -F: \'/^%1:/ { for(i=1;i<8;i++) printf "%s\\"%s\\"", (i==1)?"":", ", $i }\' /etc/passwd',
   '^get user ([a-z0-9]+) uid$' : 'awk -F: \'/^%1:/ { printf "\\"%s\\"", $3 }\' /etc/passwd',
   '^get user ([a-z0-9]+) gid$' : 'awk -F: \'/^%1:/ { printf "\\"%s\\"", $4 }\' /etc/passwd',
   '^get user ([a-z0-9]+) gecos$' : 'awk -F: \'/^%1:/ { printf "\\"%s\\"", $5 }\' /etc/passwd',
