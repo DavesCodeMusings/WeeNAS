@@ -138,9 +138,11 @@
     <summary>da0</summary>
     <canvas id="da0-read" height=100 width=100></canvas>
     <canvas id="da0-write" height=100 width=100></canvas>
+    <canvas id="da0-qlen" height=100 width=100></canvas>
     <script>
       new Rounded270Gauge('da0-read', 'Read', 0.1, true);
       new Rounded270Gauge('da0-write', 'Write', 0, true);
+      new Rounded270Gauge('da0-qlen', 'Queue', 0, true);
     </script>
   </details>
 
@@ -148,9 +150,11 @@
     <summary>da1</summary>
     <canvas id="da1-read" height=100 width=100></canvas>
     <canvas id="da1-write" height=100 width=100></canvas>
+    <canvas id="da1-qlen" height=100 width=100></canvas>
     <script>
       new Rounded270Gauge('da1-read', 'Read', 0, true);
       new Rounded270Gauge('da1-write', 'Write', 0.6, true);
+      new Rounded270Gauge('da1-qlen', 'Queue', 0, true);
     </script>
   </details>
 </aside>
