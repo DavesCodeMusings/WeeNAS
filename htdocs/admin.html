@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+
+<head>
+  <title>WeeNAS Administration</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="monitor.css" rel="stylesheet" type="text/css">
+  <style>
+    details {
+      padding-bottom: 1em;
+    }
+
+    main details,
+    main summary {
+      width: 320px;
+    }
+
+    aside details,
+    aside summary {
+      width: 320px;
+    }
+
+    .rt-just {
+      text-align: right;
+    }
+
+    #user-list {
+      padding-bottom: 1em;
+    }
+  </style>
+  <script>
+    /* Figure out whence we came and put the hostname in the header. */
+    function showHostname() {
+      if (window.location.hostname) {
+        document.getElementById('hostname').innerHTML = window.location.hostname;
+      }
+    }
+
+    /* Open up <details> all at once. */
+    function openDetails() {
+      let elements = document.getElementsByTagName('details');
+      for (let i = 0; i < elements.length; i++) {
+        elements[i].setAttribute('open', '');
+      }
+    }
+
+    /* AJAX user fetcher. */
+    function getUsers() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          let user_flags = JSON.parse(this.responseText);
+          let users = Object.keys(user_flags);
+          let enabledCount = 0;
+          let enabledList = '';
+          let disabledList = '';
+          for (let i = 0; i < users.length; i++) {
+            if (!user_flags[users[i]].includes('D')) {
+              enabledList += '<option>' + users[i] + '</option>';
+              enabledCount++;
+            }
+            else {
+              disabledList += '<option>' + users[i] + '</option>';
+            }
+          }
+          document.getElementById('user-total').innerHTML = ' (' + enabledCount + ' active)';
+          document.getElementById('user-enabled').size = Math.max(users.length, 5);
+          document.getElementById('user-enabled').innerHTML = enabledList;
+          document.getElementById('user-disabled').size = Math.max(users.length, 5);
+          document.getElementById('user-disabled').innerHTML = disabledList;
+        }
+      };
+      xhttp.open('GET', './users/flags', true);
+      xhttp.send();
+    }
+  </script>
+</head>
+
+<body onload="showHostname(); getUsers();">
+
+  <header>
+    <h1 id="hostname">WeeNAS</h1>
+  </header>
+  <nav>
+    <p>
+      <a href="javascript:openDetails();">Expand All</a>
+      |
+      <a href="monitor.html">Monitor</a>
+    </p>
+  </nav>
+
+  <main>
+    <h2>Administration</h2>
+
+    <details open>
+      <summary>Add Users</summary>
+      <form>
+        <table>
+          <tr>
+            <td><input type="text" size="50em"></td>
+            <td><button type="submit" style="color: green; width: 4em;" type="submit">&#x2714;</button></td>
+          </tr>
+        </table>
+      </form>
+      <p>Separate account names with spaces.</p>
+    </details>
+
+    <div>
+      <details open>
+        <summary>Current Accounts <span id="user-total"></span></summary>
+          <form>
+            <table>
+              <tr>
+                <td><select id="user-enabled" size=5 style="width: 10em;"></select></td>
+                <td><button type="button" style="width: 4em;" title="lock">&#x1f512;&#x276F;</button>
+                  <br>
+                  <button type="button" style="width: 4em;" title="unlock">&#x276E;&#x1f513;</button>
+                </td>
+                <td><select id="user-disabled" size=5 style="width: 10em;"></select></td>
+                <td><button onclick="alert('Are you sure?');"type="button" style="width: 4em;" title="delete">&#x274C;</button></td>
+              </tr>
+            </table>
+          </form>
+      </details>
+    </div>
+
+    <div>
+      <details>
+        <summary>Filesystems</summary>
+      </details>
+    </div>
+
+    <div>
+      <details>
+        <summary>System Time</summary>
+      </details>
+    </div>
+  </main>
+
+  <aside>
+    <h2>System Logs</h2>
+  </aside>
+
+  <footer>
+    <p><a href="https://davescodemusings.github.io/WeeNAS" target="_blank" style="color: whitesmoke;">WeeNAS = Raspberry
+        Pi + Flash Drive + FreeBSD + Samba</a></p>
+  </footer>
+
+</body>
+
+</html>
