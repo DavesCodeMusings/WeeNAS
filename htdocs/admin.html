@@ -81,15 +81,18 @@
     }
 
     /* AJAX mail fetcher. */
-    function getMail() {
+    function getMail(msgNum) {
+      let url = './system/mail';
+      if (typeof(msgNum) === 'number') url += '/' + msgNum;
+      url += '/raw';
       var xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-          let mailHeaders = this.responseText;
-          document.getElementById('mail').value = mailHeaders;
+          let mailMsg = this.responseText;
+          document.getElementById('mail').value = mailMsg;
         }
       };
-      xhttp.open('GET', './system/mail/raw', true);
+      xhttp.open('GET', url, true);
       xhttp.send();
     }
 
@@ -140,9 +143,12 @@
       <button onclick="getLog('nmbd');" type="button">Refresh</button>
     </details>
     <details>
-      <summary>Mail Headers</summary>
+      <summary>System Mail</summary>
       <textarea rows=25 cols=80 id="mail"></textarea>
-      <button onclick="getMail();" type="button">Refresh</button>
+      <button onclick="getMail();" type="button">Show Headers</button>
+      <input id="mail-msg-number" type="number" min=1 max=99 value=1>
+      <button onclick="getMail(parseInt(document.getElementById('mail-msg-number').value));" type="button">Read Message</button>
+      <button onclick="getMail(parseInt(++document.getElementById('mail-msg-number').value));" type="button">Next Message</button>
     </details>
   </main>
 
