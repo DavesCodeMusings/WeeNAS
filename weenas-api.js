@@ -18,8 +18,11 @@ const ESYNTAX = 'SYNTAX ERROR.';
  * @type {{apiCmd: string, shellCmd: string}} apiCmdDict
  */
 var apiCmdDict = {
-  '^get users$': 'pdbedit -L | awk -F: \'BEGIN { printf "[ " } { printf "%s\\"%s\\"", (NR==1)?"":", ", $1 } END { printf " ]" }\'',
+  '^get api pwd$' : 'echo "\\"' + __dirname + '\\""',
+  '^get users$': 'pdbedit -L | awk -F: \'BEGIN { print "[" } { printf "%s\\"%s\\"", (NR==1)?"":",\\n", $1 } END { printf "\\n]" }\'',
+  '^get users flags$' : 'pdbedit -L -v | awk -F\': *\' \'BEGIN { count=0; print "{" } /---------------/ { getline; printf "%s\\"%s\\" : ", (++count==1)?"":",\\n", $2; getline; getline; printf "\\"%s\\"", $2 } END { printf "\\n}" }\'',
   '^get user ([a-z0-9]+)$': 'pdbedit -L %1 | awk -F: \'{ printf "[ \\"%s\\", \\"%s\\", \\"%s\\" ]", $1, $2, $3 }\'',
+  '^get user ([a-z0-9]+) disabled$': 'pdbedit -L -v test | awk -F: \'/^Account Flags:/ { printf "%i", (index($2,"D")!=0) }\'',
   '^new user ([a-z0-9]+)$': './lib/defaultpass.sh %1 | smbpasswd -s -a %1',
   '^set user ([a-z0-9]+) disabled$': 'smbpasswd -d %1',
   '^set user ([a-z0-9]+) enabled$': 'smbpasswd -e %1',
@@ -61,6 +64,10 @@ var apiCmdDict = {
   '^get system cpu iostat idle$': 'iostat -Cx | awk \'FNR == 3 { printf "%s", $5 }\'',
   '^get system cpu temperature$': 'echo "\\"$(sysctl -n dev.cpu.0.temperature)\\""',
   '^get system load$': 'sysctl -n vm.loadavg | awk \'{ printf "[ %s, %s, %s ]\\n", $2, $3, $4 } \'',
+  '^get system log messages raw$' : 'cat /var/log/messages',
+  '^get system log nmbd raw$' : 'cat /var/log/samba4/log.nmbd',
+  '^get system log smbd raw$' : 'cat /var/log/samba4/log.smbd',
+  '^get system mail raw$' : 'mailx -H -u `awk -F\': *\' \'/^root:/ { print $2 }\' /etc/aliases`',
   '^get system memory nameplate$': 'printf "\\"%1.fG\\"\\n" $(echo "scale=2; $(sysctl -n hw.physmem) / 1073741824" | bc)',
   '^get system memory usable$': 'sysctl -n hw.physmem',
   '^get system memory user$': 'sysctl -n hw.usermem',
@@ -184,11 +191,11 @@ if (port) {
       if (fs.existsSync(filePath)) {
         console.log(stamp('Serving file: ' + filePath + ' as ' + mimeTypeDict[match[2]]));
         let data = fs.readFileSync(filePath, 'utf-8');
-        response.writeHead(200, { 'Content-Type': mimeTypeDict[match[2]] });
+        response.writeHead(200, { 'Content-Type': mimeTypeDict[match[2]] + '; charset=utf-8' });
         response.write(data);
       }
       else {
-        response.writeHead(404, { 'Content-Type': 'text/plain' });
+        response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
         response.write('Sorry, Charlie.');
       }
     }
@@ -200,11 +207,11 @@ if (port) {
       console.log(stamp('REST API: ' + method + ' ' + urlPath + ' => ' + cmd));
       let result = parse(cmd);
       if (result.includes(ESYNTAX) === false) {
-        response.writeHead(200, { 'Content-Type': 'text/plain' });
+        response.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
         response.write(result + '\r\n');
       }
       else {
-        response.writeHead(404, { 'Content-Type': 'text/plain' });
+        response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
         response.write('Sorry, Charlie.');
       }
     }

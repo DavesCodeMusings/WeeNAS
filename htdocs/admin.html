@@ -12,22 +12,26 @@
       padding-bottom: 1em;
     }
 
+    main {
+      float: left;
+      margin-right: 2em;
+      width: 50%;
+    }
+
     main details,
     main summary {
-      width: 320px;
+      width: 600px;
+    }
+
+    aside {
+      float: left;
+      margin-left: 1em;
+      width: 40%;
     }
 
     aside details,
     aside summary {
-      width: 320px;
-    }
-
-    .rt-just {
-      text-align: right;
-    }
-
-    #user-list {
-      padding-bottom: 1em;
+      width: 300px;
     }
   </style>
   <script>
@@ -51,13 +55,13 @@
       var xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-          let user_flags = JSON.parse(this.responseText);
-          let users = Object.keys(user_flags);
+          let userFlags = JSON.parse(this.responseText);
+          let users = Object.keys(userFlags);
           let enabledCount = 0;
           let enabledList = '';
           let disabledList = '';
           for (let i = 0; i < users.length; i++) {
-            if (!user_flags[users[i]].includes('D')) {
+            if (!userFlags[users[i]].includes('D')) {
               enabledList += '<option>' + users[i] + '</option>';
               enabledCount++;
             }
@@ -75,14 +79,41 @@
       xhttp.open('GET', './users/flags', true);
       xhttp.send();
     }
+
+    /* AJAX mail fetcher. */
+    function getMail() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          let mailHeaders = this.responseText;
+          document.getElementById('mail').value = mailHeaders;
+        }
+      };
+      xhttp.open('GET', './system/mail/raw', true);
+      xhttp.send();
+    }
+
+    /* AJAX log fetcher. */
+    function getLog(name) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          let logContents = this.responseText;
+          document.getElementById(name).value = logContents;
+        }
+      };
+      xhttp.open('GET', './system/log/' + name + '/raw', true);
+      xhttp.send();
+    }
   </script>
 </head>
 
-<body onload="showHostname(); getUsers();">
+<body onload="showHostname(); getUsers(); getMail(); getLog('messages'); getLog('smbd'); getLog('nmbd');">
 
   <header>
     <h1 id="hostname">WeeNAS</h1>
   </header>
+
   <nav>
     <p>
       <a href="javascript:openDetails();">Expand All</a>
@@ -92,8 +123,31 @@
   </nav>
 
   <main>
-    <h2>Administration</h2>
+    <h2>Logs &amp; Messages</h2>
+    <details open>
+      <summary>/var/log/messages</summary>
+      <textarea rows=25 cols=80  id="messages"></textarea>
+      <button onclick="getLog('messages');" type="button">Refresh</button>
+    </details>
+    <details>
+      <summary>/var/log/samba4/smbd.log</summary>
+      <textarea rows=25 cols=80  id="smbd"></textarea>
+      <button onclick="getLog('smbd');" type="button">Refresh</button>
+    </details>
+    <details>
+      <summary>/var/log/samba4/nmbd.log</summary>
+      <textarea rows=25 cols=80  id="nmbd"></textarea>
+      <button onclick="getLog('nmbd');" type="button">Refresh</button>
+    </details>
+    <details>
+      <summary>Mail Headers</summary>
+      <textarea rows=25 cols=80 id="mail"></textarea>
+      <button onclick="getMail();" type="button">Refresh</button>
+    </details>
+  </main>
 
+  <aside>
+    <h2>Administration</h2>
     <details open>
       <summary>Add Users</summary>
       <form>
@@ -137,10 +191,6 @@
         <summary>System Time</summary>
       </details>
     </div>
-  </main>
-
-  <aside>
-    <h2>System Logs</h2>
   </aside>
 
   <footer>
