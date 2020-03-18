@@ -33,6 +33,10 @@
     aside summary {
       width: 300px;
     }
+
+    button {
+      width: 4em;
+    }
   </style>
   <script>
     /* Figure out whence we came and put the hostname in the header. */
@@ -108,15 +112,16 @@
       xhttp.open('GET', './system/log/' + name + '/raw', true);
       xhttp.send();
     }
+
+    /* Current Mail Message Number */
+    mailMsgNum = 1;
   </script>
 </head>
 
-<body onload="showHostname(); getUsers(); getMail(); getLog('messages'); getLog('smbd'); getLog('nmbd');">
-
+<body onload="showHostname(); getUsers(); getMail(); getLog('messages'); getLog('smbd'); getLog('nmbd'); getLog('weenas');">
   <header>
     <h1 id="hostname">WeeNAS</h1>
   </header>
-
   <nav>
     <p>
       <a href="javascript:openDetails();">Expand All</a>
@@ -124,34 +129,37 @@
       <a href="monitor.html">Monitor</a>
     </p>
   </nav>
-
   <main>
     <h2>Logs &amp; Messages</h2>
     <details open>
       <summary>/var/log/messages</summary>
       <textarea rows=25 cols=80  id="messages"></textarea>
-      <button onclick="getLog('messages');" type="button">Refresh</button>
+      <button onclick="getLog('messages');" type="button">&#x21BB;</button>
     </details>
     <details>
       <summary>/var/log/samba4/smbd.log</summary>
       <textarea rows=25 cols=80  id="smbd"></textarea>
-      <button onclick="getLog('smbd');" type="button">Refresh</button>
+      <button onclick="getLog('smbd');" type="button">&#x21BB;</button>
     </details>
     <details>
       <summary>/var/log/samba4/nmbd.log</summary>
       <textarea rows=25 cols=80  id="nmbd"></textarea>
-      <button onclick="getLog('nmbd');" type="button">Refresh</button>
+      <button onclick="getLog('nmbd');" type="button">&#x21BB;</button>
+    </details>
+    <details>
+      <summary>/var/log/weenas_api.log</summary>
+      <textarea rows=25 cols=80  id="weenas"></textarea>
+      <button onclick="getLog('weenas');" type="button">&#x21BB;</button>
     </details>
     <details>
       <summary>System Mail</summary>
       <textarea rows=25 cols=80 id="mail"></textarea>
-      <button onclick="getMail();" type="button">Show Headers</button>
-      <input id="mail-msg-number" type="number" min=1 max=99 value=1>
-      <button onclick="getMail(parseInt(document.getElementById('mail-msg-number').value));" type="button">Read Message</button>
-      <button onclick="getMail(parseInt(++document.getElementById('mail-msg-number').value));" type="button">Next Message</button>
+      <button onclick="getMail(); mailMsgNum = 1;" title="Reload Headers" type="button">&#x21BB;</button>
+      <button onclick="getMail(mailMsgNum);" title="Switch to Message View" type="button">&#x1F4C4;</button>
+      <button onclick="mailMsgNum = Math.max(--mailMsgNum, 1); getMail(mailMsgNum);" title="Previous Message" type="button">&#x25B2;</button>
+      <button onclick="getMail(++mailMsgNum);" title="Next Message" type="button">&#x25BC;</button>
     </details>
   </main>
-
   <aside>
     <h2>Administration</h2>
     <details open>
@@ -166,7 +174,6 @@
       </form>
       <p>Separate account names with spaces.</p>
     </details>
-
     <div>
       <details open>
         <summary>Current Accounts <span id="user-total"></span></summary>
@@ -174,9 +181,9 @@
             <table>
               <tr>
                 <td><select id="user-enabled" size=5 style="width: 10em;"></select></td>
-                <td><button type="button" style="width: 4em;" title="lock">&#x1f512;&#x276F;</button>
+                <td><button type="button" style="width: 4em;" title="lock">&#x1F512;&#x276F;</button>
                   <br>
-                  <button type="button" style="width: 4em;" title="unlock">&#x276E;&#x1f513;</button>
+                  <button type="button" style="width: 4em;" title="unlock">&#x276E;&#x1F513;</button>
                 </td>
                 <td><select id="user-disabled" size=5 style="width: 10em;"></select></td>
                 <td><button onclick="alert('Are you sure?');"type="button" style="width: 4em;" title="delete">&#x274C;</button></td>
@@ -185,25 +192,21 @@
           </form>
       </details>
     </div>
-
     <div>
       <details>
         <summary>Filesystems</summary>
       </details>
     </div>
-
     <div>
       <details>
         <summary>System Time</summary>
       </details>
     </div>
   </aside>
-
   <footer>
     <p><a href="https://davescodemusings.github.io/WeeNAS" target="_blank" style="color: whitesmoke;">WeeNAS = Raspberry
         Pi + Flash Drive + FreeBSD + Samba</a></p>
   </footer>
-
 </body>
 
 </html>

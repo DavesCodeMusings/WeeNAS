@@ -67,14 +67,16 @@ The WeeNAS API commands are structured in a verb-noun syntax. The verbs are
 simple and consist of only get, set, new, and del.  The noun part consists
 of increasingly specific words to describe the resource. For example, disks
 refers to any storage devices plugged into the system, while disk da0 refers
-to a specific disk.  Also notice that 'disks', plural, will return a number
-of lines of information, whereas 'disk da0', singular, returns only one.
+to a specific disk.  All output is in JSON format unless the last noun word
+is 'raw'. It should also be noted that 'disks', plural, will return a multi-
+dimensional array of information, whereas 'disk da0', singular, returns only
+a single-dimensional one.
 
 When using a 'set' command, a state value is expected.  For example, 'set
 user bob locked'.
 
 The web-based REST API behaves the same way, but verbs are specified by the
-HTTP request.  The mapping of verbs is: GET to get, PUT to patch, POST to
+HTTP request.  The mapping of verbs is: GET to get, PUT to set, POST to
 new, and DELETE to del. The hierarchial noun string is separated by forward
 slashes rather than spaces.  For example, the command 'get datetime' becomes
 'http://wenas.local:9000/datetime'. The get operation is implied by the HTTP
