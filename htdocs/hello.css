@@ -49,6 +49,20 @@ a:hover {
     text-decoration: underline;
 }
 
+/* Force buttons wider than the one-character unicode symbol that labels them. */
+button {
+    width: 5em;
+  }
+
+/* Add more spacing between summary elements for easier touch screen access. */
+summary {
+    padding-bottom: 0.5em;
+    padding-top: 0.5em;}
+
+/* Soften the corners on form elements. */
+input, select, textarea {
+    border-radius: 5px;
+}
 /* Keep content away from the very edges of the screen. */
 header, nav, main, aside, footer {
     padding: 0.25em;
@@ -66,19 +80,6 @@ header {
 nav {
     padding-right: 1em;
     text-align: right;
-}
-
-/* Remove bullets from lists in the margins to save space. */
-nav ul, aside ul {
-    list-style: none;
-    padding-left: 0px;
-    width: 100%;
-}
-
-/* Spread out margin lists a little more (assuming they are lists of links)
-   making them easier to tap with a touch screen. */
-nav li, aside li {
-    padding-bottom: 1em;
 }
 
 /* Separate from body with a thin line.  Shrink font for less prominence. */
@@ -122,22 +123,8 @@ footer {
         font-size: 300%;
     }
 
-    /* Nav and aside get a narrow slice of screen and float into position
-       as margins areas alongside the main content. Padding all around pushes
-       their content away from edges and slightly lower than main. */
-    nav {
-        padding-top: 0em;
-        padding-bottom: 0em;
-    }
-    aside {
-        float: left;
-        padding: 1em;
-        width: 30%;
-    }
-    
-    /* Main gets the most screen area.  Padding on left and right keeps
-       content from bumping into margins, but no padding on top makes it
-       slightly higher than the margins, giving it more visual prominence. */
+    /* Main is on the left and gets a left margin to add some whitespace.
+       Padding on left and right keeps it away from aside element. */
     main {
         float: left;
         margin-left: 5%;
@@ -145,7 +132,21 @@ footer {
         padding-right: 1em;
         width: 60%;
     }
+    main.narrow {
+        width: 35%;
+    }
 
+    /* Aside is similar to main, except no left margin. */
+    aside {
+        float: left;
+        padding-left: 1em;
+        padding-right: 1em;
+        width: 30%;
+    }
+    aside.wide {
+        width: 55%;
+    }
+    
     /* Mimic the rounding of the body, but just on the bottom. */
     footer {
         border-radius: 0 0 1em 1em;

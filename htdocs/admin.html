@@ -6,38 +6,7 @@
   <title>WeeNAS Administration</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="monitor.css" rel="stylesheet" type="text/css">
-  <style>
-    details {
-      padding-bottom: 1em;
-    }
-
-    main {
-      float: left;
-      margin-right: 2em;
-      width: 50%;
-    }
-
-    main details,
-    main summary {
-      width: 600px;
-    }
-
-    aside {
-      float: left;
-      margin-left: 1em;
-      width: 40%;
-    }
-
-    aside details,
-    aside summary {
-      width: 300px;
-    }
-
-    button {
-      width: 4em;
-    }
-  </style>
+  <link href="hello.css" rel="stylesheet" type="text/css">
   <script>
     /* Figure out whence we came and put the hostname in the header. */
     function showHostname() {
@@ -54,29 +23,27 @@
       }
     }
 
-    /* AJAX user fetcher. */
+    /* AJAX fetch users */
     function getUsers() {
-      var xhttp = new XMLHttpRequest();
+      let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
           let userFlags = JSON.parse(this.responseText);
           let users = Object.keys(userFlags);
-          let enabledCount = 0;
           let enabledList = '';
           let disabledList = '';
           for (let i = 0; i < users.length; i++) {
             if (!userFlags[users[i]].includes('D')) {
               enabledList += '<option>' + users[i] + '</option>';
-              enabledCount++;
             }
             else {
               disabledList += '<option>' + users[i] + '</option>';
             }
           }
-          document.getElementById('user-total').innerHTML = ' (' + enabledCount + ' active)';
-          document.getElementById('user-enabled').size = Math.max(users.length, 5);
+          document.getElementById('user-total').innerHTML = users.length;
+          document.getElementById('user-enabled').size = Math.min(users.length, 10);
           document.getElementById('user-enabled').innerHTML = enabledList;
-          document.getElementById('user-disabled').size = Math.max(users.length, 5);
+          document.getElementById('user-disabled').size = Math.min(users.length, 10);
           document.getElementById('user-disabled').innerHTML = disabledList;
         }
       };
@@ -84,12 +51,119 @@
       xhttp.send();
     }
 
-    /* AJAX mail fetcher. */
+    /* AJAX add user(s) */
+    function addUsers(userList) {
+      if (userList) {
+        document.body.style.cursor = 'wait';
+        let users = userList.split(' ');
+        let xhttp = [];
+        for (let i = 0; i < users.length; i++) {
+          url = './user/' + users[i];
+          xhttp[i] = new XMLHttpRequest();
+          xhttp[i].onreadystatechange = function () {
+            if (xhttp[i].readyState === 4) {
+              document.body.style.cursor = 'default';
+              if (xhttp[i].status !== 200) alert('Error: ' + xhttp[i].responseText);
+            }
+          };
+          xhttp[i].open('POST', url, true);
+          xhttp[i].send('');
+        }
+      }
+    }
+
+    /* AJAX set user attribute (enable/disable) */
+    function setUser(user, attribute) {
+      if (user) {
+        document.body.style.cursor = 'wait';
+        url = './user/' + user + '/' + attribute;
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+          if (this.readyState === 4) {
+            document.body.style.cursor = 'default';
+            if (this.status !== 200) alert('Error: ' + this.responseText);
+          }
+        };
+        xhttp.open('PUT', url, true);
+        xhttp.send();
+      }
+    }
+
+    /* AJAX delete user */
+    function delUser(user) {
+      if (user) {
+        if (confirm('Permanently delete ' + user + '?')) {
+          document.body.style.cursor = 'wait';
+          url = './user/' + user;
+          let xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function () {
+            if (this.readyState === 4) {
+              document.body.style.cursor = 'default';
+              if (this.status !== 200) alert('Error: ' + this.responseText);
+            }
+          };
+          xhttp.open('DELETE', url, true);
+          xhttp.send();
+        }
+      }
+    }
+
+    /* Get service status and use it to fill element's innerHTML. */
+    function getServiceStatus(name, elementId) {
+      let url = './system/service/' + name;
+      let xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          if (this.status === 200) {
+            document.getElementById(elementId).innerHTML = JSON.parse(this.responseText);
+          }
+          else {
+            document.getElementById(elementId).innerHTML = "Not running.";
+          }
+        }
+      };
+      xhttp.open('GET', url, true);
+      xhttp.send();
+    }
+
+    /* Get server time and browser time, in UTC and to the nearest minute. */
+    function getDateTime() {
+      let xhttpTime = new XMLHttpRequest();
+      xhttpTime.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          if (this.status === 200) {
+            let serverDateTime = this.responseText;
+            document.getElementById('time-server').value = JSON.parse(serverDateTime);
+          }
+          else {
+            document.getElementById('time-server').value = "yyyy-mm-ddThh:mmZ";
+          }
+        }
+      };
+      xhttpTime.open('GET', './datetime', true);
+      xhttpTime.send();
+
+      // Report on ntpd service.
+      getServiceStatus('ntpd', 'time-ntpd');
+
+      // Create an ISO-8601 date rounded to the nearest minute to match server format.
+      let d = new Date();
+      let formattedDate = d.getUTCFullYear()
+        + '-' + ('0' + (d.getUTCMonth() + 1)).slice(-2)
+        + '-' + ('0' + d.getUTCDate()).slice(-2)
+        + 'T' + ('0' + d.getUTCHours()).slice(-2)
+        + ':' + ('0' + d.getUTCMinutes()).slice(-2)
+        + 'Z';
+      document.getElementById('time-browser').value = formattedDate;
+    }
+
+    /* AJAX fetch mail by message ID. No ID or ID=0 will fetch headers.*/
     function getMail(msgNum) {
       let url = './system/mail';
-      if (typeof(msgNum) === 'number') url += '/' + msgNum;
+      if (typeof (msgNum) === 'number' && msgNum > 0) url += '/' + msgNum;
+      else mailMsgNum = 0;
       url += '/raw';
-      var xhttp = new XMLHttpRequest();
+      let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
           let mailMsg = this.responseText;
@@ -100,28 +174,35 @@
       xhttp.send();
     }
 
+    /* Current mail message number */
+    mailMsgNum = 0;
+
     /* AJAX log fetcher. */
     function getLog(name) {
-      var xhttp = new XMLHttpRequest();
+      let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
+        if (this.readyState === 4 && this.status === 200) {
           let logContents = this.responseText;
-          document.getElementById(name).value = logContents;
+          let e = document.getElementById('log-viewer');
+          e.value = logContents;
+          e.scrollTop = e.scrollHeight;
         }
       };
       xhttp.open('GET', './system/log/' + name + '/raw', true);
       xhttp.send();
     }
 
-    /* Current Mail Message Number */
-    mailMsgNum = 1;
+    /* Current log file name */
+    logFileName = "messages";
+
   </script>
 </head>
 
-<body onload="showHostname(); getUsers(); getMail(); getLog('messages'); getLog('smbd'); getLog('nmbd'); getLog('weenas');">
+<body onload="showHostname();">
   <header>
     <h1 id="hostname">WeeNAS</h1>
   </header>
+
   <nav>
     <p>
       <a href="javascript:openDetails();">Expand All</a>
@@ -129,80 +210,96 @@
       <a href="monitor.html">Monitor</a>
     </p>
   </nav>
-  <main>
-    <h2>Logs &amp; Messages</h2>
-    <details open>
-      <summary>/var/log/messages</summary>
-      <textarea rows=25 cols=80  id="messages"></textarea>
-      <button onclick="getLog('messages');" type="button">&#x21BB;</button>
-    </details>
-    <details>
-      <summary>/var/log/samba4/smbd.log</summary>
-      <textarea rows=25 cols=80  id="smbd"></textarea>
-      <button onclick="getLog('smbd');" type="button">&#x21BB;</button>
-    </details>
-    <details>
-      <summary>/var/log/samba4/nmbd.log</summary>
-      <textarea rows=25 cols=80  id="nmbd"></textarea>
-      <button onclick="getLog('nmbd');" type="button">&#x21BB;</button>
-    </details>
-    <details>
-      <summary>/var/log/weenas_api.log</summary>
-      <textarea rows=25 cols=80  id="weenas"></textarea>
-      <button onclick="getLog('weenas');" type="button">&#x21BB;</button>
-    </details>
-    <details>
-      <summary>System Mail</summary>
-      <textarea rows=25 cols=80 id="mail"></textarea>
-      <button onclick="getMail(); mailMsgNum = 1;" title="Reload Headers" type="button">&#x21BB;</button>
-      <button onclick="getMail(mailMsgNum);" title="Switch to Message View" type="button">&#x1F4C4;</button>
-      <button onclick="mailMsgNum = Math.max(--mailMsgNum, 1); getMail(mailMsgNum);" title="Previous Message" type="button">&#x25B2;</button>
-      <button onclick="getMail(++mailMsgNum);" title="Next Message" type="button">&#x25BC;</button>
-    </details>
-  </main>
-  <aside>
+
+  <main class="narrow">
     <h2>Administration</h2>
-    <details open>
-      <summary>Add Users</summary>
+    <details>
+      <summary>&#x1F464;&#x2795; Add User Accounts</summary>
       <form>
         <table>
           <tr>
-            <td><input type="text" size="50em"></td>
-            <td><button type="submit" style="color: green; width: 4em;" type="submit">&#x2714;</button></td>
+            <td><input id='user-list' type="text" size="40em" maxlength="60" pattern="[a-z0-9 ]+"
+                placeholder="Lowercase only. Separate with spaces."></td>
+            <td><button onclick="addUsers(document.getElementById('user-list').value)" style="color: green"
+                type="button">&#x2714;</button>
+            </td>
           </tr>
         </table>
       </form>
-      <p>Separate account names with spaces.</p>
     </details>
     <div>
-      <details open>
-        <summary>Current Accounts <span id="user-total"></span></summary>
-          <form>
-            <table>
-              <tr>
-                <td><select id="user-enabled" size=5 style="width: 10em;"></select></td>
-                <td><button type="button" style="width: 4em;" title="lock">&#x1F512;&#x276F;</button>
-                  <br>
-                  <button type="button" style="width: 4em;" title="unlock">&#x276E;&#x1F513;</button>
-                </td>
-                <td><select id="user-disabled" size=5 style="width: 10em;"></select></td>
-                <td><button onclick="alert('Are you sure?');"type="button" style="width: 4em;" title="delete">&#x274C;</button></td>
-              </tr>
-            </table>
-          </form>
+      <details>
+        <summary onclick="getUsers();">&#x1F464;&#x1F4CB; Manage Account Properties</summary>
+        <form>
+          <table>
+            <tr>
+              <td><select id="user-enabled" size=5 style="width: 10em;"></select></td>
+              <td><button onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers();"
+                  type="button" title="lock">&#x1F512;&#x276F;</button>
+                <br>
+                <button onclick="setUser(document.getElementById('user-disabled').value, 'enabled'); getUsers();"
+                  type="button" title="unlock">&#x276E;&#x1F513;</button>
+              </td>
+              <td><select id="user-disabled" size=5 style="width: 10em;"></select></td>
+              <td><button onclick="delUser(document.getElementById('user-disabled').value); getUsers();" type="button"
+                  title="delete">&#x274C;</button></td>
+            </tr>
+          </table>
+          <p>Total users: <span id="user-total"></span></p>
+        </form>
       </details>
     </div>
     <div>
       <details>
-        <summary>Filesystems</summary>
+        <summary onclick="getDateTime();">&#x1F4C5;&#x0231A; System Date-Time</summary>
+        <form>
+          <table>
+            <tr>
+              <td><label>Sync:</label></td>
+              <td id="time-ntpd"></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><label>Server:</label></td>
+              <td><input id="time-server" style="width: 15em;"></td>
+              <td><button title="Reset server time to client time." type="button">&#x027A5; &#x0231A;</button></td>
+            </tr>
+            <tr>
+              <td><label>Client:</label></td>
+              <td><input id="time-browser" readonly style="width: 15em;"></td>
+              <td><button onclick="getDateTime();" title="Refresh Time" type="button">&#x21BB;</button></td>
+            </tr>
+          </table>
+        </form>
       </details>
     </div>
-    <div>
-      <details>
-        <summary>System Time</summary>
-      </details>
-    </div>
+  </main>
+
+  <aside>
+    <h2>Logs &amp; Messages</h2>
+    <details>
+      <summary onclick="getLog(logFileName);">&#x1F4C4; Log Viewer</summary>
+      <p>
+        <button onclick="getLog(logFileName = 'messages');" type="button">system</button>
+        <button onclick="getLog(logFileName = 'smbd');" type="button">smbd</button>
+        <button onclick="getLog(logFileName = 'nmbd');" type="button">nmbd</button>
+        <button onclick="getLog(logFileName = 'weenas');" type="button">api</button>
+        <button onclick="getLog(logFileName);" title="Refresh Log" type="button">&#x21BB;</button>
+      </p>
+      <textarea readonly rows=25 cols=80 id="log-viewer"></textarea>
+    </details>
+    <details>
+      <summary onclick="getMail();">&#x1F4E7; System Mail</summary>
+      <p>
+        <button onclick="getMail(0);" title="Header View" type="button">&#x2709;</button>
+        <button onclick="mailMsgNum = Math.max(--mailMsgNum, 0); getMail(mailMsgNum);" title="Previous Message"
+          type="button">&#x25B2;</button>
+        <button onclick="getMail(++mailMsgNum);" title="Next Message" type="button">&#x25BC;</button>
+      </p>
+      <textarea readonly rows=25 cols=80 id="mail"></textarea>
+    </details>
   </aside>
+
   <footer>
     <p><a href="https://davescodemusings.github.io/WeeNAS" target="_blank" style="color: whitesmoke;">WeeNAS = Raspberry
         Pi + Flash Drive + FreeBSD + Samba</a></p>
