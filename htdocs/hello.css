@@ -51,7 +51,7 @@ a:hover {
 
 /* Force buttons wider than the one-character unicode symbol that labels them. */
 button {
-    width: 5em;
+    width: 3.5em;
   }
 
 /* Add more spacing between summary elements for easier touch screen access. */
@@ -124,10 +124,12 @@ footer {
     }
 
     /* Main is on the left and gets a left margin to add some whitespace.
-       Padding on left and right keeps it away from aside element. */
+       Padding on left and right keeps it away from aside element. min-height
+       keeps content from scrunching up. */
     main {
         float: left;
         margin-left: 5%;
+        min-height: 55vh;
         padding-left: 1em;
         padding-right: 1em;
         width: 60%;

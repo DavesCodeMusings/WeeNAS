@@ -23,31 +23,35 @@
       }
     }
 
+    /*
+    * Users
+    */
+
     /* AJAX fetch users */
     function getUsers() {
       let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-          let userFlags = JSON.parse(this.responseText);
-          let users = Object.keys(userFlags);
+          let usersObj = JSON.parse(this.responseText);
+          let users = Object.keys(usersObj);
+          users.sort();
           let enabledList = '';
           let disabledList = '';
           for (let i = 0; i < users.length; i++) {
-            if (!userFlags[users[i]].includes('D')) {
+            if (!usersObj[users[i]].includes('D')) {
               enabledList += '<option>' + users[i] + '</option>';
             }
             else {
               disabledList += '<option>' + users[i] + '</option>';
             }
           }
-          document.getElementById('user-total').innerHTML = users.length;
           document.getElementById('user-enabled').size = Math.min(users.length, 10);
           document.getElementById('user-enabled').innerHTML = enabledList;
           document.getElementById('user-disabled').size = Math.min(users.length, 10);
           document.getElementById('user-disabled').innerHTML = disabledList;
         }
       };
-      xhttp.open('GET', './users/flags', true);
+      xhttp.open('GET', './users', true);
       xhttp.send();
     }
 
@@ -108,6 +112,80 @@
       }
     }
 
+    /*
+    * Storage
+    */
+
+    /* Human readable disk-size */
+    function diskSizeHuman(sizeBytes) {
+      let size = sizeBytes;
+      let label = ['B', 'K', 'M', 'G', 'T', 'P'];
+      let count = 0;
+      while (size/1000 > 1 && count < label.length-1) {
+        size /= 1000;
+        count++;
+      }
+      size = Math.round(size);
+      return `${size}${label[count]}`;
+    }
+
+    /* AJAX fetch storage devices (disks) */
+    function getDisks() {
+      let url = './disks';
+      let xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          let disksObj = JSON.parse(this.responseText);
+          let disks = Object.keys(disksObj);
+          disks.sort();
+          let diskList = '';
+          for (let i = 0; i < disks.length; i++) {
+            diskList += '<option>' + disks[i] + '</option>';
+          }
+          document.getElementById('storage-devices').innerHTML = diskList;
+        }
+      };
+      xhttp.open('GET', url, true);
+      xhttp.send();
+    }
+
+    /* AJAX fetch partitions */
+    function getPartitions(disk) {
+      let url = './disk/' + disk + '/partitions';
+      let xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          let partitionsObj = JSON.parse(this.responseText);
+          let partitions = Object.keys(partitionsObj);
+          partitions.sort();
+          let partitionList = '';
+          for (let i = 0; i < partitions.length; i++) {
+            partitionList += '<option>' + partitions[i] + '</option>';
+          }
+          document.getElementById('storage-partitions').innerHTML = partitionList;
+          document.getElementById('storage-size').innerHTML = '';
+          document.getElementById('storage-label').innerHTML = '';
+        }
+      };
+      xhttp.open('GET', url, true);
+      xhttp.send();
+    }
+
+    /* AJAX fetch filesystem info */
+    function getFilesystem(partition) {
+      let url = './partition/' + partition;
+      let xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          let partitionInfo = JSON.parse(this.responseText);
+          document.getElementById('storage-size').innerHTML = diskSizeHuman(partitionInfo[0]);
+          document.getElementById('storage-label').innerHTML = partitionInfo[3];
+        }
+      };
+      xhttp.open('GET', url, true);
+      xhttp.send();
+    }
+
     /* Get service status and use it to fill element's innerHTML. */
     function getServiceStatus(name, elementId) {
       let url = './system/service/' + name;
@@ -157,11 +235,13 @@
       document.getElementById('time-browser').value = formattedDate;
     }
 
-    /* AJAX fetch mail by message ID. No ID or ID=0 will fetch headers.*/
+    /* AJAX fetch mail by message ID. No ID or ID <= 0 will fetch headers.*/
     function getMail(msgNum) {
+      if (msgNum === undefined || msgNum < 0) msgNum = 0;
       let url = './system/mail';
-      if (typeof (msgNum) === 'number' && msgNum > 0) url += '/' + msgNum;
-      else mailMsgNum = 0;
+      if (msgNum > 0) {
+        url += '/' + msgNum;
+      }
       url += '/raw';
       let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
@@ -172,9 +252,10 @@
       };
       xhttp.open('GET', url, true);
       xhttp.send();
+      mailMsgNum = msgNum;
     }
 
-    /* Current mail message number */
+    /* Current mail message number (0 means show headers only) */
     mailMsgNum = 0;
 
     /* AJAX log fetcher. */
@@ -213,45 +294,72 @@
 
   <main class="narrow">
     <h2>Administration</h2>
+
+    <!-- User Account Management -->
     <details>
-      <summary>&#x1F464;&#x2795; Add User Accounts</summary>
+      <summary onclick="getUsers();">&#x1F464; User Accounts</summary>
       <form>
         <table>
           <tr>
             <td><input id='user-list' type="text" size="40em" maxlength="60" pattern="[a-z0-9 ]+"
                 placeholder="Lowercase only. Separate with spaces."></td>
             <td><button onclick="addUsers(document.getElementById('user-list').value)" style="color: green"
-                type="button">&#x2714;</button>
+                type="button">&#x2795;</button>
             </td>
+          </tr>
+        </table>
+        <br>
+        <table>
+          <tr>
+            <td><select id="user-enabled" size=5 style="width: 10em;"></select></td>
+            <td><button onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers();"
+                type="button" title="lock">&#x1F512;&#x276F;</button>
+              <br>
+              <button onclick="setUser(document.getElementById('user-disabled').value, 'enabled'); getUsers();"
+                type="button" title="unlock">&#x276E;&#x1F513;</button>
+            </td>
+            <td><select id="user-disabled" size=5 style="width: 10em;"></select></td>
+            <td><button onclick="delUser(document.getElementById('user-disabled').value); getUsers();" type="button"
+                title="delete">&#x274C;</button></td>
           </tr>
         </table>
       </form>
     </details>
+    </div>
+
+    <!-- Storage Management -->
     <div>
       <details>
-        <summary onclick="getUsers();">&#x1F464;&#x1F4CB; Manage Account Properties</summary>
+        <summary onclick="getDisks();">&#x1F4BE; Storage Devices</summary>
         <form>
           <table>
             <tr>
-              <td><select id="user-enabled" size=5 style="width: 10em;"></select></td>
-              <td><button onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers();"
-                  type="button" title="lock">&#x1F512;&#x276F;</button>
-                <br>
-                <button onclick="setUser(document.getElementById('user-disabled').value, 'enabled'); getUsers();"
-                  type="button" title="unlock">&#x276E;&#x1F513;</button>
-              </td>
-              <td><select id="user-disabled" size=5 style="width: 10em;"></select></td>
-              <td><button onclick="delUser(document.getElementById('user-disabled').value); getUsers();" type="button"
-                  title="delete">&#x274C;</button></td>
+              <td><select id="storage-devices"
+                  onchange="e=document.getElementById('storage-devices'); getPartitions(e.options[e.selectedIndex].value);"
+                  size=5 style="width: 10em;"></select></td>
+              <td><select id="storage-partitions"
+                  onchange="e=document.getElementById('storage-partitions'); getFilesystem(e.options[e.selectedIndex].value);"
+                  size=5 style="width: 10em;"></select></td>
             </tr>
           </table>
-          <p>Total users: <span id="user-total"></span></p>
+          <table>
+            <tr>
+              <td>Label:</td>
+              <td id="storage-label"></td>
+            </tr>
+            <tr>
+              <td>Size:</td>
+              <td id="storage-size"></td>
+            </tr>
+          </table>
         </form>
       </details>
     </div>
+
+    <!-- System Date and Time -->
     <div>
       <details>
-        <summary onclick="getDateTime();">&#x1F4C5;&#x0231A; System Date-Time</summary>
+        <summary onclick="getDateTime();">&#x0231A; System Date-Time</summary>
         <form>
           <table>
             <tr>
@@ -262,12 +370,12 @@
             <tr>
               <td><label>Server:</label></td>
               <td><input id="time-server" style="width: 15em;"></td>
-              <td><button title="Reset server time to client time." type="button">&#x027A5; &#x0231A;</button></td>
+              <td><button onclick="getDateTime();" title="Refresh Time" type="button">&#x21BB;</button></td>
             </tr>
             <tr>
               <td><label>Client:</label></td>
               <td><input id="time-browser" readonly style="width: 15em;"></td>
-              <td><button onclick="getDateTime();" title="Refresh Time" type="button">&#x21BB;</button></td>
+              <td><button title="Reset server time to client time." type="button">&#x0231A;</button></td>
             </tr>
           </table>
         </form>
@@ -275,6 +383,7 @@
     </div>
   </main>
 
+  <!-- Logs and Email -->
   <aside>
     <h2>Logs &amp; Messages</h2>
     <details>
@@ -291,7 +400,7 @@
     <details>
       <summary onclick="getMail();">&#x1F4E7; System Mail</summary>
       <p>
-        <button onclick="getMail(0);" title="Header View" type="button">&#x2709;</button>
+        <button onclick="getMail(0);" title="Header View" type="button">&#x02709;</button>
         <button onclick="mailMsgNum = Math.max(--mailMsgNum, 0); getMail(mailMsgNum);" title="Previous Message"
           type="button">&#x25B2;</button>
         <button onclick="getMail(++mailMsgNum);" title="Next Message" type="button">&#x25BC;</button>
