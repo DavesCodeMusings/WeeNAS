@@ -121,7 +121,7 @@
       let size = sizeBytes;
       let label = ['B', 'K', 'M', 'G', 'T', 'P'];
       let count = 0;
-      while (size/1000 > 1 && count < label.length-1) {
+      while (size / 1000 > 1 && count < label.length - 1) {
         size /= 1000;
         count++;
       }
@@ -156,7 +156,7 @@
       xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
           let diskObj = JSON.parse(this.responseText);
-          document.getElementById('storage-label').innerHTML = diskObj.label;
+          document.getElementById('storage-label').value = '';
           document.getElementById('storage-size').innerHTML = diskSizeHuman(diskObj.size);
         }
       };
@@ -192,12 +192,51 @@
         if (this.readyState == 4 && this.status == 200) {
           let partitionObj = JSON.parse(this.responseText);
           document.getElementById('storage-size').innerHTML = diskSizeHuman(partitionObj.size);
-          document.getElementById('storage-label').innerHTML = partitionObj.label;
+          document.getElementById('storage-label').value = partitionObj.label;
+          getFilesystemInfo(partitionObj.label);
         }
       };
       xhttp.open('GET', url, true);
       xhttp.send();
     }
+
+    /* AJAX fetch mounted filesystem info by label */
+    function getFilesystemInfo(label) {
+      let url = './filesystem/' + label;
+      let xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          let filesystemObj = JSON.parse(this.responseText);
+          let e = document.getElementById('storage-mountpoint');
+          if (filesystemObj.mountpoint) {
+            e.value = filesystemObj.mountpoint;
+          }
+          else {
+            e.value = '';
+          }
+        }
+      };
+      xhttp.open('GET', url, true);
+      xhttp.send();
+    }
+
+    /* AJAX write partition table */
+    function writePartitionTable(device) {
+      if (confirm('Destroy all data on ' + device + '?')) {
+
+      }
+    }
+
+    /* AJAX write filesystem */
+    function writeFilesystem(partition) {
+      if (confirm('Destroy all data on ' + partition + '?')) {
+
+      }
+    }
+
+    /*
+    * Service
+    */
 
     /* Get service status and use it to fill element's innerHTML. */
     function getServiceStatus(name, elementId) {
@@ -216,6 +255,10 @@
       xhttp.open('GET', url, true);
       xhttp.send();
     }
+
+    /*
+    * Time
+    */
 
     /* Get server time and browser time, in UTC and to the nearest minute. */
     function getDateTime() {
@@ -324,15 +367,20 @@
         <br>
         <table>
           <tr>
-            <th>Enabled</th><th></th><th>Locked</th><th></th>
+            <th>enabled</th>
+            <th></th>
+            <th>locked</th>
+            <th></th>
           </tr>
           <tr>
             <td><select id="user-enabled" size=5 style="width: 10em;"></select></td>
-            <td><button onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers();"
-                type="button" title="lock">&#x1F512;&#x276F;</button>
+            <td><button class="narrow"
+                onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers();" type="button"
+                title="lock">&#x1F512;&#x276F;</button>
               <br>
-              <button onclick="setUser(document.getElementById('user-disabled').value, 'enabled'); getUsers();"
-                type="button" title="unlock">&#x276E;&#x1F513;</button>
+              <button class="narrow"
+                onclick="setUser(document.getElementById('user-disabled').value, 'enabled'); getUsers();" type="button"
+                title="unlock">&#x276E;&#x1F513;</button>
             </td>
             <td><select id="user-disabled" size=5 style="width: 10em;"></select></td>
             <td><button onclick="delUser(document.getElementById('user-disabled').value); getUsers();" type="button"
@@ -350,23 +398,36 @@
         <form>
           <table>
             <tr>
-              <th>device</th><th>partition</th><th>mountpoint</th>
+              <th>device</th>
+              <th>partition</th>
+              <th>mount</th>
             </tr>
             <tr>
               <td><select id="storage-devices"
-                  onchange="e=document.getElementById('storage-devices'); getDiskInfo(e.options[e.selectedIndex].value); getPartitions(e.options[e.selectedIndex].value);"
+                  onchange="document.getElementById('storage-mountpoint').value = ''; e=document.getElementById('storage-devices'); getDiskInfo(e.options[e.selectedIndex].value); getPartitions(e.options[e.selectedIndex].value);"
                   size=5 style="width: 10em;"></select></td>
               <td><select id="storage-partitions"
-                  onchange="e=document.getElementById('storage-partitions'); getPartitionInfo(e.options[e.selectedIndex].value);"
+                  onchange="document.getElementById('storage-mountpoint').value = ''; e=document.getElementById('storage-partitions'); getPartitionInfo(e.options[e.selectedIndex].value);"
                   size=5 style="width: 10em;"></select></td>
-              <td style="vertical-align: top;"><input id="storage-mountpoint" style="width: 10em;"></td>
+              <td style="vertical-align: top;">
+                device:<br>
+                <input id="storage-label" placeholder="device name" style="width: 10em;"><br>
+                mountpoint:<br>
+                <input id="storage-mountpoint" placeholder="directory path" style="width: 10em;">
+              </td>
+            </tr>
+            <tr>
+              <td><button id="storage-repartition" class="wide" onclick="e=document.getElementById('storage-devices'); writePartitionTable(e.options[e.selectedIndex].value);"
+                  title="Write GUID partition table onto selected device."
+                  type="button">&#x1F4CB;&#x0279C;&#x1F4BE;</button></td>
+              <td><button id="storage-format" class="wide" onclick="e=document.getElementById('storage-partitions'); writeFilesystem(e.options[e.selectedIndex].value);"
+                  title="Write UFS filesystem onto selected partition."
+                  type="button">&#x1F4DD;&#x0279C;&#x1F4BE;</button></td>
+              <td><button id="storage-mount" class="wide" title="Mount filesystem on directory."
+                  type="button">&#x1F4BE;&#x0279C;&#x1F4BB;</button></td>
             </tr>
           </table>
           <table>
-            <tr>
-              <td>Label:</td>
-              <td id="storage-label"></td>
-            </tr>
             <tr>
               <td>Size:</td>
               <td id="storage-size"></td>
@@ -404,7 +465,7 @@
   </main>
 
   <!-- Logs and Email -->
-  <aside>
+  <aside class="wide">
     <h2>Logs &amp; Messages</h2>
     <details>
       <summary onclick="getLog(logFileName);">&#x1F4C4; Log Viewer</summary>
@@ -412,6 +473,7 @@
         <button onclick="getLog(logFileName = 'messages');" type="button">system</button>
         <button onclick="getLog(logFileName = 'smbd');" type="button">smbd</button>
         <button onclick="getLog(logFileName = 'nmbd');" type="button">nmbd</button>
+        <button onclick="getLog(logFileName = 'messages');" type="button">cron</button>
         <button onclick="getLog(logFileName = 'weenas');" type="button">api</button>
         <button onclick="getLog(logFileName);" title="Refresh Log" type="button">&#x21BB;</button>
       </p>
@@ -420,7 +482,7 @@
     <details>
       <summary onclick="getMail();">&#x1F4E7; System Mail</summary>
       <p>
-        <button onclick="getMail(0);" title="Header View" type="button">&#x02709;</button>
+        <button onclick="getMail(0);" title="Header View" type="button">&#x1F4D1;</button>
         <button onclick="mailMsgNum = Math.max(--mailMsgNum, 0); getMail(mailMsgNum);" title="Previous Message"
           type="button">&#x25B2;</button>
         <button onclick="getMail(++mailMsgNum);" title="Next Message" type="button">&#x25BC;</button>
