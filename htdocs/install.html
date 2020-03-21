@@ -27,31 +27,13 @@
         <table>
           <tr>
             <td><label>Trusted Users</label></td>
-            <td><input id="user-trusted" onchange="users(); mail();" size="32" type="text" pattern="[A-Za-z ]+"></td>
-          </tr>
-          <tr>
-            <td><label>Regular Users</label></td>
-            <td><input id="user-regular" onchange="users();" size="64" type="text" pattern="[A-Za-z ]+"></td>
+            <td><input id="user-trusted" onchange="users(); mail();" size="32" type="text" pattern="[a-z ]+"></td>
           </tr>
         </table>
         <ul>
-          <li>Account names should be separated by spaces.</li>
-          <li>Uppercase letters will be converted to lowercase for account names.</li>
-          <li>Trusted users will be added to the wheel group and can su to root.</li>
+          <li>Account names should be lowercase and separated by spaces.</li>
+          <li>Trusted users can log in via Secure SHell and su to root.</li>
           <li>There must be at least one trusted user or you will lose access to root!</li>
-        </ul>
-      </details>
-
-      <details open>
-        <summary><b>Mail</b> <span class="right-justify" id="mail-summary"></span></summary>
-        <table>
-          <tr>
-            <td><label>System mail recipient</label></td>
-            <td><input id="mail-alias" onchange="mail();" size="16" type="text" pattern="[a-z]+"</td>
-          </tr>
-        </table>
-        <ul>
-          <li>One trusted user must be set up to receive system mail sent to root.</li>
         </ul>
       </details>
 
@@ -70,7 +52,7 @@
         <ul>
           <li>Host name and domain name should be lowercase.</li>
           <li>The dot will be automatically inserted between host and domain names.</li>
-          <li>If you do not have a domain name, leave it as 'local'.</li>
+          <li>If you do not have an established domain name, leave it as 'local'.</li>
           </li>
         </ul>
       </details>
@@ -102,6 +84,7 @@
         </table>
         <ul>
           <li>For the timezone path, choose the location closest to where you live.</li>
+          <li>Time will automatically be kept in sync with internet time servers.</li>
         </ul>
       </details>
 
@@ -207,13 +190,6 @@
             <td><input id="samba-workgroup" onchange="samba();" type="text" value="workgroup"></td>
           </tr>
           <tr>
-            <td><label>Home Directories</label></td>
-            <td><select id="samba-home" onchange="samba();">
-                <option>Yes</option>
-                <option>No</option>
-              </select></td>
-          </tr>
-          <tr>
             <td><label>Shared Directory</label></td>
             <td><select id="samba-shared" onchange="samba();">
                 <option>Yes</option>
@@ -247,8 +223,6 @@
 <span id="storage-commands"></span>
 # Samba
 <span id="samba-commands"></span>
-# Mail
-<span id="mail-commands"></span>
 # Users
 <span id="user-commands"></span>
     </div>
