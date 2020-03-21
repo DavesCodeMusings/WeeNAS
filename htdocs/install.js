@@ -37,9 +37,9 @@ function time() {
     var timezone = document.getElementById('time-area').value + '/' + document.getElementById('time-location').value;
     var summary = timezone;
     var commands = '';
-    commands += 'ntpd_enable="YES"\n';
-    commands += 'ntpd_sync_on_start="YES"\n';
-    commands += 'cp /usr/share/zoneinfo/' + timezone + ' /etc/localtime\n';
+    commands += 'sysrc ntpd_enable="YES"\n';
+    commands += 'sysrc ntpd_sync_on_start="YES"\n';
+    commands += 'ln -s /usr/share/zoneinfo/' + timezone + ' /etc/localtime\n';
     commands += 'service ntpd start\n';
     document.getElementById('time-summary').innerHTML = summary;
     document.getElementById('time-commands').innerHTML = commands;
