@@ -149,7 +149,22 @@
       xhttp.send();
     }
 
-    /* AJAX fetch partitions */
+    /* AJAX fetch disk label and size */
+    function getDiskInfo(disk) {
+      let url = './disk/' + disk;
+      let xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          let diskObj = JSON.parse(this.responseText);
+          document.getElementById('storage-label').innerHTML = diskObj.label;
+          document.getElementById('storage-size').innerHTML = diskSizeHuman(diskObj.size);
+        }
+      };
+      xhttp.open('GET', url, true);
+      xhttp.send();
+    }
+
+    /* AJAX fetch partitions belonging to a storage device */
     function getPartitions(disk) {
       let url = './disk/' + disk + '/partitions';
       let xhttp = new XMLHttpRequest();
@@ -163,23 +178,21 @@
             partitionList += '<option>' + partitions[i] + '</option>';
           }
           document.getElementById('storage-partitions').innerHTML = partitionList;
-          document.getElementById('storage-size').innerHTML = '';
-          document.getElementById('storage-label').innerHTML = '';
         }
       };
       xhttp.open('GET', url, true);
       xhttp.send();
     }
 
-    /* AJAX fetch filesystem info */
-    function getFilesystem(partition) {
+    /* AJAX fetch partition label and size */
+    function getPartitionInfo(partition) {
       let url = './partition/' + partition;
       let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-          let partitionInfo = JSON.parse(this.responseText);
-          document.getElementById('storage-size').innerHTML = diskSizeHuman(partitionInfo[0]);
-          document.getElementById('storage-label').innerHTML = partitionInfo[3];
+          let partitionObj = JSON.parse(this.responseText);
+          document.getElementById('storage-size').innerHTML = diskSizeHuman(partitionObj.size);
+          document.getElementById('storage-label').innerHTML = partitionObj.label;
         }
       };
       xhttp.open('GET', url, true);
@@ -311,6 +324,9 @@
         <br>
         <table>
           <tr>
+            <th>Enabled</th><th></th><th>Locked</th><th></th>
+          </tr>
+          <tr>
             <td><select id="user-enabled" size=5 style="width: 10em;"></select></td>
             <td><button onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers();"
                 type="button" title="lock">&#x1F512;&#x276F;</button>
@@ -334,12 +350,16 @@
         <form>
           <table>
             <tr>
+              <th>device</th><th>partition</th><th>mountpoint</th>
+            </tr>
+            <tr>
               <td><select id="storage-devices"
-                  onchange="e=document.getElementById('storage-devices'); getPartitions(e.options[e.selectedIndex].value);"
+                  onchange="e=document.getElementById('storage-devices'); getDiskInfo(e.options[e.selectedIndex].value); getPartitions(e.options[e.selectedIndex].value);"
                   size=5 style="width: 10em;"></select></td>
               <td><select id="storage-partitions"
-                  onchange="e=document.getElementById('storage-partitions'); getFilesystem(e.options[e.selectedIndex].value);"
+                  onchange="e=document.getElementById('storage-partitions'); getPartitionInfo(e.options[e.selectedIndex].value);"
                   size=5 style="width: 10em;"></select></td>
+              <td style="vertical-align: top;"><input id="storage-mountpoint" style="width: 10em;"></td>
             </tr>
           </table>
           <table>
