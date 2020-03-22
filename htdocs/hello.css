@@ -51,8 +51,15 @@ a:hover {
 
 /* Force buttons wider than the one-character unicode symbol that labels them. */
 button {
-    width: 3.5em;
-  }
+    width: 6em;
+}
+button.narrow {
+    width: 4em;
+}
+button.wide {
+    width: 10em;
+}
+
 
 /* Add more spacing between summary elements for easier touch screen access. */
 summary {

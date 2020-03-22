@@ -235,7 +235,7 @@
     }
 
     /*
-    * Service
+    * Services
     */
 
     /* Get service status and use it to fill element's innerHTML. */
@@ -291,6 +291,9 @@
       document.getElementById('time-browser').value = formattedDate;
     }
 
+    /* Current mail message number (0 means show headers only) */
+    mailMsgNum = 0;
+
     /* AJAX fetch mail by message ID. No ID or ID <= 0 will fetch headers.*/
     function getMail(msgNum) {
       if (msgNum === undefined || msgNum < 0) msgNum = 0;
@@ -311,8 +314,20 @@
       mailMsgNum = msgNum;
     }
 
-    /* Current mail message number (0 means show headers only) */
-    mailMsgNum = 0;
+    /* AJAX delete mail by message ID. */
+    function delMail(msgNum) {
+      if (typeof(msgNum) == 'number' && msgNum > 0) {
+        let url = './system/mail/' + msgNum;
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+          if (this.readyState === 4 && this.status !== 200) {
+            alert("Mail delete failed.")
+          }
+        };
+        xhttp.open('DELETE', url, true);
+        xhttp.send();
+      }
+    }
 
     /* AJAX log fetcher. */
     function getLog(name) {
@@ -359,8 +374,8 @@
           <tr>
             <td><input id='user-list' type="text" size="40em" maxlength="60" pattern="[a-z0-9 ]+"
                 placeholder="Lowercase only. Separate with spaces."></td>
-            <td><button onclick="addUsers(document.getElementById('user-list').value)" style="color: green"
-                type="button">&#x2795;</button>
+            <td><button class="narrow" onclick="addUsers(document.getElementById('user-list').value)" style="color: green"
+                type="button">&#x02714;</button>
             </td>
           </tr>
         </table>
@@ -376,15 +391,15 @@
             <td><select id="user-enabled" size=5 style="width: 10em;"></select></td>
             <td><button class="narrow"
                 onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers();" type="button"
-                title="lock">&#x1F512;&#x276F;</button>
+                title="Lock account">&#x1F512;&#x276F;</button>
               <br>
               <button class="narrow"
                 onclick="setUser(document.getElementById('user-disabled').value, 'enabled'); getUsers();" type="button"
-                title="unlock">&#x276E;&#x1F513;</button>
+                title="Unlock account">&#x276E;&#x1F513;</button>
             </td>
             <td><select id="user-disabled" size=5 style="width: 10em;"></select></td>
-            <td><button onclick="delUser(document.getElementById('user-disabled').value); getUsers();" type="button"
-                title="delete">&#x274C;</button></td>
+            <td><button class="narrow" onclick="delUser(document.getElementById('user-disabled').value); getUsers();" type="button"
+                title="Delete account">&#x274C;</button></td>
           </tr>
         </table>
       </form>
@@ -411,9 +426,9 @@
                   size=5 style="width: 10em;"></select></td>
               <td style="vertical-align: top;">
                 device:<br>
-                <input id="storage-label" placeholder="device name" style="width: 10em;"><br>
+                <input id="storage-label" placeholder="device name" readonly style="width: 10em;"><br>
                 mountpoint:<br>
-                <input id="storage-mountpoint" placeholder="directory path" style="width: 10em;">
+                <input id="storage-mountpoint" placeholder="directory path" readonly style="width: 10em;">
               </td>
             </tr>
             <tr>
@@ -486,6 +501,7 @@
         <button onclick="mailMsgNum = Math.max(--mailMsgNum, 0); getMail(mailMsgNum);" title="Previous Message"
           type="button">&#x25B2;</button>
         <button onclick="getMail(++mailMsgNum);" title="Next Message" type="button">&#x25BC;</button>
+        <button onclick="delMail(mailMsgNum); getmail(0);" title="Delete Message" type="button">&#x274C;</button>
       </p>
       <textarea readonly rows=25 cols=80 id="mail"></textarea>
     </details>
