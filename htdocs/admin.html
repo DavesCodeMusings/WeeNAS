@@ -116,6 +116,9 @@
     * Storage
     */
 
+    /* For caching disk information */
+    var disksObj = {};
+
     /* Human readable disk-size */
     function diskSizeHuman(sizeBytes) {
       let size = sizeBytes;
@@ -135,64 +138,50 @@
       let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-          let disksObj = JSON.parse(this.responseText);
-          let disks = Object.keys(disksObj);
-          disks.sort();
-          let diskList = '';
-          for (let i = 0; i < disks.length; i++) {
-            diskList += '<option>' + disks[i] + '</option>';
+          disksObj = JSON.parse(this.responseText);
+          let diskNames = Object.keys(disksObj);
+          diskNames.sort();
+          let diskOptionList = '';
+          for (let i = 0; i < diskNames.length; i++) {
+            diskOptionList += '<option>' + diskNames[i] + '</option>';
           }
-          document.getElementById('storage-devices').innerHTML = diskList;
+          document.getElementById('storage-devices').innerHTML = diskOptionList;
         }
       };
       xhttp.open('GET', url, true);
       xhttp.send();
     }
 
-    /* AJAX fetch disk label and size */
+    /*  */
     function getDiskInfo(disk) {
       let url = './disk/' + disk;
       let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
           let diskObj = JSON.parse(this.responseText);
-          document.getElementById('storage-label').value = '';
-          document.getElementById('storage-size').innerHTML = diskSizeHuman(diskObj.size);
-        }
-      };
-      xhttp.open('GET', url, true);
-      xhttp.send();
-    }
-
-    /* AJAX fetch partitions belonging to a storage device */
-    function getPartitions(disk) {
-      let url = './disk/' + disk + '/partitions';
-      let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-          let partitionsObj = JSON.parse(this.responseText);
-          let partitions = Object.keys(partitionsObj);
-          partitions.sort();
-          let partitionList = '';
-          for (let i = 0; i < partitions.length; i++) {
-            partitionList += '<option>' + partitions[i] + '</option>';
+          let partitionNames = Object.keys(diskObj);
+          partitionNames.sort();
+          let partitionOptionList = '';
+          for (let i = 0; i < partitionNames.length; i++) {
+            partitionOptionList += '<option>' + partitionNames[i] + '</option>';
           }
-          document.getElementById('storage-partitions').innerHTML = partitionList;
+          document.getElementById('storage-partitions').innerHTML = partitionOptionList;
         }
       };
       xhttp.open('GET', url, true);
       xhttp.send();
+      if (disksObj[disk].size) document.getElementById('storage-size').innerHTML = diskSizeHuman(disksObj[disk].size);
+      if (disksObj[disk].description) document.getElementById('storage-description').innerHTML = disksObj[disk].description;
     }
 
-    /* AJAX fetch partition label and size */
+    /* AJAX fetch partition type and label */
     function getPartitionInfo(partition) {
-      let url = './partition/' + partition;
+      let url = './disk/' + partition;
       let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
           let partitionObj = JSON.parse(this.responseText);
-          document.getElementById('storage-size').innerHTML = diskSizeHuman(partitionObj.size);
-          document.getElementById('storage-label').value = partitionObj.label;
+          document.getElementById('storage-label').innerHTML = '<option>' + partitionObj.label + '</option>';
           getFilesystemInfo(partitionObj.label);
         }
       };
@@ -220,17 +209,45 @@
       xhttp.send();
     }
 
-    /* AJAX write partition table */
-    function writePartitionTable(device) {
-      if (confirm('Destroy all data on ' + device + '?')) {
-
+    /* AJAX write partition scheme */
+    function writePartitionTable(disk) {
+      if (confirm('This will destroy all data on ' + disk)) {
+        document.body.style.cursor = 'wait';
+        let url = './disk/' + disk + '/gpt';
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+          if (this.readyState == 4) {
+            if (this.status == 200) {
+              reply = JSON.parse(this.responseText);
+              alert(reply);
+            }
+            else alert('Error writing partition scheme to ' + disk);
+            document.body.style.cursor = 'default';
+          }
+        };
+        xhttp.open('PUT', url, true);
+        xhttp.send();
       }
     }
 
     /* AJAX write filesystem */
     function writeFilesystem(partition) {
-      if (confirm('Destroy all data on ' + partition + '?')) {
-
+      if (confirm('This will destroy all data on ' + partition)) {
+        document.body.style.cursor = 'wait';
+        let url = './disk/' + partition + '/ufs';
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+          if (this.readyState == 4) {
+            if (this.status == 200) {
+              reply = JSON.parse(this.responseText);
+              alert(reply);
+            }
+            else alert('Error writing filesystem to ' + partition);
+            document.body.style.cursor = 'default';
+          }
+        };
+        xhttp.open('PUT', url, true);
+        xhttp.send();
       }
     }
 
@@ -316,7 +333,7 @@
 
     /* AJAX delete mail by message ID. */
     function delMail(msgNum) {
-      if (typeof(msgNum) == 'number' && msgNum > 0) {
+      if (typeof (msgNum) == 'number' && msgNum > 0) {
         let url = './system/mail/' + msgNum;
         let xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function () {
@@ -369,93 +386,127 @@
     <!-- User Account Management -->
     <details>
       <summary onclick="getUsers();">&#x1F464; User Accounts</summary>
-      <form>
-        <table>
-          <tr>
-            <td><input id='user-list' type="text" size="40em" maxlength="60" pattern="[a-z0-9 ]+"
-                placeholder="Lowercase only. Separate with spaces."></td>
-            <td><button class="narrow" onclick="addUsers(document.getElementById('user-list').value)" style="color: green"
-                type="button">&#x02714;</button>
-            </td>
-          </tr>
-        </table>
-        <br>
-        <table>
-          <tr>
-            <th>enabled</th>
-            <th></th>
-            <th>locked</th>
-            <th></th>
-          </tr>
-          <tr>
-            <td><select id="user-enabled" size=5 style="width: 10em;"></select></td>
-            <td><button class="narrow"
-                onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers();" type="button"
-                title="Lock account">&#x1F512;&#x276F;</button>
-              <br>
-              <button class="narrow"
-                onclick="setUser(document.getElementById('user-disabled').value, 'enabled'); getUsers();" type="button"
-                title="Unlock account">&#x276E;&#x1F513;</button>
-            </td>
-            <td><select id="user-disabled" size=5 style="width: 10em;"></select></td>
-            <td><button class="narrow" onclick="delUser(document.getElementById('user-disabled').value); getUsers();" type="button"
-                title="Delete account">&#x274C;</button></td>
-          </tr>
-        </table>
-      </form>
+      <div style="margin-left: 1em;">
+        <details>
+          <summary>&#x02795; Add</summary>
+          <form>
+            <table>
+              <tr>
+                <td><input id='user-list' type="text" size="40em" maxlength="60" pattern="[a-z0-9 ]+"
+                    placeholder="Lowercase only. Separate with spaces."></td>
+                <td><button class="narrow" onclick="addUsers(document.getElementById('user-list').value)" type="button">
+                    <span style="color: green; font-size: 125%; font-weight: bold;">+</span></button>
+                </td>
+              </tr>
+            </table>
+          </form>
+        </details>
+        <details>
+          <summary>&#x1F527; Manage</summary>
+          <form>
+            <table>
+              <tr>
+                <th>enabled</th>
+                <th></th>
+                <th>locked</th>
+                <th></th>
+              </tr>
+              <tr>
+                <td><select id="user-enabled" size=5 style="width: 10em;"></select></td>
+                <td><button class="narrow"
+                    onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers();"
+                    type="button" title="Lock account">&#x1F512;&#x276F;</button>
+                  <br>
+                  <button class="narrow"
+                    onclick="setUser(document.getElementById('user-disabled').value, 'enabled'); getUsers();"
+                    type="button" title="Unlock account">&#x276E;&#x1F513;</button>
+                </td>
+                <td><select id="user-disabled" size=5 style="width: 10em;"></select></td>
+                <td><button class="narrow"
+                    onclick="delUser(document.getElementById('user-disabled').value); getUsers();" type="button"
+                    title="Delete account"><span
+                      style="color: red; font-size: 125%; font-weight: bold;">x</span></button></td>
+              </tr>
+            </table>
+          </form>
+        </details>
+      </div>
     </details>
-    </div>
 
     <!-- Storage Management -->
-    <div>
-      <details>
-        <summary onclick="getDisks();">&#x1F4BE; Storage Devices</summary>
-        <form>
-          <table>
-            <tr>
-              <th>device</th>
-              <th>partition</th>
-              <th>mount</th>
-            </tr>
-            <tr>
-              <td><select id="storage-devices"
-                  onchange="document.getElementById('storage-mountpoint').value = ''; e=document.getElementById('storage-devices'); getDiskInfo(e.options[e.selectedIndex].value); getPartitions(e.options[e.selectedIndex].value);"
-                  size=5 style="width: 10em;"></select></td>
-              <td><select id="storage-partitions"
-                  onchange="document.getElementById('storage-mountpoint').value = ''; e=document.getElementById('storage-partitions'); getPartitionInfo(e.options[e.selectedIndex].value);"
-                  size=5 style="width: 10em;"></select></td>
-              <td style="vertical-align: top;">
-                device:<br>
-                <input id="storage-label" placeholder="device name" readonly style="width: 10em;"><br>
-                mountpoint:<br>
-                <input id="storage-mountpoint" placeholder="directory path" readonly style="width: 10em;">
-              </td>
-            </tr>
-            <tr>
-              <td><button id="storage-repartition" class="wide" onclick="e=document.getElementById('storage-devices'); writePartitionTable(e.options[e.selectedIndex].value);"
-                  title="Write GUID partition table onto selected device."
-                  type="button">&#x1F4CB;&#x0279C;&#x1F4BE;</button></td>
-              <td><button id="storage-format" class="wide" onclick="e=document.getElementById('storage-partitions'); writeFilesystem(e.options[e.selectedIndex].value);"
-                  title="Write UFS filesystem onto selected partition."
-                  type="button">&#x1F4DD;&#x0279C;&#x1F4BE;</button></td>
-              <td><button id="storage-mount" class="wide" title="Mount filesystem on directory."
-                  type="button">&#x1F4BE;&#x0279C;&#x1F4BB;</button></td>
-            </tr>
-          </table>
-          <table>
-            <tr>
-              <td>Size:</td>
-              <td id="storage-size"></td>
-            </tr>
-          </table>
-        </form>
-      </details>
-    </div>
+
+    <details>
+      <summary onclick="getDisks();">&#x1F4BE; Storage Devices</summary>
+      <div style="margin-left: 1em;">
+        <details>
+          <summary>&#x02795; Add</summary>
+          <form>
+            <table>
+              <tr>
+                <th>device</th>
+                <th>partition</th>
+              </tr>
+              <tr>
+                <td><select id="storage-devices"
+                    onchange="e=document.getElementById('storage-devices'); getDiskInfo(e.options[e.selectedIndex].value);"
+                    size=5 style="width: 14em;"></select></td>
+                <td><select id="storage-partitions"
+                    onchange="e=document.getElementById('storage-partitions'); getPartitionInfo(e.options[e.selectedIndex].value);"
+                    size=5 style="width: 14em;"></select></td>
+              </tr>
+            </table>
+            <table>
+              <tr>
+                <td><input id="storage-disk-label" placeholder="disk label" style="width: 8em;"><button
+                    id="storage-repartition"
+                    onclick="e=document.getElementById('storage-devices'); writePartitionTable(e.options[e.selectedIndex].value);"
+                    title="Write GUID partition scheme onto selected device."
+                    type="button">&#x1F4CB;&#x0279C;&#x1F4BE;</button></td>
+                <td><input placeholder="filesystem label" style="width: 8em;"><button id="storage-format"
+                    onclick="e=document.getElementById('storage-partitions'); writeFilesystem(e.options[e.selectedIndex].value);"
+                    title="Write UFS filesystem onto selected partition."
+                    type="button">&#x1F4DD;&#x0279C;&#x1F4BE;</button></td>
+            </table>
+            <table>
+              <tr>
+                <td>Name:</td>
+                <td id="storage-description"></td>
+              </tr>
+              <tr>
+                <td>Size:</td>
+                <td id="storage-size"></td>
+              </tr>
+            </table>
+          </form>
+        </details>
+
+        <details>
+          <summary>&#x1F527; Manage</summary>
+          <form>
+            <table>
+              <tr>
+                <th>filesystem</th>
+                <th>directory</th>
+              </tr>
+              <tr>
+                <td><select size=5 style="width: 14em;"></select></td>
+                <td style="vertical-align: top"><input style="width: 14em;" type="text"><br>
+                  <button id="storage-mount" class="wide" title="Mount filesystem on directory."
+                    type="button">&#x1F4BE;&#x276F;&#x1F4BB;</button><br>
+                  <button id="storage-mount" class="wide" title="Unmount filesystem."
+                    type="button">&#x1F4BE;&#x276E;&#x1F4BB;</button></td>
+
+              </tr>
+            </table>
+          </form>
+        </details>
+      </div>
+    </details>
 
     <!-- System Date and Time -->
-    <div>
-      <details>
-        <summary onclick="getDateTime();">&#x0231A; System Date-Time</summary>
+    <details>
+      <summary onclick="getDateTime();">&#x0231A; System Date-Time</summary>
+      <div style="margin-left: 1em;">
         <form>
           <table>
             <tr>
@@ -475,8 +526,8 @@
             </tr>
           </table>
         </form>
-      </details>
-    </div>
+      </div>
+    </details>
   </main>
 
   <!-- Logs and Email -->

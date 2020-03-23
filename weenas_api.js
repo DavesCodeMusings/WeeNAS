@@ -4,6 +4,7 @@
  * WeeNAS -- Raspberry Pi + Flash Drive + FreeBSD + Samba
  * @author David Horton https://github.com/DavesCodeMusings/htmlGauges
  */
+
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -22,7 +23,7 @@ const ESYNTAX = 'SYNTAX ERROR.';
  * @type {{apiCmd: string, shellCmd: string}} apiCmdDict
  */
 var apiCmdDict = {
-  '^get api home$' : 'echo "\\"' + __dirname + '\\""',
+  '^get api home$': 'echo "\\"' + __dirname + '\\""',
   '^get users$': '/usr/local/bin/pdbedit -L -v | /usr/bin/awk -F\': *\' \'BEGIN { count=0; printf "{" } /---------------/ { getline; printf "%s\\n  \\"%s\\" : ", (++count==1)?"":",", $2; getline; getline; printf "\\"%s\\"", $2 } END { printf "\\n}" }\'',
   '^get user ([a-z0-9]+)$': '/usr/local/bin/pdbedit -L %1 | /usr/bin/awk -F: \'{ printf "[ \\"%s\\", \\"%s\\", \\"%s\\" ]", $1, $2, $3 }\'',
   '^get user ([a-z0-9]+) disabled$': '/usr/local/bin/pdbedit -L -v test | /usr/bin/awk -F: \'/^Account Flags:/ { printf "%i", (index($2,"D")!=0) }\'',
@@ -37,37 +38,37 @@ var apiCmdDict = {
   '^set datetime (20[0-9][0-9]-(?:0[1-9]|1[0-2])-(?:0[1-9]|1[0-9]|3[0-1])T(?:[0-1][0-9]|2[0-3]):[0-5][0-9])$': 'echo "\"$(/bin/date -Iminutes %1)\"',
   '^get timezone$': '/usr/bin/readlink /etc/localtime | sed -E \'s/\\/usr\\/share\\/zoneinfo\\/(.*)/"\\1"/\'',
   '^set timezone ([A-Za-z]+/[A-Za-z]+)': '/bin/ln -s /usr/share/zoneinfo/%1 /etc/localtime',
-  '^get disks$': '/sbin/sysctl -n kern.geom.conftxt | awk \'BEGIN { printf "{"; count=0 } /^0 DISK/ { printf "%s\\n  \\"%s\\": { \\"size\\": %s, ", (++count==1)?"":",", $3, $4; getline; printf "\\"label\\": \\"%s\\" }", ($2=="LABEL")?$3:"" } END { printf "\\n}" }\'',
-  '^get disk (da[0-9]|mmcsd0)$': '/sbin/sysctl -n kern.geom.conftxt | awk \'/^0 DISK %1/ { printf "{ \\"size\\": %s, ", $4; getline; printf "\\"label\\": \\"%s\\" }", ($2=="LABEL")?$3:"" }\'',
-  '^get disk (da[0-9]|mmcsd0) iostats$': '/usr/sbin/iostat -dx %1 | /usr/bin/awk \'BEGIN { printf "[ " } /^%1/ { for(i=2;i<12;i++) printf "%s%s", (i==2)?"":", ", $i } END { printf " ]" }\'',
-  '^get disk (da[0-9]|mmcsd0) iostat krs$': '/usr/sbin/iostat -dx | /usr/bin/awk \'/^%1/ { printf "%s", $4 }\'',
-  '^get disk (da[0-9]|mmcsd0) iostat kws$': '/usr/sbin/iostat -dx | /usr/bin/awk \'/^%1/ { printf "%s", $5 }\'',
-  '^get disk (da[0-9]|mmcsd0) iostat qlen$': '/usr/sbin/iostat -dx | /usr/bin/awk \'/^%1/ { printf "%s", $10 }\'',
-  '^get disk (da[0-9]|mmcsd0) partitions$': '/sbin/sysctl -n kern.geom.conftxt | awk \'BEGIN { printf "{"; count=0 } /^[12] PART %1/ { printf "%s\\"%s\\": { \\"size\\": %s, ", (++count==1)?"\\n  ":",\\n  ", $3, $4; getline; printf "\\"label\\": \\"%s\\" }", ($2=="LABEL")?$3:"" } END { printf "\\n}" }\'',
-  '^get partition ((?:da[0-9]|mmcsd0)[ps][1-9][a-h]*)$': '/sbin/sysctl -n kern.geom.conftxt | /usr/bin/awk \'/%1/ { printf "{ \\"size\\": %s, \\"type\\": \\"%s\\", \\"table\\": \\"%s\\"", $4, $11, $13; getline; printf ", \\"label\\": \\"%s\\" }", $3 }\'',
+  '^get disks$': 'geom disk list | awk \'BEGIN { printf "{ " } /Name/ { printf "%s\\n  \\"%s\\": { ", (++count==1)?"":",", $3 } /Mediasize/ { printf "\\"size\\": %s, ", $2 } /descr/ { printf "\\"description\\": \\""; for(i=2;i<=NF;i++) printf "%s%s", (i==2)?"":" ", $i; printf "\\" }" } END { printf "\\n}\\n"}\'',
+  '^get disk (da[0-9]|mmcsd0)$': 'geom part list %1 | awk \'BEGIN { printf "{" } /Name/ { printf "%s\\n  \\"%s\\": { ", (++count==1)?"":",", $3 } /Mediasize/ { printf "\\"size\\": %s, ", $2 } / type:/ { printf "\\"type\\": \\"%s\\" }", $2 } /Consumers/ { exit } END { printf "\\n}\\n" }\'',
+  '^get disk (da[0-9]) iostats$': '/usr/sbin/iostat -dx %1 | /usr/bin/awk \'BEGIN { printf "{ " } /^%1/ { printf "\\"krs\\": %s, \\"kws\\": %s, \\"qlen\\": %s", $4, $5, $10 } END { printf " }" }\'',
+  '^set disk (da[0-9]) gpt$': 'echo "\\"pretending to gpart delete -i 1 %1 && gpart destroy %1 && gpart create -s GPT %1 && gpart add -t freebsd-ufs %1\\""',
+  '^get disk (da[0-9][ps][1-9]|mmcsd0[ps][1-9])$': 'geom label list %1 | awk \'/Name:/ { printf "{ \\"label\\": \\"%s\\", ", $3 } /Mediasize:/ { printf "\\"size\\": %s }\\n", $2  } /Consumers/ { exit }\'',
+  '^set disk (da[0-9]p[1-9]) ufs$': 'echo "\\"pretending to newfs -j /dev/%1\\""',
   '^get filesystems$': 'df -m | /usr/bin/awk \'BEGIN { printf "{"; count=0 } /^\\/dev/ { printf "%s\\n  ", (++count==1)?"":","; printf "\\"%s\\": { \\"total\\": %s, \\"used\\": %s, \\"free\\": %s, \\"percent\\": \\"%s\\", \\"mountpoint\\": \\"%s\\" }", $1, $2, $3, $4, $5, $6 } END { printf "\\n}" }\'',
   '^get filesystems (msdosfs|ufs)$': 'df -m | /usr/bin/awk \'BEGIN { printf "{ "; count=0 } /^\\/dev\\/%1/ { printf "%s\\n", (++count==1)?"":", "; printf "[ \\"%s\\", %s, %s, %s, \\"%s\\", \\"%s\\" ]", $1, $2, $3, $4, $5, $6 } END { printf "\\n}" }\'',
   '^get filesystem (msdosfs|ufs) ([a-zA-Z]+)$': 'df -m | /usr/bin/awk \'BEGIN { printf "{ " } /^\\/dev\\/%1\\/%2/ { printf "\\"total\\": %s, \\"used\\": %s, \\"free\\": %s, \\"percent\\": \\"%s\\", \\"mountpoint\\": \\"%s\\"", $2, $3, $4, $5, $6 } END { printf " }" }\'',
+  '^set filesystem ufs ([a-zA-Z]+)': 'echo "\\"pretending to mkdir -p /media/%1 && mount /dev/ufs/%1 on /media/%1\\""',
   '^get system$': '/sbin/sysctl -n hw.platform | /usr/bin/awk \'{ printf "\\"%s\\"", $0 }\'',
   '^get system cpu$': '/sbin/sysctl -n hw.model | /usr/bin/awk \'{ printf "\\"%s %s\\"", $1, $2 }\'',
-  '^get system cpu cores$': '/sbin/sysctl -n hw.ncpu',
+  '^get system cpu cores$ ': '/sbin/sysctl -n hw.ncpu',
   '^get system cpu speed$': '/sbin/sysctl -n dev.cpu.0.freq',
-  '^get system cpu iostats$': '/usr/sbin/iostat -Cx | /usr/bin/awk \'FNR==3 { gsub("-", " "); printf "[ %s, %s, %s, %s, %s ]", $1, $2, $3, $4, $5; }\'',
+  '^get system cpu iostats$': '/usr/sbin/iostat -Cx | /usr/bin/awk \'FNR==3 { gsub("-", " "); printf "{ \\"user\\": %s, \\"nice\\": %s, \\"system\\": %s, \\"interrupt\\": %s, \\"idle\\": %s }", $1, $2, $3, $4, $5; }\'',
   '^get system cpu iostat idle$': '/usr/sbin/iostat -Cx | /usr/bin/awk \'FNR == 3 { printf "%s", $5 }\'',
   '^get system cpu temperature$': 'echo "\\"$(/sbin/sysctl -n dev.cpu.0.temperature)\\""',
   '^get system load$': '/sbin/sysctl -n vm.loadavg | /usr/bin/awk \'{ printf "[ %s, %s, %s ]\\n", $2, $3, $4 } \'',
-  '^get system log cron raw$' : '/usr/bin/tail -n1000 /var/log/cron',
-  '^get system log messages raw$' : '/usr/bin/tail -n1000 /var/log/messages',
-  '^get system log nmbd raw$' : '/usr/bin/tail -n1000 /var/log/samba4/log.nmbd',
-  '^get system log smbd raw$' : '/usr/bin/tail -n1000 /var/log/samba4/log.smbd',
-  '^get system log weenas raw$' : '/usr/bin/tail -n1000 /var/log/weenas_api.log',
-  '^get system mail raw$' : 'mailx -Hu `/usr/bin/awk -F\': *\' \'/^root:/ { print $2 }\' /etc/aliases`',
-  '^get system mail ([0-9]+) raw$' : 'echo "%1" | mailx -Nu `/usr/bin/awk -F\': *\' \'/^root:/ { print $2 }\' /etc/aliases`',
+  '^get system log cron raw$': '/usr/bin/tail -n1000 /var/log/cron',
+  '^get system log messages raw$': '/usr/bin/tail -n1000 /var/log/messages',
+  '^get system log nmbd raw$': '/usr/bin/tail -n1000 /var/log/samba4/log.nmbd',
+  '^get system log smbd raw$': '/usr/bin/tail -n1000 /var/log/samba4/log.smbd',
+  '^get system log weenas raw$': '/usr/bin/tail -n1000 /var/log/weenas_api.log',
+  '^get system mail raw$': 'mailx -Hu `/usr/bin/awk -F\': *\' \'/^root:/ { print $2 }\' /etc/aliases`',
+  '^get system mail ([0-9]+) raw$': 'echo "%1" | mailx -Nu `/usr/bin/awk -F\': *\' \'/^root:/ { print $2 }\' /etc/aliases`',
+  '^del system mail ([0-9]+)$': 'echo "d%1" | mailx -Nu `/usr/bin/awk -F\': *\' \'/^root:/ { print $2 }\' /etc/aliases`', 
   '^get system memory nameplate$': 'printf "\\"%1.fG\\"\\n" $(echo "scale=2; $(/sbin/sysctl -n hw.physmem) / 1073741824" | bc)',
   '^get system memory usable$': '/sbin/sysctl -n hw.physmem',
   '^get system memory user$': '/sbin/sysctl -n hw.usermem',
   '^get system memory free$': 'echo "$(/sbin/sysctl -n vm.stats.vm.v_free_count) * $(/sbin/sysctl -n vm.stats.vm.v_page_size)" | bc',
-  '^get system service (ntpd)$': 'echo "\\"$(/usr/sbin/service %1 status)\\""',
+  '^get system service (ntpd|samba_server)$': 'echo "\\"$(/usr/sbin/service %1 status | tr "\n" " ")\\""',
   '^get system top$': '/usr/bin/top -bt | /usr/bin/awk \'BEGIN { count=0; print "[" } { printf "%s\\"%s\\"", (++count==1)?"":",\\n", $0 } END { printf "\\n]" }\'',
   '^get system top raw$': '/usr/bin/top -bt'
 };
