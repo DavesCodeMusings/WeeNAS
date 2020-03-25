@@ -27,31 +27,37 @@
     * Users
     */
 
+    /* Display user accounts, separating into enanbled/disabled on the page. */
+    function updateUserList(usersObj) {
+      let users = Object.keys(usersObj);
+      users.sort();
+      let enabledList = '';
+      let disabledList = '';
+      for (let i = 0; i < users.length; i++) {
+        if (!usersObj[users[i]].includes('D')) {
+          enabledList += '<option>' + users[i] + '</option>';
+        }
+        else {
+          disabledList += '<option>' + users[i] + '</option>';
+        }
+      }
+      document.getElementById('user-enabled').innerHTML = enabledList;
+      document.getElementById('user-disabled').innerHTML = disabledList;
+    }
+
     /* AJAX fetch users */
-    function getUsers() {
+    function getUsers(callback) {
+      url = './users';
+      document.body.style.cursor = 'wait';
       let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-          let usersObj = JSON.parse(this.responseText);
-          let users = Object.keys(usersObj);
-          users.sort();
-          let enabledList = '';
-          let disabledList = '';
-          for (let i = 0; i < users.length; i++) {
-            if (!usersObj[users[i]].includes('D')) {
-              enabledList += '<option>' + users[i] + '</option>';
-            }
-            else {
-              disabledList += '<option>' + users[i] + '</option>';
-            }
-          }
-          document.getElementById('user-enabled').size = Math.min(users.length, 10);
-          document.getElementById('user-enabled').innerHTML = enabledList;
-          document.getElementById('user-disabled').size = Math.min(users.length, 10);
-          document.getElementById('user-disabled').innerHTML = disabledList;
+        if (this.readyState == 4) {
+          if (this.status == 200) callback(JSON.parse(this.responseText));
+          else alert('ERROR: ' + this.responseText);
+          document.body.style.cursor = 'default';
         }
       };
-      xhttp.open('GET', './users', true);
+      xhttp.open('GET', url, true);
       xhttp.send();
     }
 
@@ -66,8 +72,8 @@
           xhttp[i] = new XMLHttpRequest();
           xhttp[i].onreadystatechange = function () {
             if (xhttp[i].readyState === 4) {
-              document.body.style.cursor = 'default';
               if (xhttp[i].status !== 200) alert('Error: ' + xhttp[i].responseText);
+              document.body.style.cursor = 'default';
             }
           };
           xhttp[i].open('POST', url, true);
@@ -84,8 +90,8 @@
         let xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function () {
           if (this.readyState === 4) {
-            document.body.style.cursor = 'default';
             if (this.status !== 200) alert('Error: ' + this.responseText);
+            document.body.style.cursor = 'default';
           }
         };
         xhttp.open('PUT', url, true);
@@ -102,8 +108,8 @@
           let xhttp = new XMLHttpRequest();
           xhttp.onreadystatechange = function () {
             if (this.readyState === 4) {
-              document.body.style.cursor = 'default';
               if (this.status !== 200) alert('Error: ' + this.responseText);
+              document.body.style.cursor = 'default';
             }
           };
           xhttp.open('DELETE', url, true);
@@ -132,81 +138,98 @@
       return `${size}${label[count]}`;
     }
 
+    /* Display disk information */
+    function updateDiskList(disksObj) {
+      let diskNames = Object.keys(disksObj);
+      diskNames.sort();
+      let diskOptionList = '';
+      for (let i = 0; i < diskNames.length; i++) {
+        diskOptionList += '<option>' + diskNames[i] + '</option>';
+      }
+      document.getElementById('storage-devices').innerHTML = diskOptionList;
+    }
+
     /* AJAX fetch storage devices (disks) */
-    function getDisks() {
+    function getDisks(callback) {
       let url = './disks';
+      document.body.style.cursor = 'wait';
       let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-          disksObj = JSON.parse(this.responseText);
-          let diskNames = Object.keys(disksObj);
-          diskNames.sort();
-          let diskOptionList = '';
-          for (let i = 0; i < diskNames.length; i++) {
-            diskOptionList += '<option>' + diskNames[i] + '</option>';
-          }
-          document.getElementById('storage-devices').innerHTML = diskOptionList;
+        if (this.readyState == 4) {
+          if (this.status == 200) callback(JSON.parse(this.responseText));
+          else alert('Error: ' + this.responseText);
+          document.body.style.cursor = 'default';
         }
       };
       xhttp.open('GET', url, true);
       xhttp.send();
     }
 
-    /*  */
-    function getDiskInfo(disk) {
+    /* Display partition information */
+    function updateDiskInfo(diskObj) {
+      let partitionNames = Object.keys(diskObj);
+      partitionNames.sort();
+      let partitionOptionList = '';
+      for (let i = 0; i < partitionNames.length; i++) {
+        partitionOptionList += '<option>' + partitionNames[i] + '</option>';
+      }
+      document.getElementById('storage-partitions').innerHTML = partitionOptionList;
+      //if (disksObj[disk].size) document.getElementById('storage-size').innerHTML = diskSizeHuman(disksObj[disk].size);
+      //if (disksObj[disk].description) document.getElementById('storage-description').innerHTML = disksObj[disk].description;
+    }
+
+    /* Get information about a particular disk. */
+    function getDiskInfo(disk, callback) {
       let url = './disk/' + disk;
+      document.body.style.cursor = 'wait';
       let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-          let diskObj = JSON.parse(this.responseText);
-          let partitionNames = Object.keys(diskObj);
-          partitionNames.sort();
-          let partitionOptionList = '';
-          for (let i = 0; i < partitionNames.length; i++) {
-            partitionOptionList += '<option>' + partitionNames[i] + '</option>';
-          }
-          document.getElementById('storage-partitions').innerHTML = partitionOptionList;
-        }
-      };
-      xhttp.open('GET', url, true);
-      xhttp.send();
-      if (disksObj[disk].size) document.getElementById('storage-size').innerHTML = diskSizeHuman(disksObj[disk].size);
-      if (disksObj[disk].description) document.getElementById('storage-description').innerHTML = disksObj[disk].description;
-    }
-
-    /* AJAX fetch partition type and label */
-    function getPartitionInfo(partition) {
-      let url = './disk/' + partition;
-      let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-          let partitionObj = JSON.parse(this.responseText);
-          document.getElementById('storage-label').innerHTML = '<option>' + partitionObj.label + '</option>';
-          getFilesystemInfo(partitionObj.label);
+        if (this.readyState == 4) {
+          if (this.status == 200) callback(JSON.parse(this.responseText));
+          else alert('Error: ' + this.responseText);
+          document.body.style.cursor = 'default';
         }
       };
       xhttp.open('GET', url, true);
       xhttp.send();
     }
 
-    /* AJAX fetch mounted filesystem info by label */
-    function getFilesystemInfo(label) {
-      let url = './filesystem/' + label;
+    /* Display available filesystems */
+    function displayFilesystems(filesystemsArr) {
+      filesystemsList = '';
+      for (let i = 0; i < filesystemsArr.length; i++) {
+        filesystemsList += '<option>' + filesystemsArr[i] + '</option>'
+        document.getElementById('storage-filesystems').innerHTML = filesystemsList;
+      }
+    }
+
+    /* AJAX fetch available filesystems */
+    function getFilesystems(fsType, callback) {
+      let url = './filesystems/' + fsType;
+      document.body.style.cursor = 'wait';
       let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-          let filesystemObj = JSON.parse(this.responseText);
-          let e = document.getElementById('storage-mountpoint');
-          if (filesystemObj.mountpoint) {
-            e.value = filesystemObj.mountpoint;
-          }
-          else {
-            e.value = '';
-          }
+        if (this.readyState == 4) {
+          if (this.status == 200) callback(JSON.parse(this.responseText));
+          else alert('Error: ' + this.responseText);
+          document.body.style.cursor = 'default';
         }
       };
       xhttp.open('GET', url, true);
       xhttp.send();
+    }
+
+    /* Determine a default mount directory based on filesystem label */
+    function suggestMountPoint(fsLabel) {
+      if (fsLabel) {
+        let parentDir = '/media';
+
+        // Chop 'fs' off the end for readability, so 'musicfs' becomes 'music'.
+        if (fsLabel.substring(fsLabel.length - 2) == 'fs') {
+          fsLabel = fsLabel.substring(0, fsLabel.length - 2);
+        }
+        return parentDir + '/' + fsLabel;
+      }
     }
 
     /* AJAX write partition scheme */
@@ -255,19 +278,22 @@
     * Services
     */
 
-    /* Get service status and use it to fill element's innerHTML. */
-    function getServiceStatus(name, elementId) {
+    /* Display ntpd Status */
+    function updateNtpd(status) {
+      document.getElementById('time-ntpd').innerHTML = status;
+    }
+
+    /* Get service status. */
+    function getServiceStatus(name, callback) {
       let url = './system/service/' + name;
       let xhttp = new XMLHttpRequest();
+      document.body.style.cursor = 'wait';
       xhttp.onreadystatechange = function () {
         if (this.readyState === 4) {
-          if (this.status === 200) {
-            document.getElementById(elementId).innerHTML = JSON.parse(this.responseText);
-          }
-          else {
-            document.getElementById(elementId).innerHTML = "Not running.";
-          }
+          if (this.status === 200) callback(JSON.parse(this.responseText));
+          else alert('Error: ' + this.responseText);
         }
+        document.body.style.cursor = 'default';
       };
       xhttp.open('GET', url, true);
       xhttp.send();
@@ -277,25 +303,9 @@
     * Time
     */
 
-    /* Get server time and browser time, in UTC and to the nearest minute. */
-    function getDateTime() {
-      let xhttpTime = new XMLHttpRequest();
-      xhttpTime.onreadystatechange = function () {
-        if (this.readyState === 4) {
-          if (this.status === 200) {
-            let serverDateTime = this.responseText;
-            document.getElementById('time-server').value = JSON.parse(serverDateTime);
-          }
-          else {
-            document.getElementById('time-server').value = "yyyy-mm-ddThh:mmZ";
-          }
-        }
-      };
-      xhttpTime.open('GET', './datetime', true);
-      xhttpTime.send();
-
-      // Report on ntpd service.
-      getServiceStatus('ntpd', 'time-ntpd');
+    /* Display date and time */
+    function updateDateTime(dateTimeString) {
+      document.getElementById('time-server').value = dateTimeString;
 
       // Create an ISO-8601 date rounded to the nearest minute to match server format.
       let d = new Date();
@@ -308,27 +318,79 @@
       document.getElementById('time-browser').value = formattedDate;
     }
 
+    /* Get server time and browser time, in UTC and to the nearest minute. */
+    function getDateTime(callback) {
+      let xhttpTime = new XMLHttpRequest();
+      document.body.style.cursor = 'wait';
+      xhttpTime.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          if (this.status === 200) callback(JSON.parse(this.responseText));
+          else alert('Error: ' + this.responseText);
+        }
+        document.body.style.cursor = 'default';
+      };
+      xhttpTime.open('GET', './datetime', true);
+      xhttpTime.send();
+    }
+
+    /* Current log file name */
+    logFileName = "messages";
+
+    /* Display log contents and automaticall scroll down to most recent events. */
+    function updateLog(contents) {
+      let e = document.getElementById('log-viewer');
+      e.value = contents;
+      e.scrollTop = e.scrollHeight;
+    }
+
+    /* AJAX log fetcher. */
+    function getLog(name, callback) {
+      let url = './system/log/' + name + '/raw';
+      let xhttp = new XMLHttpRequest();
+      document.body.style.cursor = 'wait';
+      xhttp.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          if (this.status === 200) callback(this.responseText);
+          else alert('Error: ' + this.responseText);
+          document.body.style.cursor = 'default';
+        }
+      };
+      xhttp.open('GET', url, true);
+      xhttp.send();
+    }
+
+    /*
+    *  Mail
+    */
+
     /* Current mail message number (0 means show headers only) */
     mailMsgNum = 0;
 
+    /* Display contents of mail message or headers. */
+    function updateMail(msg) {
+      document.getElementById('mail').value = msg;
+    }
+
     /* AJAX fetch mail by message ID. No ID or ID <= 0 will fetch headers.*/
-    function getMail(msgNum) {
+    function getMail(msgNum, callback) {
       if (msgNum === undefined || msgNum < 0) msgNum = 0;
       let url = './system/mail';
       if (msgNum > 0) {
         url += '/' + msgNum;
       }
       url += '/raw';
+      document.body.style.cursor = 'wait';
       let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-          let mailMsg = this.responseText;
-          document.getElementById('mail').value = mailMsg;
+        if (this.readyState == 4) {
+          if (this.status == 200) callback(this.responseText);
+          else alert(this.responseText);
+          mailMsgNum = msgNum;
+          document.body.style.cursor = 'default';
         }
       };
       xhttp.open('GET', url, true);
       xhttp.send();
-      mailMsgNum = msgNum;
     }
 
     /* AJAX delete mail by message ID. */
@@ -345,25 +407,6 @@
         xhttp.send();
       }
     }
-
-    /* AJAX log fetcher. */
-    function getLog(name) {
-      let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function () {
-        if (this.readyState === 4 && this.status === 200) {
-          let logContents = this.responseText;
-          let e = document.getElementById('log-viewer');
-          e.value = logContents;
-          e.scrollTop = e.scrollHeight;
-        }
-      };
-      xhttp.open('GET', './system/log/' + name + '/raw', true);
-      xhttp.send();
-    }
-
-    /* Current log file name */
-    logFileName = "messages";
-
   </script>
 </head>
 
@@ -385,7 +428,7 @@
 
     <!-- User Account Management -->
     <details>
-      <summary onclick="getUsers();">&#x1F464; User Accounts</summary>
+      <summary>&#x1F464; User Accounts</summary>
       <div style="margin-left: 1em;">
         <details>
           <summary>&#x02795; Add</summary>
@@ -402,7 +445,7 @@
           </form>
         </details>
         <details>
-          <summary>&#x1F527; Manage</summary>
+          <summary onclick="getUsers(updateUserList);">&#x1F527; Manage</summary>
           <form>
             <table>
               <tr>
@@ -414,17 +457,17 @@
               <tr>
                 <td><select id="user-enabled" size=5 style="width: 10em;"></select></td>
                 <td><button class="narrow"
-                    onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers();"
+                    onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers(updateUserList);"
                     type="button" title="Lock account">&#x1F512;&#x276F;</button>
                   <br>
                   <button class="narrow"
-                    onclick="setUser(document.getElementById('user-disabled').value, 'enabled'); getUsers();"
+                    onclick="setUser(document.getElementById('user-disabled').value, 'enabled'); getUsers(updateUserList);"
                     type="button" title="Unlock account">&#x276E;&#x1F513;</button>
                 </td>
                 <td><select id="user-disabled" size=5 style="width: 10em;"></select></td>
                 <td><button class="narrow"
-                    onclick="delUser(document.getElementById('user-disabled').value); getUsers();" type="button"
-                    title="Delete account"><span
+                    onclick="delUser(document.getElementById('user-disabled').value); getUsers(updateUserList);"
+                    type="button" title="Delete account"><span
                       style="color: red; font-size: 125%; font-weight: bold;">x</span></button></td>
               </tr>
             </table>
@@ -436,10 +479,10 @@
     <!-- Storage Management -->
 
     <details>
-      <summary onclick="getDisks();">&#x1F4BE; Storage Devices</summary>
+      <summary>&#x1F4BE; Storage Devices</summary>
       <div style="margin-left: 1em;">
         <details>
-          <summary>&#x02795; Add</summary>
+          <summary onclick="getDisks(updateDiskList);">&#x02795; Add</summary>
           <form>
             <table>
               <tr>
@@ -448,11 +491,9 @@
               </tr>
               <tr>
                 <td><select id="storage-devices"
-                    onchange="e=document.getElementById('storage-devices'); getDiskInfo(e.options[e.selectedIndex].value);"
+                    onchange="e=document.getElementById('storage-devices'); getDiskInfo(e.options[e.selectedIndex].value, updateDiskInfo);"
                     size=5 style="width: 14em;"></select></td>
-                <td><select id="storage-partitions"
-                    onchange="e=document.getElementById('storage-partitions'); getPartitionInfo(e.options[e.selectedIndex].value);"
-                    size=5 style="width: 14em;"></select></td>
+                <td><select id="storage-partitions" size=5 style="width: 14em;"></select></td>
               </tr>
             </table>
             <table>
@@ -480,8 +521,9 @@
           </form>
         </details>
 
+        <!-- Management of existing filesystems. (Mounting) -->
         <details>
-          <summary>&#x1F527; Manage</summary>
+          <summary onclick="getFilesystems('ufs', displayFilesystems);">&#x1F527; Manage</summary>
           <form>
             <table>
               <tr>
@@ -489,13 +531,14 @@
                 <th>directory</th>
               </tr>
               <tr>
-                <td><select size=5 style="width: 14em;"></select></td>
-                <td style="vertical-align: top"><input style="width: 14em;" type="text"><br>
+                <td><select id='storage-filesystems'
+                    onchange="e=document.getElementById('storage-filesystems'); document.getElementById('storage-mountpoint').value = suggestMountPoint(e.options[e.selectedIndex].value);"
+                    size=5 style="width: 14em;"></select></td>
+                <td style="vertical-align: top"><input id="storage-mountpoint" style="width: 14em;" type="text"><br>
                   <button id="storage-mount" class="wide" title="Mount filesystem on directory."
                     type="button">&#x1F4BE;&#x276F;&#x1F4BB;</button><br>
                   <button id="storage-mount" class="wide" title="Unmount filesystem."
                     type="button">&#x1F4BE;&#x276E;&#x1F4BB;</button></td>
-
               </tr>
             </table>
           </form>
@@ -505,7 +548,8 @@
 
     <!-- System Date and Time -->
     <details>
-      <summary onclick="getDateTime();">&#x0231A; System Date-Time</summary>
+      <summary onclick="getDateTime(updateDateTime); getServiceStatus('ntpd', updateNtpd);">&#x0231A; System Date-Time
+      </summary>
       <div style="margin-left: 1em;">
         <form>
           <table>
@@ -534,25 +578,26 @@
   <aside class="wide">
     <h2>Logs &amp; Messages</h2>
     <details>
-      <summary onclick="getLog(logFileName);">&#x1F4C4; Log Viewer</summary>
+      <summary onclick="getLog(logFileName, updateLog);">&#x1F4C4; Log Viewer</summary>
       <p>
-        <button onclick="getLog(logFileName = 'messages');" type="button">system</button>
-        <button onclick="getLog(logFileName = 'smbd');" type="button">smbd</button>
-        <button onclick="getLog(logFileName = 'nmbd');" type="button">nmbd</button>
-        <button onclick="getLog(logFileName = 'messages');" type="button">cron</button>
-        <button onclick="getLog(logFileName = 'weenas');" type="button">api</button>
-        <button onclick="getLog(logFileName);" title="Refresh Log" type="button">&#x21BB;</button>
+        <button onclick="getLog(logFileName = 'messages', updateLog);" type="button">system</button>
+        <button onclick="getLog(logFileName = 'smbd', updateLog);" type="button">smbd</button>
+        <button onclick="getLog(logFileName = 'nmbd', updateLog);" type="button">nmbd</button>
+        <button onclick="getLog(logFileName = 'messages', updateLog);" type="button">cron</button>
+        <button onclick="getLog(logFileName = 'weenas', updateLog);" type="button">api</button>
+        <button onclick="getLog(logFileName, updateLog);" title="Refresh Log" type="button">&#x21BB;</button>
       </p>
       <textarea readonly rows=25 cols=80 id="log-viewer"></textarea>
     </details>
     <details>
-      <summary onclick="getMail();">&#x1F4E7; System Mail</summary>
+      <summary onclick="getMail(0, updateMail);">&#x1F4E7; System Mail</summary>
       <p>
-        <button onclick="getMail(0);" title="Header View" type="button">&#x1F4D1;</button>
-        <button onclick="mailMsgNum = Math.max(--mailMsgNum, 0); getMail(mailMsgNum);" title="Previous Message"
-          type="button">&#x25B2;</button>
-        <button onclick="getMail(++mailMsgNum);" title="Next Message" type="button">&#x25BC;</button>
-        <button onclick="delMail(mailMsgNum); getmail(0);" title="Delete Message" type="button">&#x274C;</button>
+        <button onclick="getMail(0,updateMail);" title="Header View" type="button">&#x1F4D1;</button>
+        <button onclick="mailMsgNum = Math.max(--mailMsgNum, 0); getMail(mailMsgNum, updateMail);"
+          title="Previous Message" type="button">&#x25B2;</button>
+        <button onclick="getMail(++mailMsgNum, updateMail);" title="Next Message" type="button">&#x25BC;</button>
+        <button onclick="delMail(mailMsgNum); getmail(0, updateMail);" title="Delete Message"
+          type="button">&#x274C;</button>
       </p>
       <textarea readonly rows=25 cols=80 id="mail"></textarea>
     </details>
