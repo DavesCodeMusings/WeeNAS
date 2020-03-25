@@ -167,15 +167,15 @@
 
     /* Display partition information */
     function updateDiskInfo(diskObj) {
-      let partitionNames = Object.keys(diskObj);
+      let partitionNames = Object.keys(diskObj.partitions);
       partitionNames.sort();
       let partitionOptionList = '';
       for (let i = 0; i < partitionNames.length; i++) {
         partitionOptionList += '<option>' + partitionNames[i] + '</option>';
       }
       document.getElementById('storage-partitions').innerHTML = partitionOptionList;
-      //if (disksObj[disk].size) document.getElementById('storage-size').innerHTML = diskSizeHuman(disksObj[disk].size);
-      //if (disksObj[disk].description) document.getElementById('storage-description').innerHTML = disksObj[disk].description;
+      if (diskObj.size) document.getElementById('storage-size').innerHTML = diskSizeHuman(diskObj.size);
+      if (diskObj.description) document.getElementById('storage-description').innerHTML = diskObj.description;
     }
 
     /* Get information about a particular disk. */
