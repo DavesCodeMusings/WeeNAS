@@ -48,25 +48,23 @@ function users() {
     warnBlank(trusted);
     let summary = trusted.value.toLowerCase();
     let commands = '\n# Creating shared group.\n';
-    commands += 'pw group add -g 1000 shared\n';  /* user groups start at 1001 and go up, 1000 is unused. */
-    commands += '\n# Creating trusted user accounts. These are the users that can su to root.\n';
+    commands += 'pw groupadd shared -g 1000\n';  /* user groups start at 1001 and go up, 1000 is unused. */
+    commands += '\n# Creating trusted user account(s). These are the users that can su to root.\n';
     /* .split(' ') on an empty string results in a length of 1, hence the conditional below. */
     if (trusted.value) {
         let userList = trusted.value.split(' ');
         for (let i = 0; i < userList.length; i++) {
             commands += 'smbpasswd -a ' + userList[i].toLowerCase() + '\n';
-            commands += 'pw groupmod wheel -m ' + userList[i].toLowerCase() + '\n';
+            commands += 'passwd ' + userList[i].toLowerCase() + '\n';
+            commands += 'pw usermod ' + userList[i].toLowerCase() + ' -G shared,wheel -s /bin/sh\n';
         }
     }
     else {
-        commands += "\n# Check the configuration!  There must be at least one trusted user.\n"
+        commands += "\n# Check the configuration!  There must be at least one trusted user.\n";
     }
-    commands += '\n# Securing initial password vault and disabling built-in backdoor accounts.\n';
-    commands += 'chmod 400 /root/vault\n';
+    commands += '\n# Locking built-in accounts.\n';
     commands += 'pw lock toor\n';
     commands += 'pw lock freebsd\n';
-    commands += '\n# Temporary passwords for trusted users in the order they were created.\n';
-    commands += 'cat /root/vault\n';
     document.getElementById('user-summary').innerHTML = summary;
     document.getElementById('user-commands').innerHTML = commands;
 }
@@ -175,14 +173,14 @@ function storage() {
     commands += '  gpart create -s GPT ' + dev.value + '\n';
     commands += '  gpart add -t freebsd-ufs ' + dev.value + '\n';
     commands += '\n  # Create UFS filesystem (aka format.)\n'
-    commands += '  newfs ' + label.value + ' ' + dev.value + 'p1\n';
+    commands += '  newfs ' + dev.value + 'p1\n';
     commands += 'fi\n';
     commands += '\n# Label as ' + label.value + ' and set soft journaling.\n'
-    commands += 'tunefs -j -L ' + label.value + ' ' + dev.value + 'p1\n';
+    commands += 'tunefs -j enable -L ' + label.value + ' /dev/' + dev.value + 'p1\n';
     commands += '\n# Write to fstab and mount\n';
     commands += 'echo "/dev/ufs/' + label.value + ' ' + mount.value + ' ufs rw,noatime 0 0" >> /etc/fstab\n';
-    commands += 'fsck -fpy /dev/ufs/homefs\n';
-    commands += 'mount ' + label.value + '\n';
+    commands += 'fsck -fpy /dev/ufs/' + label.value + '\n';
+    commands += 'mount /dev/ufs/' + label.value + '\n';
     commands += '\n# Create a shared directory with sticky bit to help protect files.\n';
     commands += 'mkdir /home/shared\n';
     commands += 'chgrp 1000 /home/shared\n';
@@ -195,53 +193,21 @@ function samba() {
     let workgroup = document.getElementById('samba-workgroup');
     let shared = document.getElementById('samba-shared');
     let summary = workgroup.value.toUpperCase();
-    let commands = 'pkg install -y samba48\n';
+    let commands = 'pkg install -y samba410\n';
     warnBlank(workgroup);
-    commands += '\n# Create user account helper scripts.\n';
-    commands += 'mkdir /root/weenas\n';
-    commands += 'cat << EOF > /root/weenas/smbuseradd.sh\n';
-    commands += '#!/bin/sh\n';
-    commands += 'pw groupadd $1 && pw useradd $1 -m -c $1 -g $1 -G shared -w random >>/root/vault\n';
-    commands += 'EOF\n';
-    commands += 'cat << EOF > /root/weenas/smbuserdel.sh\n';
-    commands += '#!/bin/sh\n';
-    commands += 'pw userdel $1\n';
-    commands += 'EOF\n';
-    commands += '\n# Create default password for new users.\n';
-    commands += 'cat << EOF > /root/weenas/defaultpass.sh\n';
-    commands += '#!/bin/sh\n';
-    commands += 'INITPASS=$(md5 -q -s $1 | sed \'s/MD5.* = //\')\n';
-    commands += 'echo $INITPASS';
-    commands += '[ -t 1 ] || echo $INITPASS  ## echo again if piped (eg. to smbpasswd -s)';
-    commands += 'EOF\n';
-    commands += '\n# Create a place to store first time passwords.\n';
-    commands += 'touch /root/vault\n';
-    commands += 'chmod 600 /root/vault\n';
-    commands += '\n# Create Samba config file.\n';
-    commands += 'cat << EOF > /usr/share/etc/smb4.conf\n';
-    commands += '[global]\n';
-    commands += '  workgroup = ' + workgroup.value.toUpperCase() + '\n';
-    commands += '  server string = %h\n';
-    commands += '  security = user\n';
-    commands += '  add user script = /root/weenas/smbuseradd.sh %u\n';
-    commands += '  delete user script = /root/weenas/smbuserdel.sh %u\n';
-    commands += '[homes]\n';
-    commands += '  comment = Home Directories\n';
-    commands += '  browseable = no\n';
-    commands += '  writable = yes\n';
-    commands += '  create mask = 644\n';
-    commands += '  directory mask = 755\n';
+    commands += '\n# Copy boilerplate Samba config file.\n';
+    commands += 'cp /root/weenas/etc/smb4.conf /usr/local/etc/\n';
+    if (workgroup.value.toUpperCase() !== 'WORKGROUP') {
+        commands += '\n# Updating workgroup name.\n';
+        commands += 'sed -i~ \'s/WORKGROUP/' + workgroup.value.toUpperCase() + '/\' /usr/local/etc/smb4.conf\n';
+    }
     if (shared.value == 'Yes') {
         summary += ' with shared directory';
-        commands += '[shared]\n';
-        commands += '  path = /home/shared\n';
-        commands += '  comment = Shared Directory\n';
-        commands += '  browsable = yes\n';
-        commands += '  writable = yes\n';
-        commands += '  create mask = 644\n';
-        commands += '  directory mask = 755\n';
     }
-    commands += 'EOF\n';
+    else {
+        commands += '\n# Commenting out shared directory.\n';
+        commands += 'sed -i~ \'/^\\[shared\\]/,$s/^/#/\' /usr/local/etc/smb4.conf\n';
+    }
     commands += 'sysrc samba_server_enable="YES"\n';
     commands += 'service samba_server start\n';
     document.getElementById('samba-summary').innerHTML = summary;
