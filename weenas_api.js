@@ -41,9 +41,9 @@ var apiCmdDict = {
   '^get disks$': 'geom disk list | awk \'BEGIN { printf "{ " } /Name/ { printf "%s\\n  \\"%s\\": { ", (++count==1)?"":",", $3 } /Mediasize/ { printf "\\"size\\": %s, ", $2 } /descr/ { printf "\\"description\\": \\""; for(i=2;i<=NF;i++) printf "%s%s", (i==2)?"":" ", $i; printf "\\" }" } END { printf "\\n}\\n"}\'',
   '^get disk (da[0-9]|mmcsd0)$': 'echo "{" && geom disk list %1 | awk \'/Mediasize/ { printf "  \\"size\\": %s,\\n", $2 } /descr/ { printf "  \\"description\\": \\""; for(i=2;i<=NF;i++) printf "%s%s", (i==2)?"":" ", $i; printf "\\",\\n" }\' && geom part list %1 | awk \'BEGIN { printf "  \\"partitions\\": {" } /Name/ { printf "%s\\n    \\"%s\\": { ", (++count==1)?"":",", $3 } /Mediasize/ { printf "\\"size\\": %s, ", $2 } / type:/ { printf "\\"type\\": \\"%s\\" }", $2 } /Consumers/ { exit } END { printf "\\n  }\\n" }\' && echo "}"',
   '^get disk (da[0-9]) iostats$': '/usr/sbin/iostat -dx %1 | /usr/bin/awk \'BEGIN { printf "{ " } /^%1/ { printf "\\"krs\\": %s, \\"kws\\": %s, \\"qlen\\": %s", $4, $5, $10 } END { printf " }" }\'',
-  '^set disk (da[0-9]) gpt$': 'echo "\\"pretending to gpart delete -i 1 %1 && gpart destroy %1 && gpart create -s GPT %1 && gpart add -t freebsd-ufs %1\\""',
+  '^set disk (da[0-9]) gpt$': 'gpart delete -i 1 %1 && gpart destroy %1 && gpart create -s GPT %1 && gpart add -t freebsd-ufs %1',
   '^get disk (da[0-9][ps][1-9]|mmcsd0[ps][1-9])$': 'geom label list %1 | awk \'/Name:/ { printf "{ \\"label\\": \\"%s\\", ", $3 } /Mediasize:/ { printf "\\"size\\": %s }\\n", $2  } /Consumers/ { exit }\'',
-  '^set disk (da[0-9]p[1-9]) ufs$': 'echo "\\"pretending to newfs -j /dev/%1\\""',
+  '^set disk (da[0-9]p[1-9]) ufs$': 'newfs -j /dev/%1',
   '^get filesystems (msdosfs|ufs)': 'ls -1 /dev/%1 | awk \'BEGIN { printf "[ " } { printf "%s\\"%s\\"", (++count==1)?"":", ",  $0 } END { printf " ]\\n" }\'',
   '^set filesystem ufs ([a-zA-Z]+)': 'echo "\\"pretending to mkdir -p /media/%1 && mount /dev/ufs/%1 on /media/%1\\""',
   '^get filesystems mounted$': 'df -m | /usr/bin/awk \'BEGIN { printf "{"; count=0 } /^\\/dev/ { printf "%s\\n  ", (++count==1)?"":","; printf "\\"%s\\": { \\"total\\": %s, \\"used\\": %s, \\"free\\": %s, \\"percent\\": \\"%s\\", \\"mountpoint\\": \\"%s\\" }", $1, $2, $3, $4, $5, $6 } END { printf "\\n}" }\'',
@@ -144,7 +144,7 @@ console.log ('WeeNAS version ' + weenasVersion + '\nCopyright (c)2020 David Hort
 if (pidFile) {
   fs.writeFile(pidFile, process.pid, (e) => {
     if (!e) console.log(stamp('PID ' + process.pid + ' written to ' + pidFile));
-    else console.log(stamp(pidFlie + ' is stale. Don\' trust it. Actual PID is: ' + process.pid));
+    else console.log(stamp(pidFlie + ' is stale. Don\'t trust it. Actual PID is: ' + process.pid));
   });
 }
 

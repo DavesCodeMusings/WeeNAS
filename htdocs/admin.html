@@ -122,9 +122,6 @@
     * Storage
     */
 
-    /* For caching disk information */
-    var disksObj = {};
-
     /* Human readable disk-size */
     function diskSizeHuman(sizeBytes) {
       let size = sizeBytes;
@@ -248,7 +245,7 @@
             document.body.style.cursor = 'default';
           }
         };
-        xhttp.open('PUT', url, true);
+        xhttp.open('POST', url, true);
         xhttp.send();
       }
     }
@@ -269,7 +266,7 @@
             document.body.style.cursor = 'default';
           }
         };
-        xhttp.open('PUT', url, true);
+        xhttp.open('POST', url, true);
         xhttp.send();
       }
     }
@@ -583,7 +580,7 @@
         <button onclick="getLog(logFileName = 'messages', updateLog);" type="button">system</button>
         <button onclick="getLog(logFileName = 'smbd', updateLog);" type="button">smbd</button>
         <button onclick="getLog(logFileName = 'nmbd', updateLog);" type="button">nmbd</button>
-        <button onclick="getLog(logFileName = 'messages', updateLog);" type="button">cron</button>
+        <button onclick="getLog(logFileName = 'cron', updateLog);" type="button">cron</button>
         <button onclick="getLog(logFileName = 'weenas', updateLog);" type="button">api</button>
         <button onclick="getLog(logFileName, updateLog);" title="Refresh Log" type="button">&#x21BB;</button>
       </p>
