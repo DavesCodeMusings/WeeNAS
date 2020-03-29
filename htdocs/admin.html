@@ -192,7 +192,7 @@
     }
 
     /* Display available filesystems */
-    function displayFilesystems(filesystemsArr) {
+    function updateFilesystems(filesystemsArr) {
       filesystemsList = '';
       for (let i = 0; i < filesystemsArr.length; i++) {
         filesystemsList += '<option>' + filesystemsArr[i] + '</option>'
@@ -216,17 +216,33 @@
       xhttp.send();
     }
 
-    /* Determine a default mount directory based on filesystem label */
-    function suggestMountPoint(fsLabel) {
-      if (fsLabel) {
-        let parentDir = '/media';
+    /* Display mountpoint */
+    function updateMountpoint(directory, editable) {
+      let e = document.getElementById('storage-mountpoint')
+      e.value = directory;
+      if (editable) e.removeAttribute('readonly');
+      else e.setAttribute('readonly', true);
+    }
 
+    /* Determine a default mount directory based on filesystem label */
+    function suggestMountPoint(fsLabel, callback) {
+      let mountpoint = '';
+      let editable = false;
+      if (fsLabel == "rootfs") {
+        mountpoint = '/';
+      }
+      else if (fsLabel == "homefs") {
+        mountpoint = '/home';
+      }
+      else {
         // Chop 'fs' off the end for readability, so 'musicfs' becomes 'music'.
         if (fsLabel.substring(fsLabel.length - 2) == 'fs') {
           fsLabel = fsLabel.substring(0, fsLabel.length - 2);
         }
-        return parentDir + '/' + fsLabel;
+        mountpoint = '/media/' + fsLabel;
+        editable = true;
       }
+      callback(mountpoint, editable);
     }
 
     /* AJAX write partition scheme */
@@ -312,7 +328,7 @@
         + 'T' + ('0' + d.getUTCHours()).slice(-2)
         + ':' + ('0' + d.getUTCMinutes()).slice(-2)
         + 'Z';
-      document.getElementById('time-browser').value = formattedDate;
+      document.getElementById('time-client').value = formattedDate;
     }
 
     /* Get server time and browser time, in UTC and to the nearest minute. */
@@ -432,8 +448,8 @@
           <form>
             <table>
               <tr>
-                <td><input id='user-list' type="text" size="40em" maxlength="60" pattern="[a-z0-9 ]+"
-                    placeholder="Lowercase only. Separate with spaces."></td>
+                <td><input id='user-list' type="text" size="35em" maxlength="60" pattern="[a-z0-9 ]+"
+                    placeholder="Lowercase; separate with spaces."></td>
                 <td><button class="narrow" onclick="addUsers(document.getElementById('user-list').value)" type="button">
                     <span style="color: green; font-size: 125%; font-weight: bold;">+</span></button>
                 </td>
@@ -447,25 +463,23 @@
             <table>
               <tr>
                 <th>enabled</th>
-                <th></th>
                 <th>locked</th>
-                <th></th>
               </tr>
               <tr>
                 <td><select id="user-enabled" size=5 style="width: 10em;"></select></td>
-                <td><button class="narrow"
-                    onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers(updateUserList);"
-                    type="button" title="Lock account">&#x1F512;&#x276F;</button>
-                  <br>
-                  <button class="narrow"
-                    onclick="setUser(document.getElementById('user-disabled').value, 'enabled'); getUsers(updateUserList);"
-                    type="button" title="Unlock account">&#x276E;&#x1F513;</button>
-                </td>
                 <td><select id="user-disabled" size=5 style="width: 10em;"></select></td>
-                <td><button class="narrow"
+              </tr>
+              <tr>
+                <td><button class="wide"
+                  onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers(updateUserList);"
+                  type="button" title="Lock account">&#x1F512;&#x0276F;</button>
+                </td>
+                <td><button onclick="setUser(document.getElementById('user-disabled').value, 'enabled'); getUsers(updateUserList);"
+                  type="button" title="Unlock account">&#x0276E;&#x1F513;</button>
+                  <button class="narrow"
                     onclick="delUser(document.getElementById('user-disabled').value); getUsers(updateUserList);"
-                    type="button" title="Delete account"><span
-                      style="color: red; font-size: 125%; font-weight: bold;">x</span></button></td>
+                    type="button" title="Delete account">&#x0274C</button>
+                </td>
               </tr>
             </table>
           </form>
@@ -514,7 +528,7 @@
 
         <!-- Management of existing filesystems. (Mounting) -->
         <details>
-          <summary onclick="getFilesystems('ufs', displayFilesystems);">&#x1F527; Manage</summary>
+          <summary onclick="getFilesystems('ufs', updateFilesystems); document.getElementById('storage-mountpoint').value ='';">&#x1F527; Manage</summary>
           <form>
             <table>
               <tr>
@@ -523,13 +537,16 @@
               </tr>
               <tr>
                 <td><select id='storage-filesystems'
-                    onchange="e=document.getElementById('storage-filesystems'); document.getElementById('storage-mountpoint').value = suggestMountPoint(e.options[e.selectedIndex].value);"
-                    size=5 style="width: 14em;"></select></td>
-                <td style="vertical-align: top"><input id="storage-mountpoint" style="width: 14em;" type="text"><br>
-                  <button id="storage-mount" class="wide" title="Mount filesystem on directory."
-                    type="button">&#x1F4BE;&#x276F;&#x1F4BB;</button><br>
-                  <button id="storage-mount" class="wide" title="Unmount filesystem."
-                    type="button">&#x1F4BE;&#x276E;&#x1F4BB;</button></td>
+                    onchange="e=document.getElementById('storage-filesystems'); suggestMountPoint(e.options[e.selectedIndex].value, updateMountpoint);"
+                    size=4 style="width: 10em;"></select></td>
+                <td style="vertical-align: top"><input id="storage-mountpoint" readonly style="width: 10em;" type="text"><br>
+              </tr>
+                <td>
+                  <button id="storage-mount" class="wide" title="Mount filesystem on directory." type="button">&#x1F4BE;&#x276F; &#x1F4BB;</button>
+                </td>
+                <td>
+                  <button id="storage-mount" class="wide" title="Unmount filesystem." type="button">&#x276E;&#x1F4BE; &#x1F4BB;</button>
+                </td>
               </tr>
             </table>
           </form>
@@ -552,11 +569,11 @@
             <tr>
               <td><label>Server:</label></td>
               <td><input id="time-server" style="width: 15em;"></td>
-              <td><button onclick="getDateTime();" title="Refresh Time" type="button">&#x21BB;</button></td>
+              <td><button onclick="getDateTime(updateDateTime); getServiceStatus('ntpd', updateNtpd);" title="Refresh Time" type="button">&#x21BB;</button></td>
             </tr>
             <tr>
               <td><label>Client:</label></td>
-              <td><input id="time-browser" readonly style="width: 15em;"></td>
+              <td><input id="time-client" readonly style="width: 15em;"></td>
               <td><button title="Reset server time to client time." type="button">&#x0231A;</button></td>
             </tr>
           </table>

@@ -30,7 +30,7 @@ var apiCmdDict = {
   '^new user ([a-z0-9]+)$': './lib/defaultpass.sh %1 | /usr/local/bin/smbpasswd -s -a %1',
   '^set user ([a-z0-9]+) disabled$': '/usr/local/bin/smbpasswd -d %1',
   '^set user ([a-z0-9]+) enabled$': '/usr/local/bin/smbpasswd -e %1',
-  '^set user ([a-z0-9]+) default password$': './lib/defaultpass.sh %1 | /usr/local/bin/smbpasswd -s %1',
+  '^set user ([a-z0-9]+) password default$': './lib/defaultpass.sh %1 | /usr/local/bin/smbpasswd -s %1',
   '^del user ([a-z0-9]+)$': '/usr/local/bin/smbpasswd -x %1',
   '^get os users$': '/usr/bin/awk -F: \'BEGIN { printf "[ " } { if ($3>1001 && $3<32000) printf "%s\\"%s\\"", ($3==1002)?"":", ", $1 } END { printf " ]\\n" }\' /etc/passwd',
   '^get os user ([a-z0-9]+)$': '/usr/bin/awk -F: \'/^%1:/ { for(i=1;i<8;i++) printf "%s\\"%s\\"", (i==1)?"":", ", $i }\' /etc/passwd',
@@ -62,7 +62,7 @@ var apiCmdDict = {
   '^get system log nmbd raw$': '/usr/bin/tail -n1000 /var/log/samba4/log.nmbd',
   '^get system log smbd raw$': '/usr/bin/tail -n1000 /var/log/samba4/log.smbd',
   '^get system log weenas raw$': '/usr/bin/tail -n1000 /var/log/weenas_api.log',
-  '^get system mail raw$': 'mailx -H',
+  '^get system mail raw$': 'mailx -H || echo "No mail."',
   '^get system mail ([0-9]+) raw$': 'echo "%1" | mailx -N',
   '^del system mail ([0-9]+)$': 'echo "d%1" | mailx -N', 
   '^get system memory nameplate$': 'printf "\\"%1.fG\\"\\n" $(echo "scale=2; $(/sbin/sysctl -n hw.physmem) / 1073741824" | bc)',
@@ -131,11 +131,15 @@ function parse(input) {
       console.log(stamp('Running: ' + shellCmd));
 
       // Run the shell command, capturing stdout.
-      result = childProcess.execSync(shellCmd, { cwd: __dirname });
+      try {
+        result = childProcess.execSync(shellCmd, { cwd: __dirname });
+      }
+      catch {
+        result = 'Oops! ' + result;
+      }
       if (result.slice(-1) == '\n') result = result.slice(0, -1);  // like Perl chomp()
     }
   }
-
   return result;
 }
 
