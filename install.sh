@@ -8,6 +8,12 @@ else
   exit 1
 fi
 
+# Configure Time Sync
+sysrc ntpd_enable="YES"
+sysrc ntpd_sync_on_start="YES"
+ln -s /usr/share/zoneinfo/Etc/GMT /etc/localtime
+service ntpd start
+
 # Respond "yes" to all pkg prompts.
 export ASSUME_ALWAYS_YES=TRUE
 
