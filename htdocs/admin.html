@@ -230,7 +230,7 @@
     }
 
     /* AJAX write partition scheme */
-    function writePartitionTable(disk) {
+    function formatDisk(disk) {
       if (confirm('This will destroy all data on ' + disk)) {
         document.body.style.cursor = 'wait';
         let url = './disk/' + disk + '/gpt';
@@ -245,7 +245,7 @@
             document.body.style.cursor = 'default';
           }
         };
-        xhttp.open('POST', url, true);
+        xhttp.open('PUT', url, true);
         xhttp.send();
       }
     }
@@ -266,7 +266,7 @@
             document.body.style.cursor = 'default';
           }
         };
-        xhttp.open('POST', url, true);
+        xhttp.open('PUT', url, true);
         xhttp.send();
       }
     }
@@ -489,21 +489,15 @@
               <tr>
                 <td><select id="storage-devices"
                     onchange="e=document.getElementById('storage-devices'); getDiskInfo(e.options[e.selectedIndex].value, updateDiskInfo);"
-                    size=5 style="width: 14em;"></select></td>
-                <td><select id="storage-partitions" size=5 style="width: 14em;"></select></td>
+                    size=4 style="width: 10em;"></select></td>
+                <td><select id="storage-partitions" size=3 style="width: 10em;"></select><br>
+                  <input placeholder="filesystem label" style="width: 10em;"></td>
               </tr>
-            </table>
-            <table>
               <tr>
-                <td><input id="storage-disk-label" placeholder="disk label" style="width: 8em;"><button
-                    id="storage-repartition"
-                    onclick="e=document.getElementById('storage-devices'); writePartitionTable(e.options[e.selectedIndex].value);"
-                    title="Write GUID partition scheme onto selected device."
-                    type="button">&#x1F4CB;&#x0279C;&#x1F4BE;</button></td>
-                <td><input placeholder="filesystem label" style="width: 8em;"><button id="storage-format"
-                    onclick="e=document.getElementById('storage-partitions'); writeFilesystem(e.options[e.selectedIndex].value);"
-                    title="Write UFS filesystem onto selected partition."
-                    type="button">&#x1F4DD;&#x0279C;&#x1F4BE;</button></td>
+                <td><button class="wide" onclick="e=document.getElementById('storage-devices'); formatDisk(e.options[e.selectedIndex].value);"
+                    title="Create FreeBSD partition and filesystem." type="button">&#x1F4CB;&#x0279C;&#x1F4BE;</button></td>
+                <td><button class="wide" onclick="e=document.getElementById('storage-partitions'); writeFilesystem(e.options[e.selectedIndex].value);"
+                    title="Write filesystem label onto selected partition." type="button">&#x1F4DD;&#x0279C;&#x1F4BE;</button></td>
             </table>
             <table>
               <tr>
