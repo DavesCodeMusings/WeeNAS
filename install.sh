@@ -9,6 +9,7 @@ else
 fi
 
 # Configure Time Sync
+echo "Configuring Time Sync..."
 sysrc ntpd_enable="YES"
 sysrc ntpd_sync_on_start="YES"
 ln -s /usr/share/zoneinfo/Etc/GMT /etc/localtime
