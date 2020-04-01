@@ -24,8 +24,62 @@
       document.getElementById('hostname-blurb').style.display = 'none';
       document.getElementById('timezone-blurb').style.display = 'none';
       document.getElementById('storage-blurb').style.display = 'none';
-      document.getElementById('built-in-blurb').style.display = 'none';
+      document.getElementById('finalizing-blurb').style.display = 'none';
       document.getElementById(elementId).style.display = 'block';
+    }
+
+    /* AJAX set user attribute (lock/unlock, trusted/untrusted) */
+    function setUser(user, attribute) {
+      if (user) {
+        document.body.style.cursor = 'wait';
+        url = './user/' + user + '/' + attribute;
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+          if (this.readyState === 4) {
+            if (this.status !== 200) alert('Error: ' + this.responseText);
+            document.body.style.cursor = 'default';
+          }
+        };
+        xhttp.open('PUT', url, true);
+        xhttp.send();
+      }
+    }
+
+    /* AJAX add user(s) */
+    function addUsers(userList) {
+      if (userList) {
+        document.body.style.cursor = 'wait';
+        let users = userList.split(' ');
+        let xhttp = [];
+        for (let i = 0; i < users.length; i++) {
+          url = './user/' + users[i];
+          xhttp[i] = new XMLHttpRequest();
+          xhttp[i].onreadystatechange = function () {
+            if (xhttp[i].readyState === 4) {
+              if (xhttp[i].status == 200) setUser(user[i], 'trusted');
+              else alert('Error: ' + xhttp[i].responseText);
+              document.body.style.cursor = 'default';
+            }
+          };
+          xhttp[i].open('POST', url, true);
+          xhttp[i].send('');
+        }
+      }
+    }
+
+    /* API call to set the timezone. */
+    function setTimezone (area, location) {
+      let url = './timezone/' + area + '/' + location;
+      document.body.style.cursor = 'wait';
+      let xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4) {
+          if (this.status != 200) alert('Error: ' + this.responseText);
+          document.body.style.cursor = 'default';
+        }
+      };
+      xhttp.open('PUT', url, true);
+      xhttp.send();
     }
 
     /* Human readable disk-size */
@@ -65,21 +119,26 @@
 
     /* Write configuration values */
     function writeConfig() {
-      let missing = '';
-      if (!document.getElementById('trusted-users').value) {
-        missing += 'Trusted user account. ';
-      }
-      if (!document.getElementById('host').value) {
-        missing += 'Host name. ';
-      }
-      if (!document.getElementById('domain').value) {
-        missing += 'Domain name. ';
-      }
-      if (!missing) {
-        confirm('Writing config.');
+      let trustedUsers = document.getElementById('trusted-users').value;
+
+      let hostname ='';
+      if (document.getElementById('host').value) hostname = document.getElementById('host').value;
+      else hostname = document.getElementById('host').placeholder;
+      if (document.getElementById('domain').value) hostname += '.' + document.getElementById('domain').value;
+
+      let tzArea = document.getElementById('tz-area').options[document.getElementById('tz-area').selectedIndex].value;
+      let tzLocation = document.getElementById('tz-location').options[document.getElementById('tz-location').selectedIndex].value;
+
+      // At the very least, one trusted user is required.
+      if (trustedUsers) {
+        if (confirm('Overwrite system with new settings?')) {
+          addUsers(trustedUsers);
+          setHostname(hostname);
+          setTimezone(tzArea, tzLocation);
+        }
       }
       else {
-        alert('The following items are missing values and must be fixed before the configuration can be written:\n\n' + missing);
+        alert('There must be at least one trusted user.');
       }
     }
   </script>
@@ -101,7 +160,8 @@
     <p><b>Trusted Users</b></p>
     <div onmouseover="toggleBlurb('trusted-user-blurb');" onmouseout="toggleBlurb('general-blurb');"
       style="margin-left: 1em;">
-      <input id="trusted-users" onfocus="toggleBlurb('trusted-user-blurb');" onblur="toggleBlurb('general-blurb');">
+      <input id="trusted-users" onfocus="toggleBlurb('trusted-user-blurb');" onblur="toggleBlurb('general-blurb');"
+        placeholder="Lowercase only. Separate with spaces." size=42>
     </div>
 
     <p><b>Hostname</b></p>
@@ -117,8 +177,8 @@
     <p><b>Timezone</b></p>
     <div onmouseover="toggleBlurb('timezone-blurb');" onmouseout="toggleBlurb('general-blurb');"
       style="margin-left: 1em;">
-      <select id="timezone-area" onfocus="toggleBlurb('timezone-blurb');" onblur="toggleBlurb('general-blurb');"
-        onchange="tzUpdateLocations('timezone-area', 'timezone-location')">
+      <select id="tz-area" onfocus="toggleBlurb('timezone-blurb');" onblur="toggleBlurb('general-blurb');"
+        onchange="tzUpdateLocations('tz-area', 'tz-location')">
         <option>Africa</option>
         <option>America</option>
         <option>Antarctica</option>
@@ -131,7 +191,7 @@
         <option>Pacific</option>
       </select>
       /
-      <select id="timezone-location" onfocus="toggleBlurb('timezone-blurb');" onblur="toggleBlurb('general-blurb');">
+      <select id="tz-location" onfocus="toggleBlurb('timezone-blurb');" onblur="toggleBlurb('general-blurb');">
         <option>GMT</option>
       </select>
     </div>
@@ -155,18 +215,14 @@
       </table>
     </div>
 
-    <p><b>Built-In Accounts</b></p>
-    <div onmouseover="toggleBlurb('built-in-blurb');" onmouseout="toggleBlurb('general-blurb');" style="margin-left: 1em;">
-    <input checked id="lock-built-in" onfocus="toggleBlurb('built-in-blurb');" onblur="toggleBlurb('general-blurb');"
-      type="checkbox"> Lock freebsd and toor user accounts.
-    </div>
-
-    <p><b>Confirmation</b></p>
-    <div style="margin-left: 1em;">
-    <p>
-      <button class="wide" onclick="writeConfig();" title="Write configuration to device."
-        type="button">&#x1F4CB;&#x0279C;&#x1F4BB;</button>
-    </p>
+    <p><b>Finalizing Configuration</b></p>
+    <div onmouseover="toggleBlurb('finalizing-blurb');" onmouseout="toggleBlurb('general-blurb');" style="margin-left: 1em;">
+      <p>
+        <button class="wide" onclick="writeConfig();" title="Write configuration to device."
+          type="button">&#x1F4CB;&#x0279C;&#x1F4BB;</button>
+        <button class="wide" onfocus="toggleBlurb('built-in-blurb');" onblur="toggleBlurb('general-blurb');"
+          title="Lock built-in user accounts." type="button">&#x1F512;</button>
+      </p>
     </div>
   </main>
 
@@ -236,12 +292,25 @@
         the flash drive will be lost.
       </p>
     </div>
-    <div id="built-in-blurb" style="display: none;">
-      <p><b>Built-In Accounts</b></p>
+    <div id="finalizing-blurb" style="display: none;">
+      <p><b>Finalizing Configuration</b></p>
+
+      <p>Writing Configuration Values</p>
+      <p>Click the button showing a clipboard and a computer to write the configuration to your WeeNAS system.</p>
+
+      <p>Testing Connectivity</p>
+      <p>
+        Take a moment to verify that you can connect via SSH to the Raspberry Pi and log in using your trusted user and
+        password. Also test the ability to su to root using this account.  If everything checks out, click the button
+        with the padlock to lock the built-in accounts.
+      </p>
+      
+      <p>Locking Built-In Accounts</p>
       <p>
         The accounts, freebsd and toor, come built into every FreeBSD system and are secured by trivial passwords. This
-        makes system set-up very easy, but also creates an easy way in for malicious users. It is suggested that you
-        lock both of these accounts and only use the trusted account(s) to access the system.
+        makes system set-up very easy, but also creates an easy way for malicious users to gain access. After verifying
+        SSH connectivity, it is highly recommended that you lock these accounts and only use the trusted account(s) to
+        access the system.
       </p>
     </div>
   </aside>
