@@ -68,7 +68,7 @@
     }
 
     /* API call to set the hostname. */
-    function setTimezone (host, domain) {
+    function setHostname (host, domain) {
       let hostname = host;
       if (domain) hostname += '.' + domain;
       let url = './system/hostname/' + hostname;
