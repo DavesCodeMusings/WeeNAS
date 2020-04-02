@@ -2,7 +2,7 @@
 
 /**
  * WeeNAS -- Raspberry Pi + Flash Drive + FreeBSD + Samba
- * @author David Horton https://github.com/DavesCodeMusings/htmlGauges
+ * @author David Horton https://github.com/DavesCodeMusings/WeeNAS
  */
 
 'use strict';
@@ -56,7 +56,7 @@ var apiCmdDict = {
   '^get system datetime$': 'echo "\\"$(date -u +%Y-%m-%dT%H:%MZ)\\""',
   '^set system datetime (20[0-9][0-9]-(?:0[1-9]|1[0-2])-(?:0[1-9]|1[0-9]|3[0-1])T(?:[0-1][0-9]|2[0-3]):[0-5][0-9])$': 'echo "\"$(/bin/date -Iminutes %1)\"',
   '^get system timezone$': '/usr/bin/readlink /etc/localtime | sed -E \'s/\\/usr\\/share\\/zoneinfo\\/(.*)/"\\1"/\'',
-  '^set system timezone ([A-Za-z]+) ([A-Za-z]+)': '/bin/ln -sf /usr/share/zoneinfo/%1/%2 /etc/localtime',
+  '^set system timezone ([A-Za-z]+) ([A-Za-z_]+)': '/bin/ln -sf /usr/share/zoneinfo/%1/%2 /etc/localtime',
   '^get system hostname': 'echo "\\"$(/bin/hostname)\\""',
   '^set system hostname ([a-z\\.]+)': '/bin/hostname %1 && sysrc hostname="%1"',
   '^get system load$': '/sbin/sysctl -n vm.loadavg | /usr/bin/awk \'{ printf "[ %s, %s, %s ]\\n", $2, $3, $4 } \'',
@@ -203,7 +203,7 @@ if (port) {
     if (method === 'GET' && match !== null) {
       let filePath = path.join(__dirname, 'htdocs', match[1] + '.' + match[2]);
       if (fs.existsSync(filePath)) {
-        console.log(stamp('Serving file: ' + filePath + ' as ' + mimeTypeDict[match[2]]));
+        console.log(stamp('Serving: ' + filePath + ' as ' + mimeTypeDict[match[2]]));
         let data = fs.readFileSync(filePath, 'utf-8');
         response.writeHead(200, { 'Content-Type': mimeTypeDict[match[2]] + '; charset=utf-8' });
         response.write(data);

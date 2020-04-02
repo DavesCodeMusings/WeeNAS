@@ -56,7 +56,7 @@
           xhttp[i] = new XMLHttpRequest();
           xhttp[i].onreadystatechange = function () {
             if (xhttp[i].readyState === 4) {
-              if (xhttp[i].status == 200) setUser(user[i], 'trusted');
+              if (xhttp[i].status == 200) setUser(users[i], 'trusted');
               else alert('Error: ' + xhttp[i].responseText);
               document.body.style.cursor = 'default';
             }
@@ -67,9 +67,26 @@
       }
     }
 
+    /* API call to set the hostname. */
+    function setTimezone (host, domain) {
+      let hostname = host;
+      if (domain) hostname += '.' + domain;
+      let url = './system/hostname/' + hostname;
+      document.body.style.cursor = 'wait';
+      let xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4) {
+          if (this.status != 200) alert('Error: ' + this.responseText);
+          document.body.style.cursor = 'default';
+        }
+      };
+      xhttp.open('PUT', url, true);
+      xhttp.send();
+    }
+
     /* API call to set the timezone. */
     function setTimezone (area, location) {
-      let url = './timezone/' + area + '/' + location;
+      let url = './system/timezone/' + area + '/' + location;
       document.body.style.cursor = 'wait';
       let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function () {
@@ -120,12 +137,8 @@
     /* Write configuration values */
     function writeConfig() {
       let trustedUsers = document.getElementById('trusted-users').value;
-
-      let hostname ='';
-      if (document.getElementById('host').value) hostname = document.getElementById('host').value;
-      else hostname = document.getElementById('host').placeholder;
-      if (document.getElementById('domain').value) hostname += '.' + document.getElementById('domain').value;
-
+      let host = document.getElementById('host').value;
+      let domain = document.getElementById('domain').value;
       let tzArea = document.getElementById('tz-area').options[document.getElementById('tz-area').selectedIndex].value;
       let tzLocation = document.getElementById('tz-location').options[document.getElementById('tz-location').selectedIndex].value;
 
@@ -133,7 +146,7 @@
       if (trustedUsers) {
         if (confirm('Overwrite system with new settings?')) {
           addUsers(trustedUsers);
-          setHostname(hostname);
+          setHostname(host, domain);
           setTimezone(tzArea, tzLocation);
         }
       }
