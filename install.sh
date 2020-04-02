@@ -56,7 +56,7 @@ fi
 
 # Add a shared group.
 if [ "$(grep shared /etc/group)" == "" ]; then
-  pw groupadd -g 1000 shared
+  pw groupadd shared -g 1000
 fi
 
 # Finish.
