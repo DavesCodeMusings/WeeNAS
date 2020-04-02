@@ -8,7 +8,10 @@ else
   exit 1
 fi
 
-# Configure Time Sync
+# Set shell scripts to executable. (.zip files don't store the x perms.)
+find . -name '*.sh' | xargs chmod +x
+
+# Configure time sync.
 sysrc ntpd_enable="YES"
 sysrc ntpd_sync_on_start="YES"
 ln -s /usr/share/zoneinfo/Etc/GMT /etc/localtime
@@ -27,9 +30,13 @@ pkg install samba410
 echo "Installing Node.js..."
 pkg install node
 
-echo "Configure Samba..."
-# Copy boilerplate Samba config file.
-cp etc/smb4.conf /usr/local/etc/
+# Copy boilerplate Samba config file if needed.
+if ! [ -f /usr/local/etc/smb4.conf ]; then
+  echo "Configure Samba..."
+  cp etc/smb4.conf /usr/local/etc/
+else
+  echo "Preserving existing Samba configuration."
+fi
 
 # Enable and start services.
 sysrc samba_server_enable="YES"
@@ -42,8 +49,15 @@ sysrc weenas_api_home="$(pwd)"
 sysrc weenas_api_port="9000"
 service weenas_api start
 
-# Append home filesystem to /etc/fstab for later.
-echo "/dev/ufs/homefs   /home   ufs   rw,noatime   1   2" >> /etc/fstab
+# Append home filesystem to /etc/fstab to be used later.
+if [ "$(grep homefs /etc/fstab)" == "" ]; then
+  echo "/dev/ufs/homefs   /home   ufs   rw,noatime   1   2" >> /etc/fstab
+fi
+
+# Add a shared group.
+if [ "$(grep shared /etc/group)" == "" ]; then
+  pw groupadd -g 1000 shared
+fi
 
 # Finish.
 IP="$(ifconfig ue0 | awk '/inet/ { print $2 }')"

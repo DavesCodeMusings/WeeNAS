@@ -138,7 +138,7 @@ function parse(input) {
         result = childProcess.execSync(shellCmd, { cwd: __dirname });
       }
       catch {
-        result = 'Oops! ' + result;
+        result = 'Command failed: ' + result;
       }
       if (result.slice(-1) == '\n') result = result.slice(0, -1);  // like Perl chomp()
     }

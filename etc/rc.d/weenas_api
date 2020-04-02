@@ -26,7 +26,6 @@ rcvar=weenas_api_enable
 
 # Set config variables and their defaults.
 load_rc_config $name
-: ${weenas_api_enable:=NO}
 : ${weenas_api_home:=/root/weenas}
 
 command_interpreter=node
