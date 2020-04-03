@@ -84,10 +84,11 @@ sysrc weenas_api_home="$(pwd)"
 sysrc weenas_api_port="9000"
 service weenas_api start
 
-# Append home filesystem to /etc/fstab to be used later.
+# Append home filesystem information to /etc/fstab and mount homefs.
 if [ "$(grep homefs /etc/fstab)" == "" ]; then
   echo "/dev/ufs/homefs   /home   ufs   rw,noatime   1   2" >> /etc/fstab
 fi
+mount /dev/ufs/homefs
 
 # Add a shared group.
 if [ "$(grep shared /etc/group)" == "" ]; then
@@ -96,4 +97,4 @@ fi
 
 # Finish.
 IP="$(ifconfig ue0 | awk '/inet/ { print $2 }')"
-echo "Open a web browser to http://${IP}:9000 to finish configuring the system."
+echo "Open a web browser to http://${IP}:9000 to customize your WeeNAS system."
