@@ -466,18 +466,19 @@
                 <th>locked</th>
               </tr>
               <tr>
-                <td><select id="user-enabled" size=5 style="width: 10em;"></select></td>
-                <td><select id="user-disabled" size=5 style="width: 10em;"></select></td>
+                <td><select id="user-enabled" size=5 style="width: 12em;"></select></td>
+                <td><select id="user-disabled" size=5 style="width: 12em;"></select></td>
               </tr>
               <tr>
-                <td><button class="wide"
-                  onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers(updateUserList);"
+                <td>
+                  <button type="button" title="Promote to trusted.">&#x1F607;</button>
+                  <button onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers(updateUserList);"
                   type="button" title="Lock account">&#x1F512;&#x0276F;</button>
                 </td>
-                <td><button onclick="setUser(document.getElementById('user-disabled').value, 'enabled'); getUsers(updateUserList);"
+                <td>
+                  <button onclick="setUser(document.getElementById('user-disabled').value, 'enabled'); getUsers(updateUserList);"
                   type="button" title="Unlock account">&#x0276E;&#x1F513;</button>
-                  <button class="narrow"
-                    onclick="delUser(document.getElementById('user-disabled').value); getUsers(updateUserList);"
+                  <button onclick="delUser(document.getElementById('user-disabled').value); getUsers(updateUserList);"
                     type="button" title="Delete account">&#x0274C</button>
                 </td>
               </tr>
@@ -503,9 +504,9 @@
               <tr>
                 <td><select id="storage-devices"
                     onchange="e=document.getElementById('storage-devices'); getDiskInfo(e.options[e.selectedIndex].value, updateDiskInfo);"
-                    size=4 style="width: 10em;"></select></td>
-                <td><select id="storage-partitions" size=3 style="width: 10em;"></select><br>
-                  <input id="storage-fslabel" placeholder="filesystem label" style="width: 10em;"></td>
+                    size=4 style="width: 12em;"></select></td>
+                <td><select id="storage-partitions" size=3 style="width: 12em;"></select><br>
+                  <input id="storage-fslabel" placeholder="filesystem label" style="width: 12em;"></td>
               </tr>
               <tr>
                 <td><button class="wide" onclick="e=document.getElementById('storage-devices'); formatDisk(e.options[e.selectedIndex].value, document.getElementById('storage-fslabel'));"
@@ -538,8 +539,8 @@
               <tr>
                 <td><select id='storage-filesystems'
                     onchange="e=document.getElementById('storage-filesystems'); suggestMountPoint(e.options[e.selectedIndex].value, updateMountpoint);"
-                    size=4 style="width: 10em;"></select></td>
-                <td style="vertical-align: top"><input id="storage-mountpoint" readonly style="width: 10em;" type="text"><br>
+                    size=4 style="width: 12em;"></select></td>
+                <td style="vertical-align: top"><input id="storage-mountpoint" readonly style="width: 12em;" type="text"><br>
               </tr>
                 <td>
                   <button id="storage-mount" class="wide" title="Mount filesystem on directory." type="button">&#x1F4BE;&#x276F; &#x1F4BB;</button>
