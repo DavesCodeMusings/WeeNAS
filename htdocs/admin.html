@@ -246,10 +246,10 @@
     }
 
     /* AJAX write partition scheme */
-    function formatDisk(disk) {
+    function formatDisk(disk, label) {
       if (confirm('This will destroy all data on ' + disk)) {
         document.body.style.cursor = 'wait';
-        let url = './disk/' + disk + '/gpt';
+        let url = './disk/' + disk + '/freebsd/' + label;
         let xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function () {
           if (this.readyState == 4) {
@@ -257,7 +257,7 @@
               reply = JSON.parse(this.responseText);
               alert(reply);
             }
-            else alert('Error writing partition scheme to ' + disk);
+            else alert('Error writing partition scheme and filesystem to ' + disk);
             document.body.style.cursor = 'default';
           }
         };
@@ -505,13 +505,13 @@
                     onchange="e=document.getElementById('storage-devices'); getDiskInfo(e.options[e.selectedIndex].value, updateDiskInfo);"
                     size=4 style="width: 10em;"></select></td>
                 <td><select id="storage-partitions" size=3 style="width: 10em;"></select><br>
-                  <input placeholder="filesystem label" style="width: 10em;"></td>
+                  <input id="storage-fslabel" placeholder="filesystem label" style="width: 10em;"></td>
               </tr>
               <tr>
-                <td><button class="wide" onclick="e=document.getElementById('storage-devices'); formatDisk(e.options[e.selectedIndex].value);"
+                <td><button class="wide" onclick="e=document.getElementById('storage-devices'); formatDisk(e.options[e.selectedIndex].value, document.getElementById('storage-fslabel'));"
                     title="Create FreeBSD partition and filesystem." type="button">&#x1F4CB;&#x0279C;&#x1F4BE;</button></td>
                 <td><button class="wide" onclick="e=document.getElementById('storage-partitions'); writeFilesystem(e.options[e.selectedIndex].value);"
-                    title="Write filesystem label onto selected partition." type="button">&#x1F4DD;&#x0279C;&#x1F4BE;</button></td>
+                    title="Write filesystem onto selected partition." type="button">&#x1F4DD;&#x0279C;&#x1F4BE;</button></td>
             </table>
             <table>
               <tr>
