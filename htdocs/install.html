@@ -118,6 +118,7 @@
 
     /* Display disk information */
     function updateDiskInfo(diskObj) {
+      document.getElementById('storage-device').innerHTML = 'da0';
       if (diskObj.size) document.getElementById('storage-size').innerHTML = diskSizeHuman(diskObj.size);
       if (diskObj.description) document.getElementById('storage-description').innerHTML = diskObj.description;
     }
@@ -137,30 +138,6 @@
       xhttp.send();
     }
 
-    /* Mount filesystem */
-    function mountFilesystem(label) {
-      alert("Mounting" + label);
-    }
-
-    /* Create GPT partition scheme and a single freebsd-ufs partition. Callback can be used to mount storage. */
-    function formatStorage(disk, label, callback) {
-      let url = './disk/' + disk + '/freebsd' + label;
-      document.body.style.cursor = 'wait';
-      let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function () {
-        if (this.readyState == 4) {
-          if (this.status == 200) callback(label);
-          else alert("Error writing partition table.");
-          document.body.style.cursor = 'default';
-        }
-      };
-      xhttp.open('PUT', url, true);
-      xhttp.send();
-    }
-
-    /* Make calls to writePartitionTable, writeFilesystem, and mountFilesystem. */
-    
-    
     /* Write configuration values */
     function writeConfig() {
       let trustedUsers = document.getElementById('trusted-users').value;
@@ -168,20 +145,12 @@
       let domain = document.getElementById('domain').value;
       let tzArea = document.getElementById('tz-area').options[document.getElementById('tz-area').selectedIndex].value;
       let tzLocation = document.getElementById('tz-location').options[document.getElementById('tz-location').selectedIndex].value;
-      let diskName = document.getElementById('storage-device').value;
-      let diskOverwrite = document.getElementById('storage-overwrite').options[document.getElementById('storage-overwrite').selectedIndex].value;
 
       // At the very least, one trusted user is required.
       if (trustedUsers) {
         if (confirm('Overwrite system with new settings?')) {
           setHostname(host, domain);
           setTimezone(tzArea, tzLocation);
-          if (diskOverwrite = "Yes") {
-            formatStorage(diskName, 'homefs', mountFilesystem);
-          }
-          else {
-            mountFilesystem('homefs');
-          }
           addUsers(trustedUsers);
         }
       }
@@ -203,7 +172,7 @@
   </nav>
 
   <main class="narrow">
-    <h2>Initial Configuration</h2>
+    <h2>System Customization</h2>
 
     <p><b>Trusted Users</b></p>
     <div onmouseover="toggleBlurb('trusted-user-blurb');" onmouseout="toggleBlurb('general-blurb');"
@@ -250,8 +219,7 @@
       <table>
         <tr>
           <td>Device</td>
-          <td><input id="storage-device" onfocus="toggleBlurb('storage-blurb');" onblur="toggleBlurb('general-blurb');"
-              readonly value="da0"></td>
+          <td id="storage-device"></td>
         </tr>
         <tr>
           <td>Description</td>
@@ -261,17 +229,10 @@
           <td>Size</td>
           <td id="storage-size"></td>
         </tr>
-        <tr>
-          <td>Overwrite?</td>
-          <td><select id="storage-overwrite">
-              <option>No</option>
-              <option>Yes</option>
-            </select></td>
-        </tr>
       </table>
     </div>
 
-    <p><b>Finalizing Configuration</b></p>
+    <p><b>Finalizing Customization</b></p>
     <div onmouseover="toggleBlurb('finalizing-blurb');" onmouseout="toggleBlurb('general-blurb');"
       style="margin-left: 1em;">
       <p>
@@ -286,17 +247,17 @@
   <aside class="wide">
     <h2>Explanation</h2>
     <div id="general-blurb">
-      <p>A few parameters are required to get WeeNAS configured for use:</p>
+      <p>A few parameters are required to get WeeNAS customized for use:</p>
       <ol>
         <li>Trusted User(s)</li>
         <li>Hostname</li>
         <li>Timezone</li>
       </ol>
+      <p>Once these values are entered, click the confirmation button to write their values to the WeeNAS host.</p>
       <p>
         You also have the option to lock the built-in FreeBSD accounts (freebsd and toor.) It is highly recommended
-        that you do so.
+        that you do so after verifying connectivity with a trusted user account.
       </p>
-      <p>Once these values are entered, click the confirmation button to write their values to the WeeNAS host.</p>
     </div>
     <div id="trusted-user-blurb" style="display: none;">
       <p><b>Trusted Users</b></p>
@@ -336,24 +297,18 @@
     <div id="storage-blurb" style="display: none;">
       <p><b>USB Storage Device</b></p>
       <p>
-        The MicroSD card in the Raspberry Pi is dedicated to the operating system. You'll need to insert a flash drive
-        into one of the Raspberry Pi's USB ports to provide space for users' home directories and the shared drive.
-        This separation of devices for operating system and user data not only gives you more home drive space, but it
-        makes future upgrades much easier.
+        The parameters shown here are purely informational.
       </p>
-      <p>
-        <em>Insert only the USB flash drive you plan to use for home directories at this time.</em>
-      </p>
-      <p>
-        The contents of the flash drive will be overwritten and configured for compatibility with FreeBSD. Any data on
-        the flash drive will be lost.
-      </p>
+      <p> You should see the USB flash drive that was configured when the install.sh script was run. If you do not see
+        the correct device, verify that the only USB storage device plugged in is the one you intend to use for home
+        drives. Proceeding with the wrong device means users will have trouble accessing their home drives.
+      </p> 
     </div>
     <div id="finalizing-blurb" style="display: none;">
-      <p><b>Finalizing Configuration</b></p>
+      <p><b>Finalizing Custom Settings</b></p>
 
-      <p>Writing Configuration Values</p>
-      <p>Click the button showing a clipboard and a computer to write the configuration to your WeeNAS system.</p>
+      <p>Writing Settings</p>
+      <p>Click the button showing a clipboard and a computer to write the customized settings to your WeeNAS system.</p>
 
       <p>Testing Connectivity</p>
       <p>
