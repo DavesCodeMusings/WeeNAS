@@ -88,6 +88,7 @@ service weenas_api start
 if [ "$(grep homefs /etc/fstab)" == "" ]; then
   echo "/dev/ufs/homefs   /home   ufs   rw,noatime   1   2" >> /etc/fstab
 fi
+fsck -fpy /dev/ufs/homefs
 mount /dev/ufs/homefs
 
 # Add a shared group.
