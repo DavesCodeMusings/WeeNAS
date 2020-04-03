@@ -23,16 +23,15 @@
 name="weenas_api"
 desc="WeeNAS API"
 rcvar=weenas_api_enable
-
-# Set config variables and their defaults.
-load_rc_config $name
-: ${weenas_api_home:=/root/weenas}
-
 command_interpreter=node
 command=${weenas_api_home}/${name}.js
 command_args="${weenas_api_home}/${name}.js ${weenas_api_port}"
 pidfile=/var/run/${name}.pid
 pid=`/bin/pgrep -F /var/run/${name}.pid 2>/dev/null`
+
+# Set config variables and their defaults.
+load_rc_config $name
+: ${weenas_api_home:=/root/weenas}
 
 start_cmd="${name}_start"
 stop_cmd="${name}_stop"
