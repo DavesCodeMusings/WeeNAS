@@ -96,6 +96,9 @@ if [ "$(grep shared /etc/group)" == "" ]; then
   pw groupadd shared -g 1000
 fi
 
+# Create self-signed SSL cert for https encryption.
+openssl req -x509 -newkey rsa:4096 -keyout ssl.key -out ssl.cer -days 730 -nodes -subj "/CN=$(hostname)"
+
 # Finish.
 IP="$(ifconfig ue0 | awk '/inet/ { print $2 }')"
-echo "Open a web browser to http://${IP}:9000 to customize your WeeNAS system."
+echo "Open a web browser to https://${IP}:9000 to customize your WeeNAS system."

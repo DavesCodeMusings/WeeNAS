@@ -9,13 +9,13 @@
 const fs = require('fs');
 const path = require('path');
 const net = require('net');
-const http = require('http');
+const https = require('https');
 const childProcess = require('child_process');
 
 const weenasVersion = '1.0 dev'
 const pidFile = '/var/run/' + path.basename(__filename, '.js') + '.pid';
 const socket = '/var/run/' + path.basename(__filename, '.js') + '.sock';
-const port = process.argv[2];  // TCP port to listen on, if given, otherwise unix socket only.
+const port = 9000;
 const ESYNTAX = 'SYNTAX ERROR.';
 
 /**
@@ -152,7 +152,7 @@ console.log ('WeeNAS version ' + weenasVersion + '\nCopyright (c)2020 David Hort
 if (pidFile) {
   fs.writeFile(pidFile, process.pid, (e) => {
     if (!e) console.log(stamp('PID ' + process.pid + ' written to ' + pidFile));
-    else console.log(stamp(pidFlie + ' is stale. Don\'t trust it. Actual PID is: ' + process.pid));
+    else console.log(stamp(pidFile + ' is stale. Don\'t trust it. Actual PID is: ' + process.pid));
   });
 }
 
@@ -190,7 +190,13 @@ server.on('error', (e) => {
 
 // Start listening on a TCP port if a port number was given as a command-line parameter.
 if (port) {
-  const RESTServer = http.createServer((request, response) => {
+
+  const httpsOptions = {
+    key: fs.readFileSync('ssl.key'),
+    cert: fs.readFileSync('ssl.cer')
+  };
+
+  const RESTServer = https.createServer(httpsOptions, (request, response) => {
     let method = request.method.toString();
     let urlPath = request.url.toString();
 

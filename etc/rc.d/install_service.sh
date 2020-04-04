@@ -18,7 +18,6 @@ read WEENAS_HOME
 INSTALL="install -o0 -g0 -m555 ./weenas_api /usr/local/etc/rc.d"
 SYSRC_ENABLE="sysrc weenas_api_enable=YES"
 SYSRC_HOME="sysrc weenas_api_home=$WEENAS_HOME"
-SYSRC_PORT="sysrc weenas_api_port=9000"
 
 # Review.
 echo
@@ -26,7 +25,6 @@ echo "The following commands will be executed to install the WeeNAS API service:
 echo $INSTALL
 echo $SYSRC_ENABLE
 echo $SYSRC_HOME
-echo $SYSRC_PORT
 echo
 echo -n "Proceed with installation [y/N]? "
 read PROCEED
@@ -37,5 +35,3 @@ $INSTALL
 [ $? -eq 0 ] && echo "Installation successful."
 $SYSRC_ENABLE
 $SYSRC_HOME
-$SYSRC_PORT
-

@@ -10,15 +10,6 @@
 #   NO by default. Set to YES to enable.
 # weenas_api_home (path):
 #   /root/WeeNAS by default. Set to the parent path of weenas-api.js.
-# weenas_api_port (integer):
-#   9000 by default. Set to tcp port number or blank to disable REST API.
-#
-# An example of WeeNAS installed into /home/weenas and accepting REST API
-# connections on port 8080 instead of 9000:
-#
-# sysrc weenas_api_enable="YES"
-# sysrc weenas_api_home=/home/weenas
-# sysrc weenas_api_port=8080
 #
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
 . /etc/rc.subr
@@ -29,7 +20,7 @@ load_rc_config $name
 : ${weenas_api_home:=/root/weenas}
 command_interpreter=node
 command=${weenas_api_home}/${name}.js
-command_args="${weenas_api_home}/${name}.js ${weenas_api_port}"
+command_args="${weenas_api_home}/${name}.js
 pidfile=/var/run/${name}.pid
 pid=`pgrep -F /var/run/${name}.pid 2>/dev/null`
 
