@@ -6,7 +6,7 @@
   <title>WeeNAS Administration</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="hello.css" rel="stylesheet" type="text/css">
+  <link id="page-style" href="hello.css" rel="stylesheet" type="text/css">
   <script>
     /* Figure out whence we came and put the hostname in the header. */
     function showHostname() {
@@ -424,6 +424,9 @@
 </head>
 
 <body onload="showHostname();">
+  <!-- Turn on night mode between the hours of 6 p.m. and 6 a.m. -->
+  <script>let d = new Date(); if (d.getHours <= 6 || d.getHours() >= 18) document.getElementById('page-style').setAttribute('href', 'hello-night.css');</script>
+
   <header>
     <h1 id="hostname">WeeNAS</h1>
   </header>
@@ -472,12 +475,14 @@
               <tr>
                 <td>
                   <button type="button" title="Promote to trusted.">&#x1F607;</button>
-                  <button onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers(updateUserList);"
-                  type="button" title="Lock account">&#x1F512;&#x0276F;</button>
+                  <button
+                    onclick="setUser(document.getElementById('user-enabled').value, 'disabled'); getUsers(updateUserList);"
+                    type="button" title="Lock account">&#x1F512;&#x0276F;</button>
                 </td>
                 <td>
-                  <button onclick="setUser(document.getElementById('user-disabled').value, 'enabled'); getUsers(updateUserList);"
-                  type="button" title="Unlock account">&#x0276E;&#x1F513;</button>
+                  <button
+                    onclick="setUser(document.getElementById('user-disabled').value, 'enabled'); getUsers(updateUserList);"
+                    type="button" title="Unlock account">&#x0276E;&#x1F513;</button>
                   <button onclick="delUser(document.getElementById('user-disabled').value); getUsers(updateUserList);"
                     type="button" title="Delete account">&#x0274C</button>
                 </td>
@@ -509,10 +514,14 @@
                   <input id="storage-fslabel" placeholder="filesystem label" style="width: 12em;"></td>
               </tr>
               <tr>
-                <td><button class="wide" onclick="e=document.getElementById('storage-devices'); formatDisk(e.options[e.selectedIndex].value, document.getElementById('storage-fslabel'));"
-                    title="Create FreeBSD partition and filesystem." type="button">&#x1F4CB;&#x0279C;&#x1F4BE;</button></td>
-                <td><button class="wide" onclick="e=document.getElementById('storage-partitions'); writeFilesystem(e.options[e.selectedIndex].value);"
-                    title="Write filesystem onto selected partition." type="button">&#x1F4DD;&#x0279C;&#x1F4BE;</button></td>
+                <td><button class="wide"
+                    onclick="e=document.getElementById('storage-devices'); formatDisk(e.options[e.selectedIndex].value, document.getElementById('storage-fslabel'));"
+                    title="Create FreeBSD partition and filesystem." type="button">&#x1F4CB;&#x0279C;&#x1F4BE;</button>
+                </td>
+                <td><button class="wide"
+                    onclick="e=document.getElementById('storage-partitions'); writeFilesystem(e.options[e.selectedIndex].value);"
+                    title="Write filesystem onto selected partition." type="button">&#x1F4DD;&#x0279C;&#x1F4BE;</button>
+                </td>
             </table>
             <table>
               <tr>
@@ -529,7 +538,9 @@
 
         <!-- Management of existing filesystems. (Mounting) -->
         <details>
-          <summary onclick="getFilesystems('ufs', updateFilesystems); document.getElementById('storage-mountpoint').value ='';">&#x1F527; Manage</summary>
+          <summary
+            onclick="getFilesystems('ufs', updateFilesystems); document.getElementById('storage-mountpoint').value ='';">
+            &#x1F527; Manage</summary>
           <form>
             <table>
               <tr>
@@ -540,14 +551,17 @@
                 <td><select id='storage-filesystems'
                     onchange="e=document.getElementById('storage-filesystems'); suggestMountPoint(e.options[e.selectedIndex].value, updateMountpoint);"
                     size=4 style="width: 12em;"></select></td>
-                <td style="vertical-align: top"><input id="storage-mountpoint" readonly style="width: 12em;" type="text"><br>
+                <td style="vertical-align: top"><input id="storage-mountpoint" readonly style="width: 12em;"
+                    type="text"><br>
               </tr>
-                <td>
-                  <button id="storage-mount" class="wide" title="Mount filesystem on directory." type="button">&#x1F4BE;&#x276F; &#x1F4BB;</button>
-                </td>
-                <td>
-                  <button id="storage-mount" class="wide" title="Unmount filesystem." type="button">&#x276E;&#x1F4BE; &#x1F4BB;</button>
-                </td>
+              <td>
+                <button id="storage-mount" class="wide" title="Mount filesystem on directory."
+                  type="button">&#x1F4BE;&#x276F; &#x1F4BB;</button>
+              </td>
+              <td>
+                <button id="storage-mount" class="wide" title="Unmount filesystem." type="button">&#x276E;&#x1F4BE;
+                  &#x1F4BB;</button>
+              </td>
               </tr>
             </table>
           </form>
@@ -570,7 +584,8 @@
             <tr>
               <td><label>Server:</label></td>
               <td><input id="time-server" style="width: 15em;"></td>
-              <td><button onclick="getDateTime(updateDateTime); getServiceStatus('ntpd', updateNtpd);" title="Refresh Time" type="button">&#x21BB;</button></td>
+              <td><button onclick="getDateTime(updateDateTime); getServiceStatus('ntpd', updateNtpd);"
+                  title="Refresh Time" type="button">&#x21BB;</button></td>
             </tr>
             <tr>
               <td><label>Client:</label></td>
@@ -613,8 +628,8 @@
   </aside>
 
   <footer>
-    <p><a href="https://davescodemusings.github.io/WeeNAS" target="_blank" style="color: whitesmoke;">WeeNAS = Raspberry
-        Pi + Flash Drive + FreeBSD + Samba</a></p>
+    <p><a href="https://davescodemusings.github.io/WeeNAS" target="_blank">WeeNAS = Raspberry Pi + Flash Drive + FreeBSD
+        + Samba</a></p>
   </footer>
 </body>
 

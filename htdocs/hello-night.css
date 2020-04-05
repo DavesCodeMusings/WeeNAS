@@ -1,27 +1,30 @@
 /*
-   Hello, My Name Is...
+   Hello, My Name Is... (After Hours)
    A two-column design for big screens that stacks on small screens.
    Design copyright (c)2020 David Horton.
 */
 
 /* Set the overall color and font preferences here. */
 body, header, footer {
-    background: whitesmoke;
-    color: dimgray;
+    background: darkgray;
+    color: black;
     font-family: sans-serif;
 }
 header, footer {
-    background: firebrick;
-    color: whitesmoke;
+    background: darkred;
+    color: darkgray;
 }
 a {
-    color: firebrick;
+    color: darkred;
 }
 footer a {
-    color: whitesmoke;
+    color: darkgray;
 }
 h2, h3, h4, h5 {  /* h1 color is inherited from header, footer */
     color: black;
+}
+input, select, textarea {
+    background: lightgray;
 }
 
 /*

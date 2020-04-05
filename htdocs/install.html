@@ -6,7 +6,7 @@
   <title>WeeNAS Initial Configuration</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="hello.css" rel="stylesheet" type="text/css">
+  <link id="page-style" href="hello.css" rel="stylesheet" type="text/css">
 
   <script src="tzNamesLib.js"></script>
   <script>
@@ -162,12 +162,16 @@
 </head>
 
 <body onload="showHostname(); getDiskInfo('da0', updateDiskInfo);">
+  <!-- Turn on night mode between the hours of 6 p.m. and 6 a.m. -->
+  <script>let d = new Date(); if (d.getHours <= 6 || d.getHours() >= 18 ) document.getElementById('page-style').setAttribute('href', 'hello-night.css');</script>
+
   <header>
     <h1 id="hostname">WeeNAS</h1>
   </header>
 
   <nav>
     <p>
+      <a href="admin.html">Administration</a>
     </p>
   </nav>
 
@@ -302,7 +306,7 @@
       <p> You should see the USB flash drive that was configured when the install.sh script was run. If you do not see
         the correct device, verify that the only USB storage device plugged in is the one you intend to use for home
         drives. Proceeding with the wrong device means users will have trouble accessing their home drives.
-      </p> 
+      </p>
     </div>
     <div id="finalizing-blurb" style="display: none;">
       <p><b>Finalizing Custom Settings</b></p>
@@ -328,8 +332,8 @@
   </aside>
 
   <footer>
-    <p><a href="https://davescodemusings.github.io/WeeNAS" target="_blank" style="color: whitesmoke;">WeeNAS Project
-        Home</a></p>
+    <p><a href="https://davescodemusings.github.io/WeeNAS" target="_blank">WeeNAS = Raspberry Pi + Flash Drive + FreeBSD
+        + Samba</a></p>
   </footer>
 </body>
 
