@@ -4,14 +4,29 @@ const path = require('path');
 const childProcess = require('child_process');
 const crypto = require('crypto');
 
+const pidFile = path.join('var', 'run', path.basename(__filename, '.js') + '.pid');
 const port = 9000;
-const EAPI = "Sorry, Charlie.";
+const EGENERIC = "Sorry, Charlie.";
 
 // Log to stdout with a date stamp.
 function log(message) {
   let date = new Date;
   console.log(date.toISOString() + ' ' + message);
 }
+
+// Signal handlers for shutdown.
+function sigHandler(signal) {
+  log(`Caught signal: ${signal}.`);
+  if (signal == 'SIGINT' || signal == 'SIGTERM') {
+    process.exit(0);
+  }
+}
+process.on('SIGINT', sigHandler);
+process.on('SIGTERM', sigHandler);
+
+process.on('exit', () => {
+  log('Server shutdown.');
+});
 
 // Prepare for secure web server start up by fetching the SSL certificate and key. 
 const httpsOptions = {
@@ -166,7 +181,7 @@ function serveStaticContent(filePath, request, response) {
 
 // Match input to an API command and run the corresponding shell command.
 function runApiCommand(input) {
-  let result = EAPI;  // Assume the worst.
+  let result = EGENERIC;  // Assume the worst.
   let shellCmd = '';
 
   // Parse user input by looping through available commands until a regex matches.
@@ -249,7 +264,7 @@ https.createServer(httpsOptions, (request, response) => {
         if (apiVerb) {
           cmd = apiVerb + request.url.replace(/\//g, ' ').trimEnd();
           let result = runApiCommand(cmd);
-          if (result != EAPI) {
+          if (result != EGENERIC) {
             response.writeHead(200, 'OK', { 'Content-Type': 'application/json' });
             response.end(result);
           }
