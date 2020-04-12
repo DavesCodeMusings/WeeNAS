@@ -28,6 +28,21 @@
       document.getElementById(elementId).style.display = 'block';
     }
 
+    /* Authorization */
+    var authHeader = '';
+
+    /* Indicate that credentials were entered (correctly?) */
+    function credentialsEntered() {
+      document.getElementById('credentials-key').style.opacity = '1.0';
+      document.getElementById('credentials').removeAttribute('open');
+    }
+
+    /* Create authorization header from credentials */
+    function createAuth(username, password, callback) {
+      authHeader = 'Basic ' + btoa(username + ':' + password);
+      callback();
+    }
+
     /* AJAX set user attribute (lock/unlock, trusted/untrusted) */
     function setUser(user, attribute) {
       if (user) {
@@ -163,7 +178,7 @@
 
 <body onload="showHostname(); getDiskInfo('da0', updateDiskInfo);">
   <!-- Turn on night mode between the hours of 6 p.m. and 6 a.m. -->
-  <script>let d = new Date(); if (d.getHours <= 6 || d.getHours() >= 18 ) document.getElementById('page-style').setAttribute('href', 'hello-night.css');</script>
+  <script>let d = new Date(); if (d.getHours() < 6 || d.getHours() >= 18) document.getElementById('page-style').setAttribute('href', 'hello-night.css');</script>
 
   <header>
     <h1 id="hostname">WeeNAS</h1>
@@ -177,6 +192,25 @@
 
   <main class="narrow">
     <h2>System Customization</h2>
+
+    <details id="credentials" open>
+      <summary><span id="credentials-key" style="opacity: 0.25;"> &#x1F511;</span> Credentials</summary>
+      <div style="margin-left: 1em;">
+        <table>
+          <tr>
+            <td><label>Username</label></td>
+            <td><input id="credentials-username" type="text"></td>
+          </tr>
+          <tr>
+            <td><label>Password</label></td>
+            <td><input id="credentials-password" type="password"
+                onchange="createAuth(document.getElementById('credentials-username').value, document.getElementById('credentials-password').value, credentialsEntered);">
+              <span id="credentials-state">&#x026D4;</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </details>
 
     <p><b>Trusted Users</b></p>
     <div onmouseover="toggleBlurb('trusted-user-blurb');" onmouseout="toggleBlurb('general-blurb');"

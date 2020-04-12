@@ -64,6 +64,10 @@ button.wide {
     width: 10em;
 }
 
+/* Generic class to left indent by 1em. */
+.indent {
+    margin-left: 1em;
+}
 
 /* Add more spacing between summary elements for easier touch screen access. */
 summary {

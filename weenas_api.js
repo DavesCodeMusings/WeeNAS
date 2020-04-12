@@ -1,31 +1,72 @@
-#!/usr/bin/env node
-
-/**
- * WeeNAS -- Raspberry Pi + Flash Drive + FreeBSD + Samba
- * @author David Horton https://github.com/DavesCodeMusings/WeeNAS
- */
-
-'use strict';
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
-const net = require('net');
-const https = require('https');
 const childProcess = require('child_process');
+const crypto = require('crypto');
 
-const weenasVersion = '1.0 dev'
-const pidFile = '/var/run/' + path.basename(__filename, '.js') + '.pid';
-const socket = '/var/run/' + path.basename(__filename, '.js') + '.sock';
 const port = 9000;
-const ESYNTAX = 'SYNTAX ERROR.';
+const EAPI = "Sorry, Charlie.";
 
-/**
- * API command look-up with regex filtering. 
- * @type {{apiCmd: string, shellCmd: string}} apiCmdDict
- */
+// Log to stdout with a date stamp.
+function log(message) {
+  let date = new Date;
+  console.log(date.toISOString() + ' ' + message);
+}
+
+// Prepare for secure web server start up by fetching the SSL certificate and key. 
+const httpsOptions = {
+  cert: '',
+  key: ''
+};
+try {
+  httpsOptions.cert = fs.readFileSync(path.join(__dirname, 'cert', 'weenas.cer'));
+}
+catch {
+  log('Unable to read SSL cert.');
+  process.exit(2);
+}
+try {
+  httpsOptions.key = fs.readFileSync(path.join(__dirname, 'cert', 'weenas.key'));
+}
+catch {
+  log('Unable to read SSL private key.');
+  process.exit(2);
+}
+
+// Serve only alpha (with underscore or dash) filenames with extensions of css, html, js, ico, or txt.
+const filenameRegex = /^\/[A-Za-z_-]+\.(?:css|html|js|ico|txt)/;
+
+// MIME types sent with the content header for the few filetypes served.
+const mimeTypes = {
+  ".css": "text/css",
+  ".html": "text/html",
+  ".js": "application/javascript",
+  ".ico": "image/x-icon",
+  ".txt": "text/plain"
+}
+
+// A list of URLs and the log files they refer to lets them be served as 'text/plain' static files.
+const logRedirects = {
+  "/system/log/cron": "/var/log/cron",
+  "/system/log/messages": "/var/log/messages",
+  "/system/log/nmbd": "/var/log/samba4/log.nmbd",
+  "/system/log/smbd": "/var/log/samba4/log.smbd",
+  "/system/log/weenas_api": "/var/log/weenas_api.log"
+};
+
+// Mapping HTTP verbs to API verbs.
+var apiVerbDict = {
+  'GET': 'get',
+  'PUT': 'set',
+  'POST': 'new',
+  'DELETE': 'del'
+}
+
+// API commands and their corresponding shell commands.
 var apiCmdDict = {
   '^get api home$': 'echo "\\"' + __dirname + '\\""',
   '^get users$': '/usr/local/bin/pdbedit -L -v | /usr/bin/awk -F\': *\' \'BEGIN { count=0; printf "{" } /---------------/ { getline; printf "%s\\n  \\"%s\\" : ", (++count==1)?"":",", $2; getline; getline; printf "\\"%s\\"", $2 } END { printf "\\n}" }\'',
-  '^get user ([a-z0-9]+)$': '/usr/local/bin/pdbedit -L %1 | /usr/bin/awk -F: \'{ printf "[ \\"%s\\", \\"%s\\", \\"%s\\" ]", $1, $2, $3 }\'',
+  '^get user ([a-z0-9]+)$': '/usr/local/bin/pdbedit -u %1 | /usr/bin/awk -F: \'{ printf "[ \\"%s\\", \\"%s\\", \\"%s\\" ]", $1, $2, $3 }\'',
   '^new user ([a-z0-9]+)$': './lib/defaultpass.sh %1 | /usr/local/bin/smbpasswd -s -a %1',
   '^set user ([a-z0-9]+) disabled$': '/usr/sbin/pw lock %1 && /usr/local/bin/smbpasswd -d %1',
   '^set user ([a-z0-9]+) enabled$': '/usr/sbin/pw unlock %1 && /usr/local/bin/smbpasswd -e %1',
@@ -33,7 +74,7 @@ var apiCmdDict = {
   '^set user ([a-z0-9]+) untrusted$': '/usr/sbin/pw usermod %1 -G shared -s /sbin/nologin',
   '^set user ([a-z0-9]+) password default$': './lib/defaultpass.sh %1 | /usr/local/bin/smbpasswd -s %1',
   '^del user ([a-z0-9]+)$': '/usr/local/bin/smbpasswd -x %1',
-  '^get os users$': '/usr/bin/awk -F: \'BEGIN { printf "[ " } { if ($3>1001 && $3<32000) printf "%s\\"%s\\"", ($3==1002)?"":", ", $1 } END { printf " ]\\n" }\' /etc/passwd',
+  '^get os users$': '/usr/bin/awk -F: \'BEGIN { printf "[ " } { if ($3>1000 && $3<32000) printf "%s\\"%s\\"", ($3==1001)?"":", ", $1 } END { printf " ]\\n" }\' /etc/passwd',
   '^get os user ([a-z0-9]+)$': '/usr/bin/awk -F: \'/^%1:/ { for(i=1;i<8;i++) printf "%s\\"%s\\"", (i==1)?"":", ", $i }\' /etc/passwd',
   '^get disks$': 'geom disk list | awk \'BEGIN { printf "{ " } /Name/ { printf "%s\\n  \\"%s\\": { ", (++count==1)?"":",", $3 } /Mediasize/ { printf "\\"size\\": %s, ", $2 } /descr/ { printf "\\"description\\": \\""; for(i=2;i<=NF;i++) printf "%s%s", (i==2)?"":" ", $i; printf "\\" }" } END { printf "\\n}\\n"}\'',
   '^get disk (da[0-9]|mmcsd0)$': 'echo "{" && geom disk list %1 | awk \'/Mediasize/ { printf "  \\"size\\": %s,\\n", $2 } /descr/ { printf "  \\"description\\": \\""; for(i=2;i<=NF;i++) printf "%s%s", (i==2)?"":" ", $i; printf "\\",\\n" }\' && geom part list %1 | awk \'BEGIN { printf "  \\"partitions\\": {" } /Name/ { printf "%s\\n    \\"%s\\": { ", (++count==1)?"":",", $3 } /Mediasize/ { printf "\\"size\\": %s, ", $2 } / type:/ { printf "\\"type\\": \\"%s\\" }", $2 } /Consumers/ { exit } END { printf "\\n  }\\n" }\' && echo "}"',
@@ -68,7 +109,7 @@ var apiCmdDict = {
   '^get system log weenas raw$': '/usr/bin/tail -n1000 /var/log/weenas_api.log',
   '^get system mail raw$': 'mailx -H || echo "No mail."',
   '^get system mail ([0-9]+) raw$': 'echo "%1" | mailx -N',
-  '^del system mail ([0-9]+)$': 'echo "d%1" | mailx -N', 
+  '^del system mail ([0-9]+)$': 'echo "d%1" | mailx -N',
   '^get system memory nameplate$': 'printf "\\"%1.fG\\"\\n" $(echo "scale=2; $(/sbin/sysctl -n hw.physmem) / 1073741824" | bc)',
   '^get system memory usable$': '/sbin/sysctl -n hw.physmem',
   '^get system memory user$': '/sbin/sysctl -n hw.usermem',
@@ -78,45 +119,54 @@ var apiCmdDict = {
   '^get system top raw$': '/usr/bin/top -bt'
 };
 
-/**
- * REST verb to API verb look-up
- * @type {{restVerb: string, apiVerb: string}} restVerbDict
- */
-var restVerbDict = {
-  'GET': 'get',
-  'PUT': 'set',
-  'POST': 'new',
-  'DELETE': 'del'
+// Log on startup.
+log(`WeeNAS API Listening on port ${port}...`);
+
+// Decode credentials passed in the header and compare to stored credentials.
+function validateCredentials(authHeader) {
+  let authType, authCredentials = '';
+  let authorized = false;
+  if (authHeader) {
+    [authType, authCredentials] = authHeader.split(' ');
+    if (authType == 'Basic') {
+      credentialsDecoded = Buffer.from(authCredentials, 'base64').toString('ascii');
+      let [user, pass] = credentialsDecoded.split(':');
+      let storedCredentials = '';
+      try {
+        storedCredentials = JSON.parse(childProcess.execSync(`pw user show ${user} 2>/dev/null | awk -F: 'BEGIN { printf "{\\n" } { split($8, gecos, ","); printf "  \\"auth\\": \\"%s\\",\\n", gecos[2]; printf "  \\"trusted\\": %i\\n", ($10 != "/sbin/nologin") } END { printf "}\\n" }'`));
+      }
+      catch {
+        log(`Unable to retreive credentials for ${user}`);
+      }
+      let sha1Hash = crypto.createHash('sha1').update(pass).digest('hex');
+      authorized = (sha1Hash == storedCredentials.auth);
+    }
+  }
+  return authorized;
 }
 
-/**
- *  A minimal file extention to MIME type dictionary.
- * @type {{fileExtension: string, mimeType: string}} restVerbDict
- */
-var mimeTypeDict = {
-  'css': 'text/css',
-  'html': 'text/html',
-  'ico': 'image/x-icon',
-  'js': 'text/javascript'
+// Serve up static content and log files (things not handled by API.)
+function serveStaticContent(filePath, request, response) {
+  let fileStream = fs.createReadStream(filePath);
+  let mimeType = mimeTypes[path.extname(filePath)] || 'text/plain';
+  fileStream.on('open', () => {
+    log(`Serving ${request.url} from ${filePath} as ${mimeType}`);
+    response.writeHead(200, { 'Content-Type': mimeType });
+    fileStream.pipe(response);
+  });
+  fileStream.on('error', (e) => {
+    log(JSON.stringify(e));
+    response.writeHead(404, 'Not Found', { 'Content-type': 'text/plain' });
+    response.end(`404: ${request.url}'s not here, man.`);
+  });
+  fileStream.on('end', () => {
+    response.end();
+  });
 }
 
-/**
-* Add an ISO date-time stamp to any messages being logged.
-* @param {string} msg  The text to be logged.
-* @returns {string} msg with current ISO date-time prepended.
-*/
-function stamp(msg) {
-  var d = new Date();
-  return d.toISOString() + ' ' + msg;
-}
-
-/**
- * Parse and validate the api command string. If it passes muster, run the matching shell command. 
- * @param {string} input  The api command string.
- * @returns {string}  stdout from the shell command.
- */
-function parse(input) {
-  let result = ESYNTAX;  // Assume the worst.
+// Match input to an API command and run the corresponding shell command.
+function runApiCommand(input) {
+  let result = EAPI;  // Assume the worst.
   let shellCmd = '';
 
   // Parse user input by looping through available commands until a regex matches.
@@ -126,13 +176,12 @@ function parse(input) {
       // Apply the matching regex pattern to the user input to capture group matches.
       let cmdPatternRegEx = new RegExp(cmdPattern);
       let match = cmdPatternRegEx.exec(input);
-      console.log(stamp('Received: ' + input));
 
       // Substitute regex group matches into shell command %1 and %2 place holders.
       shellCmd = apiCmdDict[cmdPattern];
       if (match[1]) shellCmd = shellCmd.replace(/%1/g, match[1]);
       if (match[2]) shellCmd = shellCmd.replace(/%2/g, match[2]);
-      console.log(stamp('Running: ' + shellCmd));
+      log('Running: ' + shellCmd);
 
       // Run the shell command, capturing stdout.
       try {
@@ -147,127 +196,79 @@ function parse(input) {
   return result;
 }
 
-// Log information about this process.
-console.log ('WeeNAS version ' + weenasVersion + '\nCopyright (c)2020 David Horton https://davescodemusings.github.io/WeeNAS/');
-if (pidFile) {
-  fs.writeFile(pidFile, process.pid, (e) => {
-    if (!e) console.log(stamp('PID ' + process.pid + ' written to ' + pidFile));
-    else console.log(stamp(pidFile + ' is stale. Don\'t trust it. Actual PID is: ' + process.pid));
-  });
-}
+// Wait patiently for requests to come in.
+https.createServer(httpsOptions, (request, response) => {
+  let body = '';
+  request.setEncoding('utf8');
 
-// Create a Unix-domain API server to receive and execute commands.
-const server = net.createServer((c) => {
-  console.log(stamp('Client connect.'));
-  c.write('READY.\n> ');
-
-  // Send anything received to the command parser.
-  c.on('data', (d) => {
-    if (d.slice(-1) == '\n') d = d.slice(0, -1);  // like Perl chomp()
-    let response = parse(d.toString());
-    c.write(response + '\n> ');
-  });
-
-  c.on('end', () => {
-    console.log(stamp('Client disconnect.'));
-  });
-});
-
-// Start listening on a unix socket restricted to user:group.
-server.listen(socket, () => {
-  fs.chmod(socket, 0o660, (e) => {
-    if (e) throw e;
-  });
-  console.log(stamp('Server listening on: ' + socket));
-});
-
-// Error handler (specifically for stale socket due to unclean shutdown.)
-server.on('error', (e) => {
-  if (e.code == 'EADDRINUSE')
-    console.error('Stale socket detected. Remove ' + e.address + ' and try again.');
-  else throw e;
-});
-
-// Start listening on a TCP port if a port number was given as a command-line parameter.
-if (port) {
-
-  const httpsOptions = {
-    key: fs.readFileSync('ssl.key'),
-    cert: fs.readFileSync('ssl.cer')
-  };
-
-  const RESTServer = https.createServer(httpsOptions, (request, response) => {
-    let method = request.method.toString();
-    let urlPath = request.url.toString();
-
-    // Serve up an index.html if a blank path was given.
-    if (urlPath == '/') urlPath = '/index.html';
-
-    // Check for requests that look like '/page.html'. These are served as static pages.
-    // Everything else is processed like an API call.
-    let staticFileRegEx = new RegExp(/^\/([A-Za-z0-9]+)\.(html|css|js|ico)$/);  // Matches /file.ext
-    let match = staticFileRegEx.exec(urlPath);
-    if (method === 'GET' && match !== null) {
-      let filePath = path.join(__dirname, 'htdocs', match[1] + '.' + match[2]);
-      if (fs.existsSync(filePath)) {
-        console.log(stamp('Serving: ' + filePath + ' as ' + mimeTypeDict[match[2]]));
-        let data = fs.readFileSync(filePath, 'utf-8');
-        response.writeHead(200, { 'Content-Type': mimeTypeDict[match[2]] + '; charset=utf-8' });
-        response.write(data);
-      }
-      else {
-        response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-        response.write('Sorry, Charlie.');
-      }
+  // Keep adding chunks of data to the body unless invalid chars are encountered.
+  request.on('data', chunk => {
+    let permittedCharsRegex = /^[A-Za-z0-9 ~!@#\$%\^-_=+\[\{\]\}:;"',.\/\r\n]*$/;
+    if (chunk.match(permittedCharsRegex)) {
+      body += chunk;
     }
     else {
+      response.writeHead(400, 'Bad Request', { 'Content-Type': 'text/plain' });
+      response.end('400: Illegal characters.');
+      request.destroy();
+    }
+  });
 
-      // Replace all forward slashes wih spaces and parse the command using these
-      // substitutions for verbs: POST = new, GET = get, PUT = set, DELETE = del.
-      let cmd = restVerbDict[method] + urlPath.replace(/\//g, ' ').trimEnd();
-      console.log(stamp('REST API: ' + method + ' ' + urlPath));
-      let result = parse(cmd);
-      if (result.includes(ESYNTAX) === false) {
-        response.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-        response.write(result + '\r\n');
+  // Request is entirely read in. The time to act is now.
+  request.on('end', () => {
+    let authorized = validateCredentials(request.headers.authorization);
+
+    let filePath = '';
+
+    // Simple GET of static content in htdocs requires no auth token. Everything else does.
+    if (request.url.match(filenameRegex)) {
+      if (request.method == 'GET') {
+        filePath = path.join(__dirname, 'htdocs', request.url);
+        serveStaticContent(filePath, request, response);
       }
       else {
-        response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-        response.write('Sorry, Charlie.');
+        response.writeHead(405, 'Method Not Allowed');
+        response.end();
       }
     }
-    response.end();
-  });
-  RESTServer.listen(port, () => {
-    console.log(stamp('Server listening on: tcp/' + port));
-  });
-  RESTServer.on('error', (e) => {
-    if (e.code == 'EADDRINUSE')
-      console.error('Port ' + port + ' in use. REST API not available.');
-    else throw e;
-  });
-}
+    else if (authorized) {
 
-/**
- * Log any caught SIGINT and SIGTERM signals and exit cleanly.
- * @param {string} s  The signal name that was caught.
- */
-function sigHandler(s) {
-  console.log(stamp('Caught signal: ' + s + '.'));
-  if (s == 'SIGINT' || s == 'SIGTERM') {
-    process.exit(0);
-  }
-}
-process.on('SIGINT', sigHandler);
-process.on('SIGTERM', sigHandler);
+      // Log files are static content, but only authorized users can view them.
+      for (url in logRedirects) {
+        if (url == request.url) {
+          filePath = logRedirects[url];
+          if (request.method == 'GET') {
+            serveStaticContent(filePath, request, response);
+          }
+        }
+      }
 
-// Clean up socket on exit.
-process.on('exit', (c) => {
-  console.log(stamp('Server shutdown.'));
-  fs.unlink(socket, (e) => {
-    console.error(stamp('Unable to remove ' + socket));
+      // Use filepath as a way to see if anything matched yet. If not, check API calls.
+      if (!filePath) {
+        apiVerb = apiVerbDict[request.method] || '';
+        if (apiVerb) {
+          cmd = apiVerb + request.url.replace(/\//g, ' ').trimEnd();
+          let result = runApiCommand(cmd);
+          if (result != EAPI) {
+            response.writeHead(200, 'OK', { 'Content-Type': 'application/json' });
+            response.end(result);
+          }
+          else {
+            response.writeHead(404, 'Not Found', { 'Content-Type': 'text/plain' })
+            response.end(result);
+          }
+        }
+        else {
+          response.writeHead(405, 'Method Not Allowed');
+          response.end('Sorry, Charlie. The API does not support that method.');
+        }
+      }
+    }
+
+    // If no file was served, check request against the list of valid API calls.
+    else {
+      response.writeHead(401, 'Unauthorized');
+      response.end('Sorry, Charlie. You need to be logged in.');
+    }
   });
-  fs.unlink(pidFile, (e) => {
-    console.error(stamp('Unable to remove ' + pidFile));
-  });
-});
+}).listen(port);

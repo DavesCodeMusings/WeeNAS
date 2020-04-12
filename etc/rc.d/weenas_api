@@ -7,9 +7,9 @@
 # Add these lines to /etc/rc.conf.local or /etc/rc.conf to enable weenas_api:
 #
 # weenas_api_enable (boolean):
-#   NO by default. Set to YES to enable.
+#   Set to YES to enable.
 # weenas_api_home (path):
-#   /root/WeeNAS by default. Set to the parent path of weenas-api.js.
+#   /root/weenas by default. Set to the parent path of weenas-api.js.
 #
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
 . /etc/rc.subr
@@ -20,7 +20,7 @@ load_rc_config $name
 : ${weenas_api_home:=/root/weenas}
 command_interpreter=node
 command=${weenas_api_home}/${name}.js
-command_args="${weenas_api_home}/${name}.js
+command_args="${weenas_api_home}/${name}.js"
 pidfile=/var/run/${name}.pid
 pid=`pgrep -F /var/run/${name}.pid 2>/dev/null`
 

@@ -19,7 +19,7 @@ if [ "$?" != "0" ]; then
   exit 2
 fi
 
-# Confirm formatting for FreeBSD.
+# Confirm formatting flash drive for FreeBSD.
 echo
 echo "The following USB mass storage device was detected:"
 geom disk list $DEVICE | egrep 'Name|Mediasize|descr' | sed 's/^[0-9]\./  /'
@@ -47,9 +47,10 @@ else
 fi
 
 # Configure time sync.
+echo "Syncing system time..."
 sysrc ntpd_enable="YES"
 sysrc ntpd_sync_on_start="YES"
-ln -s /usr/share/zoneinfo/Etc/GMT /etc/localtime
+[ -h /etc/localtime ] || ln -s /usr/share/zoneinfo/Etc/GMT /etc/localtime
 service ntpd start
 
 # Respond "yes" to all pkg prompts.
@@ -81,7 +82,6 @@ echo "Installing WeeNAS API service..."
 install -o0 -g0 -m755 etc/rc.d/weenas_api /usr/local/etc/rc.d
 sysrc weenas_api_enable="YES"
 sysrc weenas_api_home="$(pwd)"
-sysrc weenas_api_port="9000"
 service weenas_api start
 
 # Append home filesystem information to /etc/fstab and mount homefs.
@@ -96,9 +96,16 @@ if [ "$(grep shared /etc/group)" == "" ]; then
   pw groupadd shared -g 1000
 fi
 
+# Give the 'freebsd' account a WeeNAS password of 'freebsd'.
+pw user mod freebsd -c "FreeBSD User,$(sha1 -qs 'freebsd')"
+
+# Lock 'toor' superuser backdoor account.
+pw lock toor
+
 # Create self-signed SSL cert for https encryption.
-openssl req -x509 -newkey rsa:4096 -keyout ssl.key -out ssl.cer -days 730 -nodes -subj "/CN=$(hostname)"
+openssl req -x509 -newkey rsa:4096 -keyout cert/weenas.key -out cert/weenas.cer -days 730 -nodes -subj "/CN=$(hostname)"
 
 # Finish.
 IP="$(ifconfig ue0 | awk '/inet/ { print $2 }')"
 echo "Open a web browser to https://${IP}:9000 to customize your WeeNAS system."
+echo "WeeNAS uses a self-signed SSL certificate. You must add an exception."
