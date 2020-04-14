@@ -173,7 +173,7 @@ function validateCredentials(authHeader) {
   return authorized;
 }
 
-// Serve up static content and log files (things not handled by API.)
+// Serve up static content and log files (GET requests not handled by API.)
 function serveStaticContent(filePath, request, response) {
   let fileStream = fs.createReadStream(filePath);
   let mimeType = mimeTypes[path.extname(filePath)] || 'text/plain';
@@ -192,26 +192,28 @@ function serveStaticContent(filePath, request, response) {
   });
 }
 
-// Match input to an API command and run the corresponding shell command.
-function runApiCommand(input) {
+// Find apiCmd in the command dictionary and run the corresponding shell command.
+function runApiCommand(apiCmd, apiBody) {
   let result = EGENERIC;  // Assume the worst.
   let shellCmd = '';
 
-  // Parse user input by looping through available commands until a regex matches.
+  // Look for apiCmd by looping through available commands until a regex match occurs.
   for (var cmdPattern in apiCmdDict) {
-    if (input.match(cmdPattern)) {
+    if (apiCmd.match(cmdPattern)) {
 
-      // Apply the matching regex pattern to the user input to capture group matches.
+      // Apply the matching regex pattern to the apiCmd to capture group matches.
       let cmdPatternRegEx = new RegExp(cmdPattern);
-      let match = cmdPatternRegEx.exec(input);
+      let match = cmdPatternRegEx.exec(apiCmd);
 
-      // Substitute regex group matches into shell command %1 and %2 place holders.
+      // Substitute regex group matches into shell command %1 and %2 placeholders.
+      // And, substitute the request body into the shell command's %0 placeholder.
       shellCmd = apiCmdDict[cmdPattern];
       if (match[1]) shellCmd = shellCmd.replace(/%1/g, match[1]);
       if (match[2]) shellCmd = shellCmd.replace(/%2/g, match[2]);
-      log('Running: ' + shellCmd);
+      if (apiBody) shellCmd = shellCmd.replace(/%0/, apiBody);
 
       // Run the shell command, capturing stdout.
+      log('Running: ' + shellCmd);
       try {
         result = childProcess.execSync(shellCmd, { cwd: __dirname });
       }
@@ -237,7 +239,7 @@ https.createServer(httpsOptions, (request, response) => {
     }
     else {
       response.writeHead(400, 'Bad Request', { 'Content-Type': 'text/plain' });
-      response.end('400: Illegal characters.');
+      response.end('400: Illegal characters in request body.');
       request.destroy();
     }
   });
@@ -276,7 +278,9 @@ https.createServer(httpsOptions, (request, response) => {
         apiVerb = apiVerbDict[request.method] || '';
         if (apiVerb) {
           cmd = apiVerb + request.url.replace(/\//g, ' ').trimEnd();
-          let result = runApiCommand(cmd);
+
+          // API calls have the request body passed as well for possible POST and/or PUT.
+          let result = runApiCommand(cmd, body);
           if (result != EGENERIC) {
             response.writeHead(200, 'OK', { 'Content-Type': 'application/json' });
             response.end(result);
@@ -287,16 +291,16 @@ https.createServer(httpsOptions, (request, response) => {
           }
         }
         else {
-          response.writeHead(405, 'Method Not Allowed');
-          response.end('Sorry, Charlie. The API does not support that method.');
+          response.writeHead(405, 'Method Not Allowed', { 'Content-Type': 'text/plain' });
+          response.end('The API does not support that method.');
         }
       }
     }
 
-    // If no file was served, check request against the list of valid API calls.
+    // Complain if no authorization was provided.
     else {
-      response.writeHead(401, 'Unauthorized');
-      response.end('Sorry, Charlie. You need to be logged in.');
+      response.writeHead(401, 'Unauthorized', { 'Content-Type': 'text/plain' });
+      response.end('You need to be logged in.');
     }
   });
 }).listen(port);

@@ -28,15 +28,32 @@
     var authHeader = '';
 
     /* Indicate that credentials were entered (correctly?) */
-    function credentialsEntered() {
-      document.getElementById('credentials-icon').style.opacity = '1.0';
-      document.getElementById('credentials').removeAttribute('open');
+    function credentialsEntered(authorized) {
+      if (authorized) {
+        document.getElementById('credentials-state').innerHTML = '&#x1F7E2;';
+        document.getElementById('credentials-icon').style.opacity = '1.0';
+        document.getElementById('credentials').removeAttribute('open');
+      }
+      else {
+        document.getElementById('credentials-state').innerHTML = '&#x026d4;';
+      }
     }
 
     /* Create authorization header from credentials */
     function createAuth(username, password, callback) {
       authHeader = 'Basic ' + btoa(username + ':' + password);
-      callback();
+      url = '/user/' + username;
+      document.body.style.cursor = 'wait';
+      let xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4) {
+          callback((this.status == 200));
+          document.body.style.cursor = 'default';
+        }
+      };
+      xhttp.open('GET', url, true);
+      xhttp.setRequestHeader('Authorization', authHeader);
+      xhttp.send();      
     }
 
     /*
@@ -71,7 +88,7 @@
     }
 
     /* Display the details for a given user info object. */
-    function updateuserDetails(userDetails) {
+    function updateUserDetails(userDetails) {
       document.getElementById('user-locked').checked = (userDetails.freebsd.locked);
       document.getElementById('user-samba').checked = (userDetails.samba.flags !== undefined && !userDetails.samba.flags.includes('D'));
       document.getElementById('user-trusted').checked = (userDetails.freebsd.shell !== '/sbin/nologin');
@@ -94,26 +111,34 @@
       xhttp.send();      
     }
 
-    /* AJAX add user(s) */
-    function addUsers(userList) {
-      if (userList) {
-        document.body.style.cursor = 'wait';
-        let users = userList.split(' ');
-        let xhttp = [];
-        for (let i = 0; i < users.length; i++) {
-          url = '/user/' + users[i];
-          xhttp[i] = new XMLHttpRequest();
-          xhttp[i].onreadystatechange = function () {
-            if (xhttp[i].readyState === 4) {
-              if (xhttp[i].status !== 200) alert('Error: ' + xhttp[i].responseText);
-              document.body.style.cursor = 'default';
-            }
-          };
-          xhttp[i].open('POST', url, true);
-          xhttp.setRequestHeader('Authorization', authHeader);
-          xhttp[i].send('');
+    /* Create new users from a list, removing each one as it is added. */
+    function addUserList() {
+      if (document.getElementById('user-list')) {
+        users = userList.split(' ');
+        for (let i=0; i++; i<users.length) {
+
         }
       }
+    }
+
+    /* AJAX add user(s) */
+    function addUser(user, callback) {
+      document.body.style.cursor = 'wait';
+      let url = '/user/' + user;
+      let xhttp = [];
+      xhttp[i] = new XMLHttpRequest();
+      xhttp[i].onreadystatechange = function () {
+        if (xhttp[i].readyState === 4) {
+          if (xhttp.status == 200) {
+            document.body.style.cursor = 'default';
+            callback(JSON.parse(this.responseText));
+          }
+          else alert('Error: ' + xhttp[i].responseText);
+        }
+      };
+      xhttp.open('POST', url, true);
+      xhttp.setRequestHeader('Authorization', authHeader);
+      xhttp.send('');
     }
 
     /* AJAX set user attribute (lock/unlock, trusted/untrusted) */
@@ -555,9 +580,9 @@
             <form>
               <table>
                 <tr>
-                  <td><input id='add-user-list' type="text" size="35em" maxlength="60" pattern="[a-z0-9 ]+"
+                  <td><input id='user-add-list' type="text" size="35em" maxlength="60" pattern="[a-z0-9 ]+"
                       placeholder="Lowercase; separate with spaces."></td>
-                  <td><button class="narrow" onclick="addUsers(document.getElementById('add-user-list').value)"
+                  <td><button class="narrow" onclick="addUsers(document.getElementById('user-add-list').value)"
                       type="button">
                       <span style="color: green; font-size: 125%; font-weight: bold;">+</span></button>
                   </td>
@@ -578,7 +603,7 @@
                   <th>Details</th>
                 </tr>
                 <tr>
-                  <td><select id="user-list" onchange="getuserDetails(document.getElementById('user-list').value, updateuserDetails);" size=5 style="width: 10em;"></select></td>
+                  <td><select id="user-list" onchange="getuserDetails(document.getElementById('user-list').value, updateUserDetails);" size=5 style="width: 10em;"></select></td>
                   <td>
                       <input id="user-locked" type="checkbox"> &#x1F512; Account Locked<br>
                       <input id="user-samba" type="checkbox"> &#x1F4C2; Network Shares<br>
