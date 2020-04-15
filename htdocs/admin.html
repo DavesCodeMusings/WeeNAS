@@ -7,526 +7,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link id="page-style" href="hello.css" rel="stylesheet" type="text/css">
+  <script src="admin.js"></script>
   <script src="tzNamesLib.js"></script>
   <script>
     /* Figure out whence we came and put the hostname in the header. */
     function showHostname() {
       if (window.location.hostname) {
         document.getElementById('hostname').innerHTML = window.location.hostname;
-      }
-    }
-
-    /* Open up <details> all at once. */
-    function openDetails() {
-      let elements = document.getElementsByTagName('details');
-      for (let i = 0; i < elements.length; i++) {
-        elements[i].setAttribute('open', '');
-      }
-    }
-
-    /* Authorization */
-    var authHeader = '';
-
-    /* Indicate that credentials were entered (correctly?) */
-    function credentialsEntered(authorized) {
-      if (authorized) {
-        document.getElementById('credentials-state').innerHTML = '&#x1F7E2;';
-        document.getElementById('credentials-icon').style.opacity = '1.0';
-        document.getElementById('credentials').removeAttribute('open');
-      }
-      else {
-        document.getElementById('credentials-state').innerHTML = '&#x026d4;';
-      }
-    }
-
-    /* Create authorization header from credentials */
-    function createAuth(username, password, callback) {
-      authHeader = 'Basic ' + btoa(username + ':' + password);
-      url = '/user/' + username;
-      document.body.style.cursor = 'wait';
-      let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function () {
-        if (this.readyState == 4) {
-          callback((this.status == 200));
-          document.body.style.cursor = 'default';
-        }
-      };
-      xhttp.open('GET', url, true);
-      xhttp.setRequestHeader('Authorization', authHeader);
-      xhttp.send();      
-    }
-
-    /*
-    * Users
-    */
-
-    /* Display user accounts. */
-    function updateUserList(users) {
-      users.sort();
-      let userList ='';
-      for (let i = 0; i < users.length; i++) {
-          userList += '<option>' + users[i] + '</option>';
-      }
-      document.getElementById('user-list').innerHTML = userList;
-    }
-
-    /* AJAX fetch users */
-    function getUsers(callback) {
-      url = '/users';
-      document.body.style.cursor = 'wait';
-      let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function () {
-        if (this.readyState == 4) {
-          if (this.status == 200) callback(JSON.parse(this.responseText));
-          else alert('Error retrieving users.\n' + this.responseText);
-          document.body.style.cursor = 'default';
-        }
-      };
-      xhttp.open('GET', url, true);
-      xhttp.setRequestHeader('Authorization', authHeader);
-      xhttp.send();
-    }
-
-    /* Display the details for a given user info object. */
-    function updateUserDetails(userDetails) {
-      document.getElementById('user-locked').checked = (userDetails.freebsd.locked);
-      document.getElementById('user-samba').checked = (userDetails.samba.flags !== undefined && !userDetails.samba.flags.includes('D'));
-      document.getElementById('user-trusted').checked = (userDetails.freebsd.shell !== '/sbin/nologin');
-    }
-
-    /* Retrieve detailed information for one particular user */
-    function getuserDetails(user, callback) {
-      url = '/user/' + user;
-      document.body.style.cursor = 'wait';
-      let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function () {
-        if (this.readyState == 4) {
-          if (this.status == 200) callback(JSON.parse(this.responseText));
-          else alert('Error retrieving user information.\n' + this.responseText);
-          document.body.style.cursor = 'default';
-        }
-      };
-      xhttp.open('GET', url, true);
-      xhttp.setRequestHeader('Authorization', authHeader);
-      xhttp.send();      
-    }
-
-    /* Create new users from a list, removing each one as it is added. */
-    function addUserList() {
-      if (document.getElementById('user-list')) {
-        users = userList.split(' ');
-        for (let i=0; i++; i<users.length) {
-
-        }
-      }
-    }
-
-    /* AJAX add user(s) */
-    function addUser(user, callback) {
-      document.body.style.cursor = 'wait';
-      let url = '/user/' + user;
-      let xhttp = [];
-      xhttp[i] = new XMLHttpRequest();
-      xhttp[i].onreadystatechange = function () {
-        if (xhttp[i].readyState === 4) {
-          if (xhttp.status == 200) {
-            document.body.style.cursor = 'default';
-            callback(JSON.parse(this.responseText));
-          }
-          else alert('Error: ' + xhttp[i].responseText);
-        }
-      };
-      xhttp.open('POST', url, true);
-      xhttp.setRequestHeader('Authorization', authHeader);
-      xhttp.send('');
-    }
-
-    /* AJAX set user attribute (lock/unlock, trusted/untrusted) */
-    function setUser(user, attribute) {
-      if (user) {
-        document.body.style.cursor = 'wait';
-        url = '/user/' + user + '/' + attribute;
-        let xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function () {
-          if (this.readyState === 4) {
-            if (this.status !== 200) alert('Error: ' + this.responseText);
-            document.body.style.cursor = 'default';
-          }
-        };
-        xhttp.open('PUT', url, true);
-        xhttp.setRequestHeader('Authorization', authHeader);
-        xhttp.send();
-      }
-    }
-
-    /* AJAX delete user */
-    function delUser(user) {
-      if (user) {
-        if (confirm('Permanently delete ' + user + '?')) {
-          document.body.style.cursor = 'wait';
-          url = '/user/' + user;
-          let xhttp = new XMLHttpRequest();
-          xhttp.onreadystatechange = function () {
-            if (this.readyState === 4) {
-              if (this.status !== 200) alert('Error: ' + this.responseText);
-              document.body.style.cursor = 'default';
-            }
-          };
-          xhttp.open('DELETE', url, true);
-          xhttp.setRequestHeader('Authorization', authHeader);
-          xhttp.send();
-        }
-      }
-    }
-
-    /*
-    * Storage
-    */
-
-    /* Human readable disk-size */
-    function diskSizeHuman(sizeBytes) {
-      let size = sizeBytes;
-      let label = ['B', 'K', 'M', 'G', 'T', 'P'];
-      let count = 0;
-      while (size / 1000 > 1 && count < label.length - 1) {
-        size /= 1000;
-        count++;
-      }
-      size = Math.round(size);
-      return `${size}${label[count]}`;
-    }
-
-    /* Display home filesystem information */
-    function updateHomefsInfo(filesystemInfo) {
-      document.getElementById('storage-home-total').innerHTML = diskSizeHuman(filesystemInfo.total * 1048576);
-      document.getElementById('storage-home-free').innerHTML = diskSizeHuman(filesystemInfo.free * 1048576);
-      document.getElementById('storage-home-percent').innerHTML = filesystemInfo.percent;
-    }
-
-    function getFilesystemInfo(filesystem, callback) {
-      url = '/filesystem/mounted/ufs/' +filesystem;
-      document.body.style.cursor = 'wait';
-      let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function () {
-        if (this.readyState == 4) {
-          if (this.status == 200) callback(JSON.parse(this.responseText));
-          else alert('Error: ' + this.responseText);
-          document.body.style.cursor = 'default';
-        }
-      };
-      xhttp.open('GET', url, true);
-      xhttp.setRequestHeader('Authorization', authHeader);
-      xhttp.send();
-    }
-
-    /* Display disk information */
-    function updateDiskList(disksObj) {
-      let diskNames = Object.keys(disksObj);
-      diskNames.sort();
-      let diskOptionList = '';
-      for (let i = 0; i < diskNames.length; i++) {
-        diskOptionList += '<option>' + diskNames[i] + '</option>';
-      }
-      document.getElementById('storage-devices').innerHTML = diskOptionList;
-    }
-
-    /* AJAX fetch storage devices (disks) */
-    function getDisks(callback) {
-      let url = '/disks';
-      document.body.style.cursor = 'wait';
-      let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function () {
-        if (this.readyState == 4) {
-          if (this.status == 200) callback(JSON.parse(this.responseText));
-          else alert('Error: ' + this.responseText);
-          document.body.style.cursor = 'default';
-        }
-      };
-      xhttp.open('GET', url, true);
-      xhttp.setRequestHeader('Authorization', authHeader);
-      xhttp.send();
-    }
-
-    /* Display partition information */
-    function updateDiskInfo(diskObj) {
-      let partitionNames = Object.keys(diskObj.partitions);
-      partitionNames.sort();
-      let partitionOptionList = '';
-      for (let i = 0; i < partitionNames.length; i++) {
-        partitionOptionList += '<option>' + partitionNames[i] + '</option>';
-      }
-      document.getElementById('storage-partitions').innerHTML = partitionOptionList;
-      if (diskObj.size) document.getElementById('storage-size').innerHTML = diskSizeHuman(diskObj.size);
-      if (diskObj.description) document.getElementById('storage-description').innerHTML = diskObj.description;
-    }
-
-    /* Get information about a particular disk. */
-    function getDiskInfo(disk, callback) {
-      let url = '/disk/' + disk;
-      document.body.style.cursor = 'wait';
-      let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function () {
-        if (this.readyState == 4) {
-          if (this.status == 200) callback(JSON.parse(this.responseText));
-          else alert('Error: ' + this.responseText);
-          document.body.style.cursor = 'default';
-        }
-      };
-      xhttp.open('GET', url, true);
-      xhttp.setRequestHeader('Authorization', authHeader);
-      xhttp.send();
-    }
-
-    /* Display available filesystems */
-    function updateFilesystems(filesystemsArr) {
-      filesystemsList = '';
-      for (let i = 0; i < filesystemsArr.length; i++) {
-        filesystemsList += '<option>' + filesystemsArr[i] + '</option>'
-        document.getElementById('storage-filesystems').innerHTML = filesystemsList;
-      }
-    }
-
-    /* AJAX fetch available filesystems */
-    function getFilesystems(fsType, callback) {
-      let url = '/filesystems/' + fsType;
-      document.body.style.cursor = 'wait';
-      let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function () {
-        if (this.readyState == 4) {
-          if (this.status == 200) callback(JSON.parse(this.responseText));
-          else alert('Error: ' + this.responseText);
-          document.body.style.cursor = 'default';
-        }
-      };
-      xhttp.open('GET', url, true);
-      xhttp.setRequestHeader('Authorization', authHeader);
-      xhttp.send();
-    }
-
-    /* Display mountpoint */
-    function updateMountpoint(directory, editable) {
-      let e = document.getElementById('storage-mountpoint')
-      e.value = directory;
-      if (editable) e.removeAttribute('readonly');
-      else e.setAttribute('readonly', true);
-    }
-
-    /* Determine a default mount directory based on filesystem label */
-    function suggestMountPoint(fsLabel, callback) {
-      let mountpoint = '';
-      let editable = false;
-      if (fsLabel == "rootfs") {
-        mountpoint = '/';
-      }
-      else if (fsLabel == "homefs") {
-        mountpoint = '/home';
-      }
-      else {
-        // Chop 'fs' off the end for readability, so 'musicfs' becomes 'music'.
-        if (fsLabel.substring(fsLabel.length - 2) == 'fs') {
-          fsLabel = fsLabel.substring(0, fsLabel.length - 2);
-        }
-        mountpoint = '/media/' + fsLabel;
-        editable = true;
-      }
-      callback(mountpoint, editable);
-    }
-
-    /* AJAX write partition scheme */
-    function formatDisk(disk, label) {
-      if (confirm('This will destroy all data on ' + disk)) {
-        document.body.style.cursor = 'wait';
-        let url = '/disk/' + disk + '/freebsd/' + label;
-        let xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function () {
-          if (this.readyState == 4) {
-            if (this.status == 200) {
-              reply = JSON.parse(this.responseText);
-              alert(reply);
-            }
-            else alert('Error writing partition scheme and filesystem to ' + disk);
-            document.body.style.cursor = 'default';
-          }
-        };
-        xhttp.open('PUT', url, true);
-        xhttp.send();
-      }
-    }
-
-    /* AJAX write filesystem */
-    function writeFilesystem(partition) {
-      if (confirm('This will destroy all data on ' + partition)) {
-        document.body.style.cursor = 'wait';
-        let url = '/disk/' + partition + '/ufs';
-        let xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function () {
-          if (this.readyState == 4) {
-            if (this.status == 200) {
-              reply = JSON.parse(this.responseText);
-              alert(reply);
-            }
-            else alert('Error writing filesystem to ' + partition);
-            document.body.style.cursor = 'default';
-          }
-        };
-        xhttp.open('PUT', url, true);
-        xhttp.send();
-      }
-    }
-
-    /*
-    * Services
-    */
-
-    /* Display ntpd Status */
-    function updateNtpd(status) {
-      document.getElementById('time-ntpd').innerHTML = status;
-    }
-
-    /* Get service status. */
-    function getServiceStatus(name, callback) {
-      let url = '/system/service/' + name;
-      let xhttp = new XMLHttpRequest();
-      document.body.style.cursor = 'wait';
-      xhttp.onreadystatechange = function () {
-        if (this.readyState === 4) {
-          if (this.status === 200) callback(JSON.parse(this.responseText));
-          else alert('Error: ' + this.responseText);
-        }
-        document.body.style.cursor = 'default';
-      };
-      xhttp.open('GET', url, true);
-      xhttp.setRequestHeader('Authorization', authHeader);
-      xhttp.send();
-    }
-
-    /*
-    * Time
-    */
-
-    /* Display date and time */
-    function updateDateTime(dateTimeString) {
-      document.getElementById('time-server').innerHTML = dateTimeString;
-
-      // Create an ISO-8601 date rounded to the nearest minute to match server format.
-      let d = new Date();
-      let formattedDate = d.getUTCFullYear()
-        + '-' + ('0' + (d.getUTCMonth() + 1)).slice(-2)
-        + '-' + ('0' + d.getUTCDate()).slice(-2)
-        + 'T' + ('0' + d.getUTCHours()).slice(-2)
-        + ':' + ('0' + d.getUTCMinutes()).slice(-2)
-        + 'Z';
-      document.getElementById('time-client').innerHTML = formattedDate;
-    }
-
-    /* Get server time and browser time, in UTC and to the nearest minute. */
-    function getDateTime(callback) {
-      let xhttp = new XMLHttpRequest();
-      document.body.style.cursor = 'wait';
-      xhttp.onreadystatechange = function () {
-        if (this.readyState === 4) {
-          if (this.status === 200) callback(JSON.parse(this.responseText));
-          else alert('Error: ' + this.responseText);
-        }
-        document.body.style.cursor = 'default';
-      };
-      xhttp.open('GET', '/system/datetime', true);
-      xhttp.setRequestHeader('Authorization', authHeader);
-      xhttp.send();
-    }
-
-    /* Set the timezone. */
-    function setTimeZone(area, location) {
-      if (area && location) {
-        let url = './system/timezone/' + area + '/' + location;
-        document.body.style.cursor = 'wait';
-        let xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function () {
-          if (this.readyState == 4) {
-            if (this.status != 200) alert('Error: ' + this.responseText);
-            document.body.style.cursor = 'default';
-          }
-        };
-        xhttp.open('PUT', url, true);
-        xhttp.setRequestHeader('Authorization', authHeader);
-        xhttp.send();
-      }
-    }
-
-
-    /* Current log file name */
-    logFileName = "messages";
-
-    /* Display log contents and automaticall scroll down to most recent events. */
-    function updateLog(contents) {
-      let e = document.getElementById('log-viewer');
-      e.value = contents;
-      e.scrollTop = e.scrollHeight;
-    }
-
-    /* AJAX log fetcher. */
-    function getLog(name, callback) {
-      let url = '/system/log/' + name;
-      let xhttp = new XMLHttpRequest();
-      document.body.style.cursor = 'wait';
-      xhttp.onreadystatechange = function () {
-        if (this.readyState === 4) {
-          if (this.status === 200) callback(this.responseText);
-          else alert('Error: ' + this.responseText);
-          document.body.style.cursor = 'default';
-        }
-      };
-      xhttp.open('GET', url, true);
-      xhttp.setRequestHeader('Authorization', authHeader);
-      xhttp.send();
-    }
-
-    /*
-    *  Mail
-    */
-
-    /* Current mail message number (0 means show headers only) */
-    mailMsgNum = 0;
-
-    /* Display contents of mail message or headers. */
-    function updateMail(msg) {
-      document.getElementById('mail').value = msg;
-    }
-
-    /* AJAX fetch mail by message ID. No ID or ID <= 0 will fetch headers.*/
-    function getMail(msgNum, callback) {
-      if (msgNum === undefined || msgNum < 0) msgNum = 0;
-      let url = '/system/mail';
-      if (msgNum > 0) {
-        url += '/' + msgNum;
-      }
-      document.body.style.cursor = 'wait';
-      let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function () {
-        if (this.readyState == 4) {
-          if (this.status == 200) callback(this.responseText);
-          else alert(this.responseText);
-          mailMsgNum = msgNum;
-          document.body.style.cursor = 'default';
-        }
-      };
-      xhttp.open('GET', url, true);
-      xhttp.setRequestHeader('Authorization', authHeader);
-      xhttp.send();
-    }
-
-    /* AJAX delete mail by message ID. */
-    function delMail(msgNum) {
-      if (typeof (msgNum) == 'number' && msgNum > 0) {
-        let url = '/system/mail/' + msgNum;
-        let xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function () {
-          if (this.readyState === 4 && this.status !== 200) {
-            alert("Mail delete failed.")
-          }
-        };
-        xhttp.open('DELETE', url, true);
-        xhttp.send();
       }
     }
   </script>
@@ -542,9 +29,9 @@
 
   <nav>
     <p>
-      <a href="javascript:openDetails();">Expand All</a>
-      |
       <a href="monitor.html">Monitor</a>
+      |
+      <a href="javascript:logOut();">Log Out</a>
     </p>
   </nav>
 
@@ -577,18 +64,15 @@
         <details>
           <summary>&#x02795; Add</summary>
           <div class="indent">
-            <form>
               <table>
                 <tr>
                   <td><input id='user-add-list' type="text" size="35em" maxlength="60" pattern="[a-z0-9 ]+"
                       placeholder="Lowercase; separate with spaces."></td>
-                  <td><button class="narrow" onclick="addUsers(document.getElementById('user-add-list').value)"
-                      type="button">
-                      <span style="color: green; font-size: 125%; font-weight: bold;">+</span></button>
+                  <td>
+                    <button onclick="addUserList(document.getElementById('user-add-list').value)" type="button">&#x1F464;&#x0279C;&#x1F4BB;</button>
                   </td>
                 </tr>
               </table>
-            </form>
           </div>
         </details>
         <details id="users-manage">
@@ -596,22 +80,22 @@
             onclick="if (!document.getElementById('users-manage').hasAttribute('open')) getUsers(updateUserList);">
             &#x1F527; Manage</summary>
           <div class="indent">
-            <form>
               <table>
                 <tr>
                   <th>User</th>
                   <th>Details</th>
                 </tr>
                 <tr>
-                  <td><select id="user-list" onchange="getuserDetails(document.getElementById('user-list').value, updateUserDetails);" size=5 style="width: 10em;"></select></td>
+                  <td><select id="user-list" onchange="getuserDetails(document.getElementById('user-list').value, updateUserDetails);" size=6 style="width: 10em;"></select></td>
                   <td>
-                      <input id="user-locked" type="checkbox"> &#x1F512; Account Locked<br>
-                      <input id="user-samba" type="checkbox"> &#x1F4C2; Network Shares<br>
-                      <input id="user-trusted" type="checkbox"> &#x1F607; Trusted User<br>
+                      <input id="user-locked" onchange="user=document.getElementById('user-list').value; if (document.getElementById('user-locked').checked) setUserAttribute(user, 'locked'); else setUserAttribute(user,'unlocked');" type="checkbox"> &#x1F512; Account Locked<br>
+                      <input id="user-samba" onchange="user=document.getElementById('user-list').value; if (document.getElementById('user-samba').checked) setUserAttribute(user, 'samba'); else setUserAttribute(user,'nosamba');" type="checkbox"> &#x1F4C2; Network Shares<br>
+                      <input id="user-shell" onchange="user=document.getElementById('user-list').value; if (document.getElementById('user-shell').checked) setUserAttribute(user, 'shell'); else setUserAttribute(user,'nologin');" type="checkbox"> &#x1F4BB; Shell Access<br>
+                      <input id="user-admin" onchange="user=document.getElementById('user-list').value; if (document.getElementById('user-admin').checked) setUserAttribute(user, 'admin'); else setUserAttribute(user,'regular');" type="checkbox"> &#x1F9D9; Admin User<br>
+                      <input id="user-delete-confirm" type="checkbox"> &#x1F47B; <button onclick="delUser(document.getElementById('user-list').value, document.getElementById('user-delete-confirm').checked)" type="button">&#x0274C;</button>
                   </td>
                 </tr>
               </table>
-            </form>
           </div>
         </details>
       </div>
@@ -829,8 +313,13 @@
   </aside>
 
   <footer>
-    <p><a href="https://davescodemusings.github.io/WeeNAS" target="_blank">WeeNAS = Raspberry Pi + Flash Drive + FreeBSD
-        + Samba</a></p>
+    <p>
+      <a href="https://davescodemusings.github.io/WeeNAS" target="_blank">WeeNAS</a>
+      = <a href="https://www.raspberrypi.org" target="_blank">Raspberry Pi &trade;</a>
+      + <a href="https://en.wikipedia.org/wiki/USB_flash_drive" target="_blank">Flash Drive</a>
+      + <a href="https://www.freebsd.org/" target="_blank">FreeBSD &reg;</a>
+      + <a href="https://www.samba.org/" target="_blank">Samba &trade;</a>
+    </p>
   </footer>
 </body>
 

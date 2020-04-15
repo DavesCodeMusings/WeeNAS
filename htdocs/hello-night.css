@@ -72,6 +72,14 @@ button.wide {
     margin-left: 1em;
 }
 
+/* Opacity to show enabled (full) or disabled (dim) options.
+.enabled {
+    opacity: 1.0;
+}
+.disabled {
+    opacity: 0.25;
+}
+
 /* Add more spacing between summary elements for easier touch screen access. */
 summary {
     padding-bottom: 0.5em;
