@@ -19,4 +19,4 @@ configure weenas_api.js as a system service.
 Once installation is complete, administration is done from a web browser. Just
 go to this host's name or IP address at port 9000.  Like this:
 
-http://<hostname or IP>:9000
+http://[hostname or IP]:9000
