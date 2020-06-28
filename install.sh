@@ -111,3 +111,5 @@ IP="$(ifconfig ue0 | awk '/inet/ { print $2 }')"
 echo "To finish, open a web browser to https://${IP}:9000/admin.html"
 echo "WeeNAS uses a self-signed SSL certificate and you must add an exception"
 echo "for your browser to display the page."
+echo
+echo "Use an initial username/password combination of freebsd/freebsd"
