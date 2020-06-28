@@ -103,9 +103,11 @@ pw user mod freebsd -c "FreeBSD User,$(sha1 -qs 'freebsd')"
 pw lock toor
 
 # Create self-signed SSL cert for https encryption.
+mkdir cert
 openssl req -x509 -newkey rsa:4096 -keyout cert/weenas.key -out cert/weenas.cer -days 730 -nodes -subj "/CN=$(hostname)"
 
 # Finish.
 IP="$(ifconfig ue0 | awk '/inet/ { print $2 }')"
-echo "Open a web browser to https://${IP}:9000 to customize your WeeNAS system."
-echo "WeeNAS uses a self-signed SSL certificate. You must add an exception."
+echo "To finish, open a web browser to https://${IP}:9000/admin.html"
+echo "WeeNAS uses a self-signed SSL certificate and you must add an exception"
+echo "for your browser to display the page."
