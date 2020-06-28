@@ -100,7 +100,6 @@ function addUserList(userList) {
   if (userList) {
     users = userList.split(' ');
     for (let i=0; i<users.length; i++) {
-      alert(users[i]);
       addUser(users[i]);
     }
   }
@@ -110,7 +109,6 @@ function addUserList(userList) {
 function addUser(user, callback) {
   document.body.style.cursor = 'wait';
   let url = '/user/' + user;
-  alert(url);
   xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function () {
     if (xhttp.readyState === 4) {
