@@ -82,7 +82,6 @@ echo "Installing WeeNAS API service..."
 install -o0 -g0 -m755 etc/rc.d/weenas_api /usr/local/etc/rc.d
 sysrc weenas_api_enable="YES"
 sysrc weenas_api_home="$(pwd)"
-service weenas_api start
 
 # Append home filesystem information to /etc/fstab and mount homefs.
 if [ "$(grep homefs /etc/fstab)" == "" ]; then
@@ -106,10 +105,13 @@ pw lock toor
 mkdir cert
 openssl req -x509 -newkey rsa:4096 -keyout cert/weenas.key -out cert/weenas.cer -days 730 -nodes -subj "/CN=$(hostname)"
 
+# Start the WeeNAS service. (Must be done after the SSL cert is gernerated.)
+service weenas_api start
+
 # Finish.
 IP="$(ifconfig ue0 | awk '/inet/ { print $2 }')"
 echo "To finish, open a web browser to https://${IP}:9000/admin.html"
-echo "WeeNAS uses a self-signed SSL certificate and you must add an exception"
+echo "WeeNAS uses a self-signed SSL certificate, so you must add an exception"
 echo "for your browser to display the page."
 echo
 echo "Use an initial username/password combination of freebsd/freebsd"
