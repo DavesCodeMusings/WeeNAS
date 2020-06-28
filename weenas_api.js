@@ -105,6 +105,7 @@ var apiCmdDict = {
   '^set user ([a-z0-9]+) nologin$': 'pw usermod %1 -s /sbin/nologin',
   '^set user ([a-z0-9]+) admin$': 'pw groupmod wheel -m %1',
   '^set user ([a-z0-9]+) regular$': 'pw groupmod wheel -d %1',
+  '^set user ([a-z0-9]+) smbpasswd ([a-zA-Z0-9]+) ([a-zA-Z0-9 ]+)$': './lib/smbpasswd.sh %1 %2 \'%3\'',
   '^get users smb$': '/usr/local/bin/pdbedit -L -v | /usr/bin/awk -F\': *\' \'BEGIN { count=0; printf "{" } /---------------/ { getline; printf "%s\\n  \\"%s\\" : ", (++count==1)?"":",", $2; getline; getline; printf "\\"%s\\"", $2 } END { printf "\\n}" }\'',
   '^get user smb ([a-z0-9]+)$': '/usr/local/bin/pdbedit -u %1 | /usr/bin/awk -F: \'{ printf "[ \\"%s\\", \\"%s\\", \\"%s\\" ]", $1, $2, $3 }\'',
   '^get disks$': 'geom disk list | awk \'BEGIN { printf "{ " } /Name/ { printf "%s\\n  \\"%s\\": { ", (++count==1)?"":",", $3 } /Mediasize/ { printf "\\"size\\": %s, ", $2 } /descr/ { printf "\\"description\\": \\""; for(i=2;i<=NF;i++) printf "%s%s", (i==2)?"":" ", $i; printf "\\" }" } END { printf "\\n}\\n"}\'',
