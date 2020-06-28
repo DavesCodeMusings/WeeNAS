@@ -92,6 +92,7 @@ var apiVerbDict = {
 
 // API commands and their corresponding shell commands.
 var apiCmdDict = {
+  '^set echo (.*)$': './lib/echo.sh %1',
   '^get api home$': 'echo "\\"' + __dirname + '\\""',
   '^get users$': '/usr/bin/awk -F: \'BEGIN { printf "[ " } { if ($3>1000 && $3<32000) printf "%s\\"%s\\"", ($3==1001)?"":", ", $1 } END { printf " ]\\n" }\' /etc/passwd',
   '^get user ([a-z0-9]+)$': 'echo "{" ; pw user show %1 | awk -F: \'{ printf "  \\"locked\\": %i,\\n", ($2 ~ /LOCKED/) }\' ; pdbedit -w -u %1 | awk -F: \'{ printf "  \\"samba\\": %i,\\n", ($5 !~ /D/) }\' ; pw user show %1 | awk -F: \'{ printf "  \\"shell\\": %i,\\n", ($10 !~ /nologin/) }\' ; groups %1 | awk \'{ printf "  \\"wheel\\": %i\\n", ($0 ~ /wheel/) }\' ; echo "}"',
@@ -105,7 +106,7 @@ var apiCmdDict = {
   '^set user ([a-z0-9]+) nologin$': 'pw usermod %1 -s /sbin/nologin',
   '^set user ([a-z0-9]+) admin$': 'pw groupmod wheel -m %1',
   '^set user ([a-z0-9]+) regular$': 'pw groupmod wheel -d %1',
-  '^set user ([a-z0-9]+) smbpasswd ([a-zA-Z0-9]+) ([a-zA-Z0-9 ]+)$': './lib/smbpasswd.sh %1 %2 \'%3\'',
+  '^set user ([a-z0-9]+) smbpasswd$': './lib/smbpasswd.sh %1',
   '^get users smb$': '/usr/local/bin/pdbedit -L -v | /usr/bin/awk -F\': *\' \'BEGIN { count=0; printf "{" } /---------------/ { getline; printf "%s\\n  \\"%s\\" : ", (++count==1)?"":",", $2; getline; getline; printf "\\"%s\\"", $2 } END { printf "\\n}" }\'',
   '^get user smb ([a-z0-9]+)$': '/usr/local/bin/pdbedit -u %1 | /usr/bin/awk -F: \'{ printf "[ \\"%s\\", \\"%s\\", \\"%s\\" ]", $1, $2, $3 }\'',
   '^get disks$': 'geom disk list | awk \'BEGIN { printf "{ " } /Name/ { printf "%s\\n  \\"%s\\": { ", (++count==1)?"":",", $3 } /Mediasize/ { printf "\\"size\\": %s, ", $2 } /descr/ { printf "\\"description\\": \\""; for(i=2;i<=NF;i++) printf "%s%s", (i==2)?"":" ", $i; printf "\\" }" } END { printf "\\n}\\n"}\'',
@@ -219,7 +220,7 @@ function runApiCommand(apiCmd, apiBody) {
       // Run the shell command, capturing stdout.
       log('Running: ' + shellCmd);
       try {
-        result = childProcess.execSync(shellCmd, { cwd: __dirname });
+        result = childProcess.execSync(shellCmd, { cwd: __dirname, input: apiBody });
       }
       catch {
         result = 'Command failed: ' + result;
