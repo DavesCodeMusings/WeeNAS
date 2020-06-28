@@ -66,7 +66,7 @@
           <div class="indent">
               <table>
                 <tr>
-                  <td><input id='user-add-list' type="text" size="35em" maxlength="60" pattern="[a-z0-9 ]+"
+                  <td><input id="user-add-list" type="text" size="35em" maxlength="60" pattern="[a-z0-9 ]+"
                       placeholder="Lowercase; separate with spaces."></td>
                   <td>
                     <button onclick="addUserList(document.getElementById('user-add-list').value)" type="button">&#x1F464;&#x0279C;&#x1F4BB;</button>
@@ -129,84 +129,6 @@
             </table>
           </div>
         </details>
-        <details id="storage-add">
-          <summary
-            onclick="if (!document.getElementById('storage-add').hasAttribute('open')) getDisks(updateDiskList);">
-            &#x02795; Add</summary>
-          <div class="indent">
-            <form>
-              <table>
-                <tr>
-                  <th>device</th>
-                  <th>partition</th>
-                </tr>
-                <tr>
-                  <td><select id="storage-devices"
-                      onchange="e=document.getElementById('storage-devices'); getDiskInfo(e.options[e.selectedIndex].value, updateDiskInfo);"
-                      size=4 style="width: 10em;"></select></td>
-                  <td><select id="storage-partitions" size=3 style="width: 10em;"></select><br>
-                    <input id="storage-fslabel" placeholder="filesystem label" style="width: 10em;"></td>
-                </tr>
-                <tr>
-                  <td><button class="wide"
-                      onclick="e=document.getElementById('storage-devices'); formatDisk(e.options[e.selectedIndex].value, document.getElementById('storage-fslabel'));"
-                      title="Create FreeBSD partition and filesystem."
-                      type="button">&#x1F4CB;&#x0279C;&#x1F4BE;</button>
-                  </td>
-                  <td><button class="wide"
-                      onclick="e=document.getElementById('storage-partitions'); writeFilesystem(e.options[e.selectedIndex].value);"
-                      title="Write filesystem onto selected partition."
-                      type="button">&#x1F4DD;&#x0279C;&#x1F4BE;</button>
-                  </td>
-              </table>
-              <table>
-                <tr>
-                  <td>Name:</td>
-                  <td id="storage-description"></td>
-                </tr>
-                <tr>
-                  <td>Size:</td>
-                  <td id="storage-size"></td>
-                </tr>
-              </table>
-            </form>
-          </div>
-        </details>
-
-        <!-- Management of existing filesystems. (Mounting) -->
-        <details id='storage-managment'>
-          <summary
-            onclick="if (!document.getElementById('storage-managment').hasAttribute('open')) getFilesystems('ufs', updateFilesystems); document.getElementById('storage-mountpoint').value ='';">
-            &#x1F527; Manage</summary>
-          <div class="indent">
-            <form>
-              <table>
-                <tr>
-                  <th>filesystem</th>
-                  <th>directory</th>
-                </tr>
-                <tr>
-                  <td><select id='storage-filesystems'
-                      onchange="e=document.getElementById('storage-filesystems'); suggestMountPoint(e.options[e.selectedIndex].value, updateMountpoint);"
-                      size=4 style="width: 10em;"></select></td>
-                  <td style="vertical-align: top"><input id="storage-mountpoint" readonly style="width: 10em;"
-                      type="text"><br>
-                </tr>
-                <td>
-                  <button id="storage-mount" class="wide" title="Mount filesystem on directory."
-                    type="button">&#x1F4BE;&#x276F; &#x1F4BB;</button>
-                </td>
-                <td>
-                  <button id="storage-mount" class="wide" title="Unmount filesystem." type="button">&#x276E;&#x1F4BE;
-                    &#x1F4BB;</button>
-                </td>
-                </tr>
-              </table>
-            </form>
-          </div>
-        </details>
-      </div>
-    </details>
 
     <!-- System Settings -->
 
@@ -215,7 +137,7 @@
       <div class="indent">
 
         <!-- Host and Domain Name -->
-        <details id="hostname">
+        <details id="host-and-domain">
           <summary onclick="if (!document.getElementById('hostname').hasAttribute('open')) getHostname();">
             &#x1F5A5;&#x0FE0F; Host and Domain Name</summary>
           <div class="indent">
@@ -308,7 +230,7 @@
         <button onclick="delMail(mailMsgNum); getmail(0, updateMail);" title="Delete Message"
           type="button">&#x274C;</button>
       </p>
-      <textarea readonly rows=25 cols=80 id="mail"></textarea>
+      <textarea readonly rows="25" cols="80" id="mail-view"></textarea>
     </details>
   </aside>
 
