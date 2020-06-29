@@ -1,15 +1,99 @@
 <!DOCTYPE html>
-<html lang="en-US">
+
+<html>
 
 <head>
-  <title>WeeNAS</title>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="refresh" content="0; url=install.html" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <style>
+    body {
+      background: dimgray;
+      color: lightgray;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    button {
+      border-radius: 5px;
+      width: 4em;
+    }
+
+    input {
+      width: 14em;
+    }
+
+    #login-box {
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 30vh;
+      text-align: center;
+      width: 15em;
+    }
+
+    #login-help {
+      display: none;
+      margin-left: auto;
+      margin-right: auto;
+      max-width: 640px;
+      padding: 0.5em;
+      text-align: justify;
+    }
+  </style>
+  <script>
+    function showLoginHelp() {
+      document.getElementById('login-box').style.marginTop = '5vh';
+      document.getElementById('login-help').style.display = 'block';
+    }
+    function revealSecret() {
+      document.getElementById('secret').type = 'text';
+    }
+    function hideSecret() {
+      document.getElementById('secret').type = 'password';
+    }
+  </script>
+  <title>WeeNas Login</title>
 </head>
 
 <body>
-<p>Redirecting to <a href="install.html">install.html</a></p>
+  <form method="post">
+    <fieldset id="login-box">
+      <legend>WeeNAS</legend>
+      <br>
+      <input id="username" name="username" type="text" placeholder="What's your name?"><br>
+      <br>
+      <input id="secret" name="secret" type="password" placeholder="Tell me a secret."><br>
+      <br>
+      <button onclick="showLoginHelp();" title="Get help" type="button">&#x02753;</button>
+      <button title="Log in" type="submit">&#x02714;</button>
+      <button onmousedown="revealSecret();" onmouseup="hideSecret();" title="Show secret"
+        type="button">&#x1F440;&#x0FE0F;</button>
+    </fieldset>
+  </form>
+  <div id="login-help">
+    <p>
+      Hi, you must be new around here. I'm a WeeNAS system. I'm the unobtrusive little box that stores files for
+      people. Before we start working together, I'd like you to tell me a secret.
+    </p>
+    <p>
+      You see, I don't really do the whole password thing, so a secret is how I know it's you. A secret can be almost
+      anything, but should be something only you and I know.
+    </p>
+    <p>
+      You could tell me a secret like, "Rocky Road is absolutely my most favorite ice cream flavor in the whole entire
+      world." Or it could be something shorter, like "All my socks have holes." Be creative, but make sure you can
+      remember it.
+    </p>
+    <p>
+      When you find yourself needing help with something, like pesky system passwords you might have forgotten, just
+      come back here and tell me your secret. I'll know it's you and then I can help you reset those passwords. I'll
+      help you set your initial passwords, too.
+    </p>
+    <p>
+      If you don't have a secret yet, think of a good one. Type it in the box and hit
+      <button type="button">&#x02714;</button>. I'll remember your secret for next time. Make sure you do too.
+    </p>
+  </div>
 </body>
 
 </html>
