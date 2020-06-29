@@ -158,7 +158,7 @@ log(`WeeNAS API Listening on port ${port}...`);
 // Decode credentials passed in the header and compare to stored credentials.
 function validateCredentials(authHeader) {
   let authType, authCredentials = '';
-  let authorized = false;
+  let authorizedUser = ''; // To be filled with username if credentials are correct.
   if (authHeader) {
     [authType, authCredentials] = authHeader.split(' ');
     if (authType == 'Basic') {
@@ -172,10 +172,12 @@ function validateCredentials(authHeader) {
         log(`Unable to retreive credentials for ${user}`);
       }
       let sha1Hash = crypto.createHash('sha1').update(pass).digest('hex');
-      authorized = (sha1Hash == storedCredentials.auth);
+      if (sha1Hash == storedCredentials.auth) {
+        authorizedUser = user;
+      }
     }
   }
-  return authorized;
+  return authorizedUser;
 }
 
 // Serve up static content and log files (GET requests not handled by API.)
@@ -198,7 +200,7 @@ function serveStaticContent(filePath, request, response) {
 }
 
 // Find apiCmd in the command dictionary and run the corresponding shell command.
-function runApiCommand(apiCmd, apiBody) {
+function runApiCommand(user, apiCmd, apiBody) {
   let result = EGENERIC;  // Assume the worst.
   let shellCmd = '';
 
@@ -220,7 +222,7 @@ function runApiCommand(apiCmd, apiBody) {
       // Run the shell command, capturing stdout.
       log('Running: ' + shellCmd);
       try {
-        result = childProcess.execSync(shellCmd, { cwd: __dirname, input: apiBody });
+        result = childProcess.execSync(shellCmd, { cwd: __dirname, env: { "USER": user}, input: apiBody });
       }
       catch {
         result = 'Command failed: ' + result;
@@ -251,7 +253,7 @@ https.createServer(httpsOptions, (request, response) => {
 
   // Request is entirely read in. The time to act is now.
   request.on('end', () => {
-    let authorized = validateCredentials(request.headers.authorization);
+    let authorizedUser = validateCredentials(request.headers.authorization);
 
     let filePath = '';
 
@@ -266,7 +268,7 @@ https.createServer(httpsOptions, (request, response) => {
         response.end();
       }
     }
-    else if (authorized) {
+    else if (authorizedUser) {
 
       // Log files are static content, but only authorized users can view them.
       for (url in logRedirects) {
@@ -278,14 +280,14 @@ https.createServer(httpsOptions, (request, response) => {
         }
       }
 
-      // Use filepath as a way to see if anything matched yet. If not, check API calls.
+      // If no filepath was matched, check API calls.
       if (!filePath) {
         apiVerb = apiVerbDict[request.method] || '';
         if (apiVerb) {
           cmd = apiVerb + request.url.replace(/\//g, ' ').trimEnd();
 
           // API calls have the request body passed as well for possible POST and/or PUT.
-          let result = runApiCommand(cmd, body);
+          let result = runApiCommand(authorizedUser, cmd, body);
           if (result != EGENERIC) {
             response.writeHead(200, 'OK', { 'Content-Type': 'application/json' });
             response.end(result);
