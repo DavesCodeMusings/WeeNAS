@@ -222,7 +222,7 @@ function runApiCommand(user, apiCmd, apiBody) {
       // Run the shell command, capturing stdout.
       log('Running: ' + shellCmd);
       try {
-        result = childProcess.execSync(shellCmd, { cwd: __dirname, env: { "USER": user}, input: apiBody });
+        result = childProcess.execSync(shellCmd, { cwd: __dirname, env: { "API_USER": user}, input: apiBody });
       }
       catch {
         result = 'Command failed: ' + result;
