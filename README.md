@@ -11,7 +11,7 @@ In this directory you will find:
 
 For first-time installation, run install.sh from this directory as follows:
 
-./install.sh
+./install.sh (There is also an experimental installer called install2.sh)
 
 This will install neccessary components using the FreeBSD pkg system and also
 configure weenas_api.js as a system service.
