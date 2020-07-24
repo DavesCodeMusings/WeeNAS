@@ -43,6 +43,7 @@ weenas_api_status()
     echo "${name} is running as PID: $pid."
   else
     echo "${name} is not running."
+    return 1
   fi
 }
 
