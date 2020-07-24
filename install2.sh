@@ -25,8 +25,9 @@ find . -name '*.sh' | xargs chmod +x >>$LOGFILE
 
 # Intro dialog.
 echo "Displaying welcome dialog." >>$LOGFILE
-dialog --no-lines --backtitle "$BACKTITLE" --title "About WeeNAS" \
- --msgbox "Welcome to WeeNAS, a quick and easy way to turn commodity hardware into a low-tech network attached storage system.\n\nWeeNAS is designed to run on top of FreeBSD(R) 12.1 installed on Raspberry Pi(TM) hardware. No other configuration is supported.\n\nWeeNAS is not part of, nor is it endorsed by, the Raspberry Pi, FreeBSD, or Samba projects.\n\nSee https://davescodemusings.github.io/WeeNAS/ for more information." 17 $BOX_W
+dialog --no-lines --backtitle "$BACKTITLE" --title "About WeeNAS" --yes-label "OK" --no-label "Exit" \
+ --yesno "Welcome to WeeNAS, a quick and easy way to turn commodity hardware into a low-tech network attached storage system.\n\nWeeNAS is designed to run on top of FreeBSD(R) 12.1 installed on Raspberry Pi(TM) hardware. No other configuration is supported.\n\nWeeNAS is not part of, nor is it endorsed by, the Raspberry Pi, FreeBSD, or Samba projects.\n\nSee https://davescodemusings.github.io/WeeNAS/ for more information." 17 $BOX_W
+[ $? -eq 0 ] || exit 0
 
 ### Gather configuration information. ###
 
@@ -35,7 +36,7 @@ TITLE="Hostname"
 echo "$TITLE: user input." >>$LOGFILE
 TMP_FILE=$(mktemp)
 dialog --no-lines --backtitle "$BACKTITLE" --title "Hostname" \
- --form "If you'd like to set a new DNS identity for your WeeNAS device (e.g. weenas.mydomain.com) type it below. Or select cancel to keep the default." 9 60 1 "hostname:" 0 0 "$(hostname)" 0 11 42 42 2>$TMP_FILE
+ --form "If you'd like to set a new DNS identity for your WeeNAS device (e.g. weenas.mydomain.com) type it below. Or select cancel to keep the default." 9 60 1 "hostname:" 0 2 "$(hostname)" 0 12 42 42 2>$TMP_FILE
 NEW_HOSTNAME=$(cat $TMP_FILE)
 echo "$TITLE: $NEW_HOSTNAME" >>$LOGFILE
 rm $TMP_FILE >>$LOGFILE 2>&1
