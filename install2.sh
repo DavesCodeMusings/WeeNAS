@@ -17,7 +17,7 @@ echo "Checking OS is FreeBSD." >>$LOGFILE
 
 # Check root privileges.
 echo "Checking root privilges." >>$LOGFILE
-#[ "$(id -u)" == "0" ] || { echo "Sorry, Charlie. You must be logged in as root to run the install script."; exit 1; }
+[ "$(id -u)" == "0" ] || { echo "Sorry, Charlie. You must be logged in as root to run the install script."; exit 1; }
 
 # Set shell scripts to executable. (.zip files don't store the perms.)
 echo "Setting eXecute bit on shell files." >>$LOGFILE
@@ -106,44 +106,52 @@ fi
 
 # Set hostname.
 TITLE="Hostname"
-echo "$TITLE: $NEW_HOSTNAME" >>$LOGFILE 2>&1
-if [ "$NEW_HOSTNAME" != "" ]; then
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --infobox "Setting new hostname.\n\n  [ ] $NEW_HOSTNAME" 6 $BOX_W
+echo "$TITLE" >>$LOGFILE 2>&1
+if [ "$NEW_HOSTNAME" != "$(hostname)" ]; then
+  echo "$TITLE: setting to $NEW_HOSTNAME" >>$LOGFILE 2>&1
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+   --infobox "Setting new hostname.\n\n  [ ] $NEW_HOSTNAME" 6 $BOX_W
   /bin/hostname $NEW_HOSTNAME >>$LOGFILE 2>&1
   sysrc hostname="$NEW_HOSTNAME" >>$LOGFILE 2>&1
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --infobox "Setting new hostname.\n\n  [x] $NEW_HOSTNAME" 6 $BOX_W
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+   --infobox "Setting new hostname.\n\n  [x] $NEW_HOSTNAME" 6 $BOX_W
+else
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "Task skipped. Keeping existing hostname." \
+   --infobox "Setting new hostname.\n\n  [s] $NEW_HOSTNAME" 6 $BOX_W
 fi
 
 # Bootstrap / update package manager.
 TITLE="Package Manager"
 echo "$TITLE: installing/updating" >>$LOGFILE 2>&1
-dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --infobox "Updating remote repositories.\n\n  [ ] All repositories are up to date." 6 $BOX_W
-/bin/hostname $NEW_HOSTNAME >>$LOGFILE 2>&1
-dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --infobox "Updating remote repositories.\n\n  [x] All repositories are up to date." 6 $BOX_W
+dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --infobox "Updating pkg and repositories.\n\n  [ ] Bootstrap pkg.\n  [ ] Update repositories." 7 $BOX_W
+pkg bootstrap >>$LOGFILE 2>&1
+dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --infobox "Updating pkg and repositories.\n\n  [x] Bootstrap pkg.\n  [ ] Update repositories." 7 $BOX_W
+pkg update >>$LOGFILE 2>&1
+dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --infobox "Updating pkg and repositories.\n\n  [x] Bootstrap pkg.\n  [x] Update repositories." 7 $BOX_W
 
 # Install and configure fusefs and devd for flash drive auto-mount.
 TITLE="Hot-Plug USB"
 echo "$TITLE" >>$LOGFILE
 if ! kldstat | grep fuse >>$LOGFILE 2>&1; then
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Configuring FuseFS and devd.\n\n  [ ] Install fusefs package.\n  [ ] Enable FuseFS.\n  [ ] Configure devd for hot-plug.\n  [ ] Restart devd." 9 $BOX_W
+   --infobox "Configuring fusefs and devd.\n\n  [ ] Install fusefs package.\n  [ ] Enable fusefs.\n  [ ] Configure devd for hot-plug.\n  [ ] Restart devd." 9 $BOX_W
   pkg info fusefs-ntfs >>$LOGFILE 2>&1 || pkg install -y fusefs-ntfs >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Configuring FuseFS and devd.\n\n  [x] Install fusefs package.\n  [ ] Enable FuseFS.\n  [ ] Configure devd for hot-plug.\n  [ ] Restart devd." 9 $BOX_W
+   --infobox "Configuring fusefs and devd.\n\n  [x] Install fusefs package.\n  [ ] Enable fusefs.\n  [ ] Configure devd for hot-plug.\n  [ ] Restart devd." 9 $BOX_W
   grep 'fuse_load="YES"' /boot/loader.conf || echo 'fuse_load="YES"' >>/boot/loader.conf
   kldload fuse
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Configuring FuseFS and devd.\n\n  [x] Install fusefs package.\n  [x] Enable FuseFS.\n  [ ] Configure devd for hot-plug.\n  [ ] Restart devd." 9 $BOX_W
+   --infobox "Configuring fusefs and devd.\n\n  [x] Install fusefs package.\n  [x] Enable fusefs.\n  [ ] Configure devd for hot-plug.\n  [ ] Restart devd." 9 $BOX_W
   [ -d /usr/local/etc/devd ] || mkdir /usr/local/etc/devd >>$LOGFILE 2>&1
   [ -f /usr/local/etc/devd/flashmount.conf ] || cp etc/flashmount.conf /usr/local/etc/devd >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Configuring FuseFS and devd.\n\n  [x] Install fusefs package.\n  [x] Enable FuseFS.\n  [x] Configure devd for hot-plug.\n  [ ] Restart devd." 9 $BOX_W
+   --infobox "Configuring fusefs and devd.\n\n  [x] Install fusefs package.\n  [x] Enable fusefs.\n  [x] Configure devd for hot-plug.\n  [ ] Restart devd." 9 $BOX_W
   service devd restart >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Configuring FuseFS and devd.\n\n  [x] Install fusefs package.\n  [x] Enable FuseFS.\n  [x] Configure devd for hot-plug.\n  [x] Restart devd." 9 $BOX_W
+   --infobox "Configuring fusefs and devd.\n\n  [x] Install fusefs package.\n  [x] Enable fusefs.\n  [x] Configure devd for hot-plug.\n  [x] Restart devd." 9 $BOX_W
 else
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "All tasks skipped, because usb hotplug is already enabled."\
-   --infobox "Configuring FuseFS and devd.\n\n  [s] Install fusefs package.\n  [s] Enable FuseFS.\n  [s] Configure devd for hot-plug.\n  [s] Restart devd." 9 $BOX_W
+   --infobox "Configuring fusefs and devd.\n\n  [s] Install fusefs package.\n  [s] Enable fusefs.\n  [s] Configure devd for hot-plug.\n  [s] Restart devd." 9 $BOX_W
 fi
 
 # Install and configure Samba for file sharing.
@@ -152,7 +160,7 @@ echo "$TITLE" >>$LOGFILE
 
 # Multiple daemons make "service samba_server onestatus" prone to inconclusive results.
 echo "$TITLE: Checking for running smbd, nmbd" >>$LOGFILE
-if ! pgrep smbd >>$LOGFILE 2>&1 && ! prgrep nmbd >>$LOGFILE 2>&1; then
+if ! pgrep smbd >>$LOGFILE 2>&1 && ! pgrep nmbd >>$LOGFILE 2>&1; then
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up SMB/CIFS file sharing.\n\n  [ ] Install Samba.\n  [ ] Create basic configuration file.\n  [ ] Start services." 8 $BOX_W
   pkg info samba410 >>$LOGFILE 2>&1 || pkg install -y samba410 >>$LOGFILE 2>&1
@@ -193,10 +201,10 @@ if ! service weenas_api onestatus >/dev/null 2>&1; then
    --infobox "Setting up WeeNAS administration. Please be patient, this can take some time.\n\n  [x] Install Node.js\n  [x] Create TLS certificate.\n  [x] Install service.\n  [x] Start service." 10 $BOX_W
 else
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "All tasks skipped, because weenas_api is already running." \
-   --infobox "Setting up WeeNAS administration. Please be patient, this can take some time.\n\n  [x] Install Node.js\n  [x] Create TLS certificate.\n  [x] Install service.\n  [x] Start service." 10 $BOX_W
+   --infobox "Setting up WeeNAS administration. Please be patient, this can take some time.\n\n  [s] Install Node.js\n  [s] Create TLS certificate.\n  [s] Install service.\n  [s] Start service." 10 $BOX_W
 fi
 
-# Partition and format device.
+# Partition and format USB device.
 TITLE="USB Storage"
 echo "$TITLE: Writing partition table and filesystem." >>$LOGFILE
 if [ "$STORAGE_STATE" == "overwritten" ]; then
