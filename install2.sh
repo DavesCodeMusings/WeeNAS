@@ -32,8 +32,8 @@ dialog --no-lines --backtitle "$BACKTITLE" --title "About WeeNAS" --yes-label "O
 ### Gather configuration information. ###
 
 # Optionally get a new hostname.
-TITLE="Hostname"
-echo "$TITLE: user input." >>$LOGFILE
+TITLE="Identity"
+echo "$TITLE: hostname input." >>$LOGFILE
 TMP_FILE=$(mktemp)
 dialog --no-lines --backtitle "$BACKTITLE" --title "Hostname" \
  --form "If you'd like to set a new DNS identity for your WeeNAS device (e.g. weenas.mydomain.com) type it below. Or select cancel to keep the default." 9 60 1 "hostname:" 0 2 "$(hostname)" 0 12 42 42 2>$TMP_FILE
@@ -62,14 +62,16 @@ echo "$DEVICE_DESCR" >>$LOGFILE
 dialog --no-lines --cr-wrap --backtitle "$BACKTITLE" --title "$TITLE" \
  --yesno "Use this device for WeeNAS data storage?\n\n$DEVICE_DESCR" 9 $BOX_W
 [ $? -eq 0 ] || exit 1
+echo "$TITLE: Using $DEVICE." >>$LOGFILE
 
-# Warn about existing homefs partition.
-echo "$TITLE: Checking for existing homefs partition." >>$LOGFILE
+# Warn about existing homefs filesystem.
+echo "$TITLE: Checking for existing homefs filesystem." >>$LOGFILE
 STORAGE_STATE="overwritten"
 if geom label list | grep homefs >>$LOGFILE 2>&1; then
   dialog --no-lines --backtitle "$BACKTITLE" --yes-label "Erase" --no-label "Preserve" --defaultno --title "$TITLE" \
    --yesno "homefs filesystem detected!\n\nAn existing homefs filesystem means that $DEVICE has been used before and may still have important data on it.\n\nYou can preserve the data on $DEVICE and use it for WeeNAS home directories or you can erase it to start fresh." 11 $BOX_W
   [ $? -eq 0 ] || STORAGE_STATE="preserved"
+  echo "$TITLE: homefs found and will be $STORAGE_STATE." >>$LOGFILE
 fi
 
 ### Confirm Installation. ###
@@ -81,7 +83,7 @@ dialog --no-lines --backtitle "$BACKTITLE" --yes-label "Install" --no-label "Exi
 
 ### Carry out requested actions. ###
 
-echo "Proceeding with installation. $DEVICE will be $STORAGE_STATE." >>$LOGFILE
+echo "Proceeding with installation." >>$LOGFILE
 
 # Start ntpd time sync.
 TITLE="Time Sync"
@@ -100,34 +102,72 @@ if ! service ntpd onestatus >/dev/null 2>&1; then
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Configuring NTP time synchronization.\n\n  [x] Enable NTP.\n  [x] Set UTC timezone.\n  [x] Start NTP service." 8 $BOX_W
 else
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "All tasks skipped, because ntpd is already running." \
+  echo "$TITLE: skipped." >>$LOGFILE
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "Skipped: ntpd is already running." \
    --infobox "Configuring NTP time synchronization.\n\n  [s] Enable NTP.\n  [s] Set UTC timezone.\n  [s] Start NTP service." 8 $BOX_W
 fi
 
-# Set hostname.
-TITLE="Hostname"
+# Set hostname and generate self-signed TLS certificate.
+TITLE="Identity"
 echo "$TITLE" >>$LOGFILE 2>&1
-if [ "$NEW_HOSTNAME" != "$(hostname)" ]; then
-  echo "$TITLE: setting to $NEW_HOSTNAME" >>$LOGFILE 2>&1
+if [ "$NEW_HOSTNAME" != "$(hostname)" ] || ! [ -f "/usr/local/etc/ssl/${NEW_HOSTNAME}.cer" ]; then
+  echo "$TITLE: setting new hostname and TLS certificate for $NEW_HOSTNAME" >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Setting new hostname.\n\n  [ ] $NEW_HOSTNAME" 6 $BOX_W
+   --infobox "Setting up identity.  Please be patient, this can take some time.\n\n  [ ] Set hostname to $NEW_HOSTNAME\n  [ ] Create TLS certificate." 8 $BOX_W
   /bin/hostname $NEW_HOSTNAME >>$LOGFILE 2>&1
   sysrc hostname="$NEW_HOSTNAME" >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Setting new hostname.\n\n  [x] $NEW_HOSTNAME" 6 $BOX_W
+   --infobox "Setting up identity. Please be patient, this can take some time.\n\n  [x] Set hostname to $NEW_HOSTNAME\n  [ ] Create TLS certificate." 8 $BOX_W
+  openssl req -x509 -newkey rsa:4096 -keyout /usr/local/etc/ssl/${NEW_HOSTNAME}.key -out /usr/local/etc/ssl/${NEW_HOSTNAME}.cer -days 730 -nodes -subj "/CN=$NEW_HOSTNAME" >>$LOGFILE 2>&1
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+   --infobox "Setting up identity. Please be patient, this can take some time.\n\n  [x] Set hostname to $NEW_HOSTNAME\n  [x] Create TLS certificate." 8 $BOX_W
 else
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "Task skipped. Keeping existing hostname." \
-   --infobox "Setting new hostname.\n\n  [s] $NEW_HOSTNAME" 6 $BOX_W
+  echo "$TITLE: skipped." >>$LOGFILE
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "Skipped: keeping existing identity." \
+   --infobox "Setting up identity.\n\n  [s] $NEW_HOSTNAME\n  [s] Create TLS certificate." 7 $BOX_W
 fi
 
 # Bootstrap / update package manager.
 TITLE="Package Manager"
-echo "$TITLE: installing/updating" >>$LOGFILE 2>&1
-dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --infobox "Updating pkg and repositories.\n\n  [ ] Bootstrap pkg.\n  [ ] Update repositories." 7 $BOX_W
-pkg bootstrap >>$LOGFILE 2>&1
-dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --infobox "Updating pkg and repositories.\n\n  [x] Bootstrap pkg.\n  [ ] Update repositories." 7 $BOX_W
-pkg update >>$LOGFILE 2>&1
-dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --infobox "Updating pkg and repositories.\n\n  [x] Bootstrap pkg.\n  [x] Update repositories." 7 $BOX_W
+echo "$TITLE: installing pkg and updating repositories." >>$LOGFILE 2>&1
+if ! pkg bootstrap | grep 'already bootstrapped'; then
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+   --infobox "Installing pkg and updating repositories.\n\n  [ ] Bootstrap pkg.\n  [ ] Update repositories." 7 $BOX_W
+  pkg bootstrap >>$LOGFILE 2>&1
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+   --infobox "Installing pkg and updating repositories.\n\n  [x] Bootstrap pkg.\n  [ ] Update repositories." 7 $BOX_W
+  pkg update >>$LOGFILE 2>&1
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+   --infobox "Installing pkg and updating repositories.\n\n  [x] Bootstrap pkg.\n  [x] Update repositories." 7 $BOX_W
+else
+  echo "$TITLE: skipped." >>$LOGFILE
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE  --hline "Skipped: pkg already installed." \
+   --infobox "Installing pkg and updating repositories.\n\n  [s] Bootstrap pkg.\n  [s] Update repositories." 7 $BOX_W
+fi
+
+# Install system monitor.
+TITLE="System Monitoring"
+echo "$TITLE: installing Monit" >>$LOGFILE 2>&1
+if ! service monit onestatus; then
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+   --infobox "Setting up system monitoring.\n\n  [ ] Install Monit.\n  [ ] Create configuration files.\n  [ ] Start service." 8 $BOX_W
+  pkg info monit >>$LOGFILE 2>&1 || pkg install -y monit >>$LOGFILE 2>&1
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+   --infobox "Setting up system monitoring.\n\n  [x] Install Monit.\n  [ ] Create configuration files.\n  [ ] Start service." 8 $BOX_W
+  [ -f /usr/local/etc/monitrc ] || sed -e 's|^#  include /etc/monit.d/\*|include /usr/local/etc/monit.d/\*.conf|' /usr/local/etc/monitrc.sample >/usr/local/etc/monitrc
+  chmod 600 /usr/local/etc/monitrc
+  [ -d /usr/local/etc/monit.d ] || cp -r etc/monit.d /usr/local/etc/monit.d
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+   --infobox "Setting up system monitoring.\n\n  [x] Install Monit.\n  [x] Create configuration files.\n  [ ] Start service." 8 $BOX_W
+  sysrc monit_enable="YES" >>$LOGFILE 2>&1;
+  service monit start >>$LOGFILE 2>&1
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+   --infobox "Setting up system monitoring.\n\n  [x] Install Monit.\n  [x] Create configuration files.\n  [x] Start service." 8 $BOX_W
+else
+  echo "$TITLE: skipped." >>$LOGFILE
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "Skipped: Monit already running." \
+   --infobox "Setting up system monitoring.\n\n  [s] Install Monit.\n  [s] Create configuration files.\n  [s] Start service." 8 $BOX_W
+fi
 
 # Install and configure fusefs and devd for flash drive auto-mount.
 TITLE="Hot-Plug USB"
@@ -150,7 +190,8 @@ if ! kldstat | grep fuse >>$LOGFILE 2>&1; then
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Configuring fusefs and devd.\n\n  [x] Install fusefs package.\n  [x] Enable fusefs.\n  [x] Configure devd for hot-plug.\n  [x] Restart devd." 9 $BOX_W
 else
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "All tasks skipped, because usb hotplug is already enabled."\
+  echo "$TITLE: skipped." >>$LOGFILE
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "Skipped: usb hotplug already enabled."\
    --infobox "Configuring fusefs and devd.\n\n  [s] Install fusefs package.\n  [s] Enable fusefs.\n  [s] Configure devd for hot-plug.\n  [s] Restart devd." 9 $BOX_W
 fi
 
@@ -174,34 +215,32 @@ if ! pgrep smbd >>$LOGFILE 2>&1 && ! pgrep nmbd >>$LOGFILE 2>&1; then
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up SMB/CIFS file sharing.\n\n  [x] Install Samba.\n  [x] Create basic configuration file.\n  [x] Start services." 8 $BOX_W
 else
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "All tasks skipped, because Samba is already running." \
+  echo "$TITLE: skipped." >>$LOGFILE
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "Skipped: Samba already running." \
    --infobox "Setting up SMB/CIFS file sharing.\n\n  [s] Install Samba.\n  [s] Create basic configuration file.\n  [s] Start services." 8 $BOX_W
 fi
 
-# WeeNAS Administration Tools
-TITLE="Administration Tools"
+# WeeNAS Administration
+TITLE="WeeNAS Administration Tool"
 echo "$TITLE" >>$LOGFILE
 if ! service weenas_api onestatus >/dev/null 2>&1; then
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" \
-   --infobox "Setting up WeeNAS administration. Please be patient, this can take some time.\n\n  [ ] Install Node.js\n  [ ] Create TLS certificate.\n  [ ] Install service.\n  [ ] Start service." 10 $BOX_W
+   --infobox "Setting up WeeNAS administration.\n\n  [ ] Install Node.js\n  [ ] Install weenas_api service.\n  [ ] Start service." 8 $BOX_W
   pkg info node12 >>$LOGFILE 2>&1 || pkg install -y node12 >>$LOGFILE 2>&1
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" \
-   --infobox "Setting up WeeNAS administration. Please be patient, this can take some time.\n\n  [x] Install Node.js\n  [ ] Create TLS certificate.\n  [ ] Install service.\n  [ ] Start service." 10 $BOX_W
-  [ -d cert ] || mkdir cert >>$LOGFILE 2>&1
-  openssl req -x509 -newkey rsa:4096 -keyout cert/weenas.key -out cert/weenas.cer -days 730 -nodes -subj "/CN=$(hostname)" >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Setting up WeeNAS administration. Please be patient, this can take some time.\n\n  [x] Install Node.js\n  [x] Create TLS certificate.\n  [ ] Install service.\n  [ ] Start service." 10 $BOX_W
+   --infobox "Setting up WeeNAS administration.\n\n  [x] Install Node.js\n  [ ] Install weenas_api service.\n  [ ] Start service." 8 $BOX_W
   install -o0 -g0 -m755 etc/rc.d/weenas_api /usr/local/etc/rc.d >>$LOGFILE 2>&1
   sysrc weenas_api_enable="YES" >>$LOGFILE 2>&1
   sysrc weenas_api_home="$(pwd)" >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Setting up WeeNAS administration. Please be patient, this can take some time.\n\n  [x] Install Node.js\n  [x] Create TLS certificate.\n  [x] Install service.\n  [ ] Start service." 10 $BOX_W
+   --infobox "Setting up WeeNAS administration.\n\n  [x] Install Node.js\n  [x] Install weenas_api service.\n  [ ] Start service." 8 $BOX_W
   service weenas_api start >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Setting up WeeNAS administration. Please be patient, this can take some time.\n\n  [x] Install Node.js\n  [x] Create TLS certificate.\n  [x] Install service.\n  [x] Start service." 10 $BOX_W
+   --infobox "Setting up WeeNAS administration.\n\n  [x] Install Node.js\n  [x] Install weenas_api service.\n  [x] Start service." 8 $BOX_W
 else
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "All tasks skipped, because weenas_api is already running." \
-   --infobox "Setting up WeeNAS administration. Please be patient, this can take some time.\n\n  [s] Install Node.js\n  [s] Create TLS certificate.\n  [s] Install service.\n  [s] Start service." 10 $BOX_W
+  echo "$TITLE: skipped." >>$LOGFILE
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "Skipped: weenas_api already running." \
+   --infobox "Setting up WeeNAS administration.\n\n  [s] Install Node.js\n  [s] Install weenas_api service.\n  [s] Start service." 8 $BOX_W
 fi
 
 # Partition and format USB device.
@@ -219,6 +258,8 @@ if [ "$STORAGE_STATE" == "overwritten" ]; then
   newfs -j -L homefs /dev/${DEVICE}p1 >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Configuring $DEVICE.\n\n  [x] Write new GPT partition scheme.\n  [x] Create FreeBSD-UFS filesystem." 7 $BOX_W
+else
+  echo "$TITLE: skipped. Storage state is $STORAGE_STATE" >>$LOGFILE
 fi
 
 # Check and mount home filesystem.
@@ -227,35 +268,38 @@ echo "$TITLE: fsck and mount homefs." >>$LOGFILE
 sysrc fsck_y_enable="YES" >>$LOGFILE 2>&1;
 if ! mount | grep homefs >>$LOGFILE 2>&1; then
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Preparing homefs.\n\n  [ ] Add to /etc/fstab.\n  [ ] Check filesystem.\n  [ ] Mount filesystem" 8 $BOX_W
+   --infobox "Preparing homefs.\n\n  [ ] Add to /etc/fstab.\n  [ ] Mount filesystem.\n  [ ] Create shared drive." 8 $BOX_W
   grep homefs /etc/fstab  >>$LOGFILE 2>&1 || echo "/dev/ufs/homefs   /home   ufs   rw,noatime   1   2" >> /etc/fstab
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Preparing homefs.\n\n  [x] Add to /etc/fstab.\n  [ ] Check filesystem.\n  [ ] Mount filesystem." 8 $BOX_W
+   --infobox "Preparing homefs.\n\n  [x] Add to /etc/fstab.\n  [ ] Mount filesystem.\n  [ ] Create shared drive." 8 $BOX_W
   fsck -fpy /dev/ufs/homefs >>$LOGFILE 2>&1
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Preparing homefs.\n\n  [x] Add to /etc/fstab.\n  [x] Check filesystem.\n  [ ] Mount filesystem." 8 $BOX_W
   mount /dev/ufs/homefs >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Preparing homefs.\n\n  [x] Add to /etc/fstab.\n  [x] Check filesystem.\n  [x] Mount filesystem." 8 $BOX_W
+   --infobox "Preparing homefs.\n\n  [x] Add to /etc/fstab.\n  [x] Mount filesystem.\n  [ ] Create shared drive." 8 $BOX_W
+  install -d -g 1000 -m 1775 /home/shared >>$LOGFILE 2>&1
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+   --infobox "Preparing homefs.\n\n  [x] Add to /etc/fstab.\n  [x] Mount filesystem.\n  [x] Create shared drive." 8 $BOX_W
 else
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "All tasks skipped, because homefs is already mounted." \
-   --infobox "Preparing homefs.\n\n  [s] Add to /etc/fstab.\n  [s] Check filesystem.\n  [s] Mount filesystem." 8 $BOX_W
+  echo "$TITLE: skipped." >>$LOGFILE
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "Skipped: homefs already mounted." \
+   --infobox "Preparing homefs.\n\n  [s] Add to /etc/fstab.\n  [s] Mount filesystem.\n  [s] Create shared drive." 8 $BOX_W
 fi
 
 # Set up users.
 TITLE="User Accounts"
 echo "$TITLE" >>$LOGFILE
 dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
- --infobox "Configuring users.\n\n  [ ] Create shared group.\n  [ ] Lock backdoor toor account.\n  [ ] Enable freebsd user as WeeNAS admin." 8 $BOX_W
+ --infobox "Configuring users.\n\n  [ ] Create shared group.\n  [ ] Lock backdoor toor account.\n  [ ] Secure wnpasswd." 8 $BOX_W
 grep shared /etc/group >>/dev/null 2>&1 || pw groupadd shared -g 1000
 dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
- --infobox "Configuring users.\n\n  [x] Create shared group.\n  [ ] Lock backdoor toor account.\n  [ ] Enable freebsd user as WeeNAS admin." 8 $BOX_W
+ --infobox "Configuring users.\n\n  [x] Create shared group.\n  [ ] Lock backdoor toor account.\n  [ ] Secure wnpasswd." 8 $BOX_W
 pw lock toor >>$LOGFILE 2>&1
 dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
- --infobox "Configuring users.\n\n  [x] Create shared group.\n  [x] Lock backdoor toor account.\n  [ ] Enable freebsd user as WeeNAS admin." 8 $BOX_W
+ --infobox "Configuring users.\n\n  [x] Create shared group.\n  [x] Lock backdoor toor account.\n  [ ] Secure wnpasswd." 8 $BOX_W
+chmod 600 etc/fnpasswd
 pw user mod freebsd -c "FreeBSD User,$(sha1 -qs 'freebsd')"
 dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
- --infobox "Configuring users.\n\n  [x] Create shared group.\n  [x] Lock backdoor toor account.\n  [x] Enable freebsd user as WeeNAS admin." 8 $BOX_W
+ --infobox "Configuring users.\n\n  [x] Create shared group.\n  [x] Lock backdoor toor account.\n  [x] Secure wnpasswd." 8 $BOX_W
 
 # Optionally set the root password. Loop through until either successful return from pw or Cancel in dialog.
 echo "$TITLE: root password" >>$LOGFILE
@@ -292,6 +336,7 @@ while [ $PW_SET -ne 1 ]; do
       dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --msgbox "Passwords do not match." 5 $BOX_W
     fi
   else
+    echo "$TITLE: skipped. User canceled request." >>$LOGFILE
     PW_SET=1  # Because it was skipped.
   fi
 done
