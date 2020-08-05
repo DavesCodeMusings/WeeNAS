@@ -13,6 +13,9 @@ The only file extention / MIME type combinations recognized are:
 * .html - text/html
 * .ico - image/x-icon
 * .js - text/javascript
+* .jpg - image/jpeg
+* .png - image/png
+* .svg - image/svg+xml
 
 Anything else is interpreted as a call to the API and will fail if a filename
 is requested.

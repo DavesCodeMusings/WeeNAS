@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+
+<!-- Mockup of new WeeNAS admin interface. -->
+
+<html lang="en-US">
+
+<head>
+  <title>Welcome</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+
+    /* Apply tweaks for portrait mode devices (tablet, phone) when width is tight. */
+    @media screen and (max-width: 768px) {
+      #bulk-user-field {
+        width: 100%;
+        /* Forcing the trailing bits to a new line. */
+      }
+
+      .collapsible {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Getting Started</h1>
+  <p>
+    If this is your first visit to the WeeNAS admin tool, you'll want to start by setting up some users. User accounts
+    and system access can be managed by clicking the blue circle containing the two silhouettes. There is a bulk account
+    creation feature that lets you create a dozen or so users at once just by entering their login names.
+  </p>
+
+  <h1>System Health</h1>
+  <p>
+    The WeeNAS admin tool is designed to communicate system health with just a glance. There are five health indicators
+    on the left side of the screen (or top if you are on a mobile device.) From top down (or right to left) these icons
+    represent the system hardware, storage devices, system services, shared directories, and user accounts. Each icon
+    has a health indicator next to it with one of four statuses.
+  </p>
+  <p style="margin-left:5vmin;">
+    <img src="dialog-positive.svg" style="vertical-align: middle;"> Everything is alright.
+    <br>
+    <img src="dialog-information.svg" style="vertical-align: middle;"> Information is available, but nothing's
+    wrong.
+    <br>
+    <img src="dialog-warning.svg" style="vertical-align: middle;"> Something needs your attention, but it's not
+    critical yet.
+    <br>
+    <img src="dialog-error.svg" style="vertical-align: middle;"> There's a serious problem that needs your
+    intervention to fix.
+  </p>
+  <p>
+    WeeNAS is built to be self-healing, so it's rare that you should ever see anything other than a green check or a
+    blue i.
+  </p>
+
+  <h1>Credits</h1>
+  <p>
+    WeeNAS would not be possible without some great open source hardware and software projects to build upon. For a list
+    of these, <a href="credits.html">click here</a>.
+  </p>
+</body>
+
+</html>

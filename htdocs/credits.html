@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+
+<head>
+  <title>Credits</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+
+    a {
+      color: darkblue;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Hardware and Software Credits</h1>
+  <p>
+    Most of these projects provide the foundation that WeeNAS is built upon.
+  </p>
+
+  <h2>Raspberry Pi Single-Board Computer</h2>
+  <p>
+    <a href="https://www.raspberrypi.org/" target="_blank">Raspberry Pi</a> is widely available, inexpensive, and
+    getting
+    more powerful all the time. Even an older model like the Raspberry Pi 2B+ has plenty of power for WeeNAS in a
+    small, home network environment.
+  </p>
+
+  <h2>FreeBSD Operating System</h2>
+  <p>
+    <a href="https://www.freebsd.org/" target="_blank">FreeBSD</a> for ARM architecture provides a solid foundation
+    on which to build. It's FuseFS kernel module and devd service allow various types of USB storage devices to
+    automatically appear under the /media netword share when plugged in.
+  </p>
+
+  <h2>Samba Project</h2>
+  <p>
+    <a href="https://www.samba.org/" target="_blank">Samba</a> is what allows FreeBSD and other Unix-like operating
+    systems to share files with computers running the Windows OS. When you type \\servername\shared into a Windows
+    explorer location bar and your files appear, that's Samba at work.
+  </p>
+
+  <h2>Monit</h2>
+  <p>
+    <a href="https://www.mmonit.com/monit/" target="_blank">Monit</a> is a monitoring tool that keeps watch over system
+    services and takes action to fix them if something goes wrong. This is what allows WeeNAS to be self-healing and
+    keeps you from seeing any nasty red X statuses. It's only when a problem can't be corrected that it will alert you.
+  </p>
+
+  <h2>Node.js</h2>
+  <p>
+    <a href="https://nodejs.org/" target="_blank">Node.js</a> is JavaScript running server-side. It is the language used
+    to build the WeeNAS API, the backend to this admin tool. It makes development faster and easier, because it's the
+    same language for backend an frontend
+  </p>
+
+  <h2>Breeze Icons and InkScape</h2>
+  <p>
+    <a href="https://github.com/KDE/breeze-icons">Breeze icons</a> were originally developed for the KDE desktop. Their
+    wide selection and easy to customize SVG format makes them perfectly suited for use in other projects like the
+    WeeNAS admin tool. <a href="https://inkscape.org/" target="_blank">Inkscape</a> provides the tool for editing.
+  </p>
+
+  <h2>FreeNAS</h2>
+  <p>
+    Actually, <a href="https://www.freenas.org/">FreeNAS</a> has no association with the WeeNAS project other than
+    serving as the basis for the bad pun that inspired the name. FreeNAS is a much more serious system, with much more
+    serious hardware requirements, and a much more serious hardware price tag.
+  </p>
+</body>
+
+</html>

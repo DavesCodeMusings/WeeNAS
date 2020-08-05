@@ -45,6 +45,15 @@
       document.getElementById('lock-screen').style.display = 'block';
       document.getElementsByTagName("header")[0].style.opacity = "1.0";
     }
+
+    function summaryClick(detailName) {
+      let urlName = detailName.toLowerCase().replace(/ /g, '-');
+      let iconName = urlName + '.svg';
+      let pageName = urlName + '.html';
+      document.getElementById('detail-heading').innerHTML = detailName;
+      document.getElementById('detail-icon').src = urlName + '.svg';
+      document.getElementById('detail-frame').src = urlName + '.html';
+    }
   </script>
 
   <style>
@@ -114,6 +123,7 @@
       background-image: linear-gradient(to bottom right, lightgray, darkgray);
       border: 1px solid dimgray;
       box-shadow: 1vw 1vh 1vw black;
+      cursor: pointer;
       height: calc(15vh + 2px);
       padding: 1vh;
       margin-bottom: 2vh;
@@ -154,7 +164,7 @@
       overflow: auto;
     }
 
-    .detail-icon {
+    #detail-icon {
       float: right;
       height: 6vmin;
       width: 6vmin;
@@ -168,7 +178,7 @@
       text-align: left;
     }
 
-    /* Apply tweaks for portrait mode devices (tablet, phone.) */
+    /* Apply tweaks for portrait mode devices (tablet, phone) when width is tight. */
     @media screen and (max-aspect-ratio: 1/1) {
       .summary {
         float: left;
@@ -178,13 +188,13 @@
       }
 
       .summary-icon {
-        height: 8vw;
-        width: 8vw;
+        height: 9vw;
+        width: 9vw;
       }
 
       .summary-status {
-        height: 6vw;
-        width: 6vw;
+        height: 5vw;
+        width: 5vw;
         vertical-align: top;
       }
 
@@ -221,7 +231,7 @@
   </style>
 </head>
 
-<body>
+<body onload="summaryClick('Welcome');">
   <header>
     <span id="hostname" style="float: left; font-size: larger;">WeeNAS</span>
     <form style="text-align: right;">
@@ -234,166 +244,46 @@
 
   <!-- Lock Screen -->
   <div id="lock-screen" style="display: hidden">
-    <img src="icons/beastie_sdcard.png" style="margin-left: 33vw; width: 33vw; height: auto; margin-top: 20vh;">
+    <img src="beastie_sdcard.png" style="margin-left: 33vw; width: 33vw; height: auto; margin-top: 20vh;">
   </div>
 
   <nav id="toolbox">
 
     <!-- Hardware, Storage and Services -->
-    <div class="summary">
-      <p><img src="icons/cpu.svg" class="summary-icon"><img src="icons/dialog-positive.svg" class="summary-status"></p>
+    <div class="summary" onclick="summaryClick('System');">
+      <p><img src="system.svg" class="summary-icon"><img src="dialog-positive.svg" class="summary-status"></p>
     </div>
 
-    <div class="summary">
-      <p><img src="icons/storage.svg" class="summary-icon"><img src="icons/dialog-warning.svg" class="summary-status">
+    <div class="summary" onclick="summaryClick('Storage');">
+      <p><img src="storage.svg" class="summary-icon"><img src="dialog-positive.svg" class="summary-status">
       </p>
     </div>
 
-    <div class="summary">
-      <p><img src="icons/services.svg" class="summary-icon"><img src="icons/dialog-error.svg" class="summary-status">
+    <div class="summary" onclick="summaryClick('Services');">
+      <p><img src="services.svg" class="summary-icon"><img src="dialog-error.svg" class="summary-status">
       </p>
     </div>
 
     <!-- Shares -->
-    <div class="summary">
-      <p><img src="icons/shares.svg" class="summary-icon"><img src="icons/dialog-positive.svg" class="summary-status">
+    <div class="summary" onclick="summaryClick('File Shares');">
+      <p><img src="file-shares.svg" class="summary-icon"><img src="dialog-positive.svg" class="summary-status">
       </p>
     </div>
 
     <!-- User account management -->
-    <div class="summary">
-      <p><img src="icons/users.svg" class="summary-icon"><img src="icons/dialog-information.svg" class="summary-status">
+    <div class="summary" onclick="summaryClick('User Accounts');">
+      <p><img src="user-accounts.svg" class="summary-icon"><img src="dialog-positive.svg" class="summary-status">
       </p>
     </div>
   </nav>
   <main>
+    <p style="font-size: 5vmin; font-weight: bold; margin-bottom: 2vh;"><span id="detail-heading">Welcome</span> <img id="detail-icon" src="welcome.svg"></p>
 
-    <!-- The following will be auto-generated based on info received from API. -->
-    <p style="font-size: 5vmin; margin-bottom: 1vh;">User Accounts <img src="icons/users.svg" class="detail-icon"></p>
-    <form>
-      <fieldset>
-        <legend>Bulk Account Creation</legend>
-        <input placeholder="space-sparated account names" style="font-size: 3vmin; width: 60%;" type="text">
-        <label><input name="admin" style="height: 2vmin; width: 2vmin;"  type="checkbox">Admin</label>
-        <label><input name="fileShares" checked style="height: 2vmin; width: 2vmin;" type="checkbox">FileShares</label>
-        <label><input name="shell" style="height: 2vmin; width: 2vmin;" type="checkbox">Shell</label>
-        <button style="font-size: 3vmin; padding: 0 1vmin;" type="button">OK</button>
-      </fieldset>
+    <hr>
 
-      <fieldset>
-        <legend>User Accounts</legend>
-        <table style="width: 100%">
-          <tr>
-            <th>Login</th>
-            <th>Full Name</th>
-            <th>Account Privileges</th>
-          </tr>
-          <tr>
-            <td>alpha</td>
-            <td>Alpha T. Dog</td>
-            <td>Admin, FileShares, Shell</td>
-          </tr>
-          <tr>
-            <td>bravo</td>
-            <td>Bravo Maestro</td>
-            <td>FileShares, Shell</td>
-          </tr>
-          <tr>
-            <td>charlie</td>
-            <td>Charlie Root</td>
-            <td>Admin, Shell</td>
-          </tr>
-          <tr>
-            <td>dave</td>
-            <td>Dave? Dave's not here, man.</td>
-            <td></td>
-          </tr>
-          <tr>
-            <td>echo</td>
-            <td>Echo, echo, echo...</td>
-            <td></td>
-          </tr>
-          <tr>
-            <td>freebsd</td>
-            <td>The Power to Serve</td>
-            <td>Admin, Shell</td>
-          </tr>
-          <tr style="background: linear-gradient(to right, gray, dimgray)">
-            <td>gecos</td>
-            <td><input placeholder="Full Name" style="font-size: 3vmin; width: 80%;" type="text"></td>
-            <td>
-              <label><input name="admin" style="height: 2vmin; width: 2vmin;" type="checkbox">Admin</label>,
-              <label><input name="FileShares" checked style="height: 2vmin; width: 2vmin;" type="checkbox">FileShares</label>,
-              <label><input name="shell" style="height: 2vmin; width: 2vmin;" type="checkbox">Shell</label>
-              <button style="font-size: 3vmin; padding: 0 1vmin;" type="button">OK</button>
-            </td>
-          </tr>
-          <tr>
-            <td>hotel</td>
-            <td>Hot L Baltimore</td>
-            <td></td>
-          </tr>
-          <tr>
-            <td>indigo</td>
-            <td>Indigofera Tinctoria</td>
-            <td>FileShares, Shell</td>
-          </tr>
-          <tr>
-            <td>joliet</td>
-            <td>...</td>
-            <td>...</td>
-          </tr>
-          <tr>
-            <td>kilo</td>
-          </tr>
-          <tr>
-            <td>linux</td>
-          </tr>
-          <tr>
-            <td>mike</td>
-          </tr>
-          <tr>
-            <td>november</td>
-          </tr>
-          <tr>
-            <td>oscar</td>
-          </tr>
-          <tr>
-            <td>pi</td>
-          </tr>
-          <tr>
-            <td>quebec</td>
-          </tr>
-          <tr>
-            <td>raspberry</td>
-          </tr>
-          <tr>
-            <td>samba</td>
-          </tr>
-          <tr>
-            <td>tango</td>
-          </tr>
-          <tr>
-            <td>uniform</td>
-          </tr>
-          <tr>
-            <td>victor</td>
-          </tr>
-          <tr>
-            <td>windows</td>
-          </tr>
-          <tr>
-            <td>xray</td>
-          </tr>
-          <tr>
-            <td>yankee</td>
-          </tr>
-          <tr>
-            <td>zulu</td>
-          </tr>
-        </table>
-      </fieldset>
-    </form>
+    <!-- The iframe allows modular design. It's height is a total guess, but seems to work well across various screens. -->
+    <iframe id="detail-frame" src="welcome.html" style="border: 0px; height: 72vh; width: 100%;">
+    </iframe>
   </main>
 </body>
 

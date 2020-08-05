@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+
+<!-- Mockup of new WeeNAS admin interface. -->
+
+<html lang="en-US">
+
+<head>
+  <title>Welcome</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+
+    button {
+      float: right;
+    }
+
+    pre {
+      font-weight: bold;
+    }
+    
+    /* Apply tweaks for portrait mode devices (tablet, phone) when width is tight. */
+    @media screen and (max-width: 768px) {
+      #bulk-user-field {
+        width: 100%;  /* Forcing the trailing bits to a new line. */
+      }
+      .collapsible {
+        display: none;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+  <form>
+    <fieldset>
+    <legend>Raspberry Pi 2 rev. 1</legend>
+      <pre>
+    BCM2836     Cortex-A7     1G RAM
+      </pre>
+    </fieldset>
+    <fieldset>
+      <legend>Top Processes</legend>
+      <button onclick="alert('Let\'s just pretend, shall we?');" type="button">&#x1F504; <span class="collapsible"> Refresh</span></button>
+      <pre>
+    last pid:  1970;  load averages:  0.00,  0.00,  0.00  up 0+08:00:00    11:28:38
+    32 processes:  1 running, 31 sleeping
+    CPU:  0.0% user,  0.0% nice,  0.1% system,  0.1% interrupt, 11.6% idle
+    Mem: 4652K Active, 140M Inact, 134M Wired, 69M Buf, 637M Free
+    Swap:
+    
+      PID USERNAME    THR PRI NICE   SIZE    RES STATE    C   TIME    WCPU COMMAND
+     1966 dave          1  23    0  5336K  2684K wait     2   0:00   0.68% sh
+     1965 dave          1  20    0    12M  7780K select   3   0:00   0.59% sshd
+     1963 root          1  39    0    12M  7756K select   0   0:00   0.39% sshd
+     1539 root          1  20    0   163M   144M select   2   0:38   0.00% smbd
+      937 root          1  20    0   161M   143M select   1   0:08   0.00% smbd
+      735 root          1  20    0  4824K  2340K select   3   0:05   0.00% syslogd
+      933 root          1  20    0    28M    13M select   1   0:04   0.00% nmbd
+      899 ntpd          1  20    0    11M    11M select   3   0:04   0.00% ntpd
+      919 ircd          1  20    0  8276K  5356K kqread   0   0:02   0.00% inspircd
+      981 root          1  20    0  9020K  6172K select   0   0:02   0.00% sendmail
+     1052 root          1  20    0  4340K  2040K ttyin    1   0:01   0.00% getty
+      988 root          1  20    0  4832K  2368K nanslp   3   0:01   0.00% cron
+     1055 root          1  20    0   161M   142M select   0   0:00   0.00% smbd
+     1036 root          2  20    0   121M   100M select   0   0:00   0.00% smbd
+     1043 root          1  20    0   119M   100M select   0   0:00   0.00% smbd
+      984 smmsp         1  20    0  8804K  6004K pause    2   0:00   0.00% sendmail
+      664 root          1  20    0  3928K  1168K select   2   0:00   0.00% devd
+     1016 root          1  22    0  4828K  2300K select   0   0:00   0.00% inetd     
+      </pre>
+    </fieldset>
+  </form>
+</body>
+</html>

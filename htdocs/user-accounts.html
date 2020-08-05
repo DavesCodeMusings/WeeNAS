@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+
+<!-- Mockup of new WeeNAS admin interface. -->
+
+<html lang="en-US">
+
+<head>
+  <title>User Accounts</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+    #bulk-user-field {
+        width: 50%;
+      }
+
+    /* Apply tweaks for portrait mode devices (tablet, phone) when width is tight. */
+    @media screen and (max-width: 768px) {
+      #bulk-user-field {
+        width: 100%;  /* Forcing the trailing bits to a new line. */
+      }
+      .collapsible {
+        display: none;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+<form>
+  <fieldset>
+    <legend>Bulk Account Creation</legend>
+    <label><span class="collapsible">Names </span><input id="bulk-user-field" placeholder="space-separated account names" type="text"></label>
+    <label><input name="admin" style="height: 2vmin; width: 2vmin;"  type="checkbox">&#x1F9D9;<span class="collapsible"> Admin</span></label>
+    <label><input name="fileShares" checked style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F4C1;<span class="collapsible"> Fileshares</span></label>
+    <label><input name="shell" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F4BB;<span class="collapsible"> Shell</span></label>
+    <button onclick="alert('Add User');">&#x02705;<span class="collapsible"> Create</span></button>
+  </fieldset>
+
+  <fieldset>
+    <legend>User Accounts</legend>
+    <table style="width: 100%">
+      <tr>
+        <th>Login</th>
+        <th>Full Name</th>
+        <th colspan="3">Account Privileges</th>
+        <th>&#x1F4DD;</th>
+      </tr>
+      <tr>
+        <td>alpha</td>
+        <td>Alpha T. Dog</td>
+        <td>&#x1F9D9;<span class="collapsible"> Admin</span></td><td>&#x1F4C1;<span class="collapsible"> Fileshares</span></td><td>&#x1F4BB;<span class="collapsible"> Shell</span></td>
+      </tr>
+      <tr>
+        <td>bravo</td>
+        <td>Bravo Maestro</td>
+        <td></td><td>&#x1F4C1;<span class="collapsible"> Fileshares</span></td><td>&#x1F4BB;<span class="collapsible"> Shell</span></td>
+      </tr>
+      <tr>
+        <td>charlie</td>
+        <td>Charlie Root</td>
+        <td>&#x1F9D9;<span class="collapsible"> Admin</span></td><td></td><td>&#x1F4BB;<span class="collapsible"> Shell</span></td>
+      </tr>
+      <tr>
+        <td>dave</td>
+        <td>Dave? Dave's not here, man.</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>echo</td>
+        <td>Echo, echo, echo...</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>freebsd</td>
+        <td>The Power to Serve</td>
+        <td>&#x1F9D9;<span class="collapsible"> Admin</span></td><td></td><td>&#x1F4BB;<span class="collapsible"> Shell</span></td>
+      </tr>
+      <tr style="background: linear-gradient(to right, gray, dimgray)">
+        <td>gecos</td>
+        <td><input placeholder="Full Name" style="width: 80%;" type="text"></td>
+        <td><label><input name="admin" type="checkbox">&#x1F9D9;<span class="collapsible"> Admin</span></label></td>
+        <td><label><input name="FileShares" checked type="checkbox">&#x1F4C1;<span class="collapsible"> Fileshares</span></label></td>
+        <td><label><input name="shell" type="checkbox">&#x1F4BB;<span class="collapsible"> Shell</span></label></td>
+        <td><span onclick="alert('Add User');" style="cursor: pointer;">&#x02705; <span class="collapsible">OK</span> <span onclick="alert('Cancel');" style="cursor: pointer;">&#x0274C;<span class="collapsible"> Cancel</span></span></td>
+      </tr>
+      <tr>
+        <td>hotel</td>
+        <td>Hot L Baltimore</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>indigo</td>
+        <td>Indigofera Tinctoria</td>
+        <td></td><td>&#x1F4C1;<span class="collapsible"> FileShares</span></td><td>&#x1F4BB;<span class="collapsible"><span class="collapsible"> Shell</span></span></td>
+      </tr>
+      <tr>
+        <td>joliet</td>
+        <td>...</td>
+        <td>...</td>
+      </tr>
+      <tr>
+        <td>kilo</td>
+      </tr>
+      <tr>
+        <td>linux</td>
+      </tr>
+      <tr>
+        <td>mike</td>
+      </tr>
+      <tr>
+        <td>november</td>
+      </tr>
+      <tr>
+        <td>oscar</td>
+      </tr>
+      <tr>
+        <td>pi</td>
+      </tr>
+      <tr>
+        <td>quebec</td>
+      </tr>
+      <tr>
+        <td>raspberry</td>
+      </tr>
+      <tr>
+        <td>samba</td>
+      </tr>
+      <tr>
+        <td>tango</td>
+      </tr>
+      <tr>
+        <td>uniform</td>
+      </tr>
+      <tr>
+        <td>victor</td>
+      </tr>
+      <tr>
+        <td>windows</td>
+      </tr>
+      <tr>
+        <td>xray</td>
+      </tr>
+      <tr>
+        <td>yankee</td>
+      </tr>
+      <tr>
+        <td>zulu</td>
+      </tr>
+    </table>
+  </fieldset>
+</form>
+</body>
+</html>

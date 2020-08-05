@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+
+<!-- Mockup of new WeeNAS admin interface. -->
+
+<html lang="en-US">
+
+<head>
+  <title>File Shares</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+
+    button {
+      float: right;
+    }
+
+    pre {
+      font-weight: bold;
+    }
+    
+    /* Apply tweaks for portrait mode devices (tablet, phone) when width is tight. */
+    @media screen and (max-width: 768px) {
+      input[type=text] {
+        width: 100%;  /* Forcing the trailing bits to a new line. */
+      }
+      .collapsible {
+        display: none;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+  <form>
+    <fieldset>
+      <legend>Create a share</legend>
+      <label><span class="collapsible">Name </span><input type="text" placeholder="new share name"></label>
+      <label><span class="collapsible">Path </span><input type="text" placeholder="server path"></label>
+      <label><input type="checkbox">&#x1F50D;<span class="collapsible"> browsable</span></label>
+      <label><input type="checkbox">&#x270F;&#xFE0F;<span class="collapsible"> writable</span></label>
+      <button onclick="alert('Add Share');" type="button">&#x02705; <span class="collapsible"> Create</span></button>
+    </fieldset>
+
+    <fieldset>
+      <legend>Delete a share</legend>
+      <label><span class="collapsible">Name </span></label>
+      <select>
+        <option>shared</option>
+        <option>media</option>
+      </select>
+      <button onclick="alert('Add Share');" type="button">&#x0274c; <span class="collapsible"> Delete</span></button>
+    </fieldset>
+
+    <fieldset>
+      <legend>Configuration</legend>
+      <button onclick="alert('Add Share');" type="button">&#x1F504; <span class="collapsible"> Refresh</span></button>
+
+      <!-- From 'date -u; testparms' command. -->
+      <pre>
+        Tue Aug  4 20:14:50 UTC 2020
+        Load smb config files from /usr/local/etc/smb4.conf
+        Loaded services file OK.
+        Server role: ROLE_STANDALONE
+            
+        # Global parameters
+        [global]
+                security = USER
+                server string = %h
+                idmap config * : backend = tdb
+
+        [homes]
+                browseable = No
+                comment = Home Directories
+                create mask = 0644
+                read only = No
+        
+        [shared]  
+                comment = Shared Directory
+                create mask = 0644
+                path = /home/shared
+                read only = No
+
+        [media]
+                comment = media
+                path = /media    
+          </pre>
+    </fieldset>
+  </form>
+</body>
+</html>
