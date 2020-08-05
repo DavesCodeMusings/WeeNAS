@@ -476,7 +476,7 @@ mailMsgNum = 0;
 
 /* Display contents of mail message or headers. */
 function updateMail(msg) {
-  document.getElementById('mail').value = msg;
+  document.getElementById('mail-view').value = msg;
 }
 
 /* AJAX fetch mail by message ID. No ID or ID <= 0 will fetch headers.*/
