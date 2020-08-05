@@ -52,28 +52,30 @@
       document.getElementById('secret').type = 'password';
     }
   </script>
-  <title>WeeNas Login</title>
+  <title>Password Helper</title>
 </head>
 
 <body>
   <form method="post">
     <fieldset id="login-box">
-      <legend>WeeNAS</legend>
+      <legend>
+        <script>document.write(window.location.hostname);</script>
+      </legend>
       <br>
-      <input id="username" name="username" type="text" placeholder="What's your name?"><br>
+      <input id="username" name="username" type="text" placeholder="What's your name?" tabindex="1"><br>
       <br>
-      <input id="secret" name="secret" type="password" placeholder="Tell me a secret."><br>
+      <input id="secret" name="secret" type="password" placeholder="Tell me a secret." tabindex="2"><br>
       <br>
       <button onclick="showLoginHelp();" title="Get help" type="button">&#x02753;</button>
-      <button title="Log in" type="submit">&#x02714;</button>
+      <button title="Log in" type="submit" tabindex="3">&#x02714;</button>
       <button onmousedown="revealSecret();" onmouseup="hideSecret();" title="Show secret"
         type="button">&#x1F440;&#x0FE0F;</button>
     </fieldset>
   </form>
   <div id="login-help">
     <p>
-      Hi, you must be new around here. I'm a WeeNAS system. I'm the unobtrusive little box that stores files for
-      people. Before we start working together, I'd like you to tell me a secret.
+    Hi, you must be new around here. I'm <script>document.write(window.location.hostname);</script> the unobtrusive
+    little box that stores files for people. Before we start working together, I'd like you to tell me a secret.
     </p>
     <p>
       You see, I don't really do the whole password thing, so a secret is how I know it's you. A secret can be almost
