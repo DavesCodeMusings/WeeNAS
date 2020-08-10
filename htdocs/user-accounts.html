@@ -6,150 +6,204 @@
 
 <head>
   <title>User Accounts</title>
-  <style>
-    body {
-      font-family: sans-serif;
-    }
-    #bulk-user-field {
-        width: 50%;
-      }
-
-    /* Apply tweaks for portrait mode devices (tablet, phone) when width is tight. */
-    @media screen and (max-width: 768px) {
-      #bulk-user-field {
-        width: 100%;  /* Forcing the trailing bits to a new line. */
-      }
-      .collapsible {
-        display: none;
-      }
+  <meta charset="utf-8">
+  <link href="common.css" rel="stylesheet" type="text/css">
+  <script src="common.js"></script>
+  <script>
+    function displayAccountHealth(accountHealth) {
+      document.getElementById('ssh-auth-failed').innerHTML = accountHealth.failed_ssh;
+      document.getElementById('su-auth-failed').innerHTML = accountHealth.failed_su;
     }
 
-  </style>
+    function displayAccountList(accountList) {
+      let list = '<option selected>[new]</option>';
+
+      // Sort the services in alpha order for readability.
+      let accounts = Object.keys(accountList).sort();
+      for (let i = 0; i < accounts.length; i++) {
+        list += `<option>${accounts[i]}</option>`;
+      }
+      document.getElementById('system-account-list').innerHTML = list;
+    }
+
+    function displaySystemAccountDetails(systemAccountDetails) {
+      if (systemAccountDetails) {
+        document.getElementById('system-account-login').value = systemAccountDetails.login;
+        let gecosFields = systemAccountDetails.gecos.split(",", 5);
+
+        // The & is shorthand for login name with first letter capitalized.
+        gecosFields[0] = gecosFields[0].replace(/&/, systemAccountDetails.login.charAt(0).toUpperCase() + systemAccountDetails.login.slice(1));
+        document.getElementById('system-account-fullname').value = gecosFields[0];
+        document.getElementById('system-account-room').value = gecosFields[1] || "";
+        document.getElementById('system-account-phone').value = gecosFields[2] || "";
+        document.getElementById('system-account-phone-alt').value = gecosFields[3] || "";
+        document.getElementById('system-account-email-alt').value = gecosFields[4] || "";
+        if (!systemAccountDetails.shell.match(/nologin/)) {
+          document.getElementById('shell').checked = true;
+        }
+      }
+      else {
+        document.getElementById('system-account-login').value = "";
+        document.getElementById('system-account-fullname').value = "";
+        document.getElementById('system-account-room').value = "";
+        document.getElementById('system-account-phone').value = "";
+        document.getElementById('system-account-phone-alt').value = "";
+        document.getElementById('system-account-email-alt').value = "";
+        document.getElementById('admin').checked = false;
+        document.getElementById('fileshares').checked = false;
+        document.getElementById('shell').checked = false;
+      }
+    }
+
+    function displaySmbAccountDetails(smbAccountDetails) {
+      if (smbAccountDetails) {
+        document.getElementById('fileshares').checked = smbAccountDetails.enabled;
+      }
+    }
+
+    function getAccountDetails(login) {
+      if (login == "[new]") {
+        document.getElementById('create-button').style.display='inline';
+        document.getElementById('update-button').style.display='none';
+        displaySystemAccountDetails();
+        displaySmbAccountDetails();
+      }
+      else {
+        document.getElementById('create-button').style.display='none';
+        document.getElementById('update-button').style.display='inline';
+        AJAX('GET', '/system/account/' + login, displaySystemAccountDetails);
+        AJAX('GET', '/smb/account/' + login, displaySmbAccountDetails);
+      }
+    }
+  </script>
 </head>
 
-<body>
-<form>
-  <fieldset>
-    <legend>Bulk Account Creation</legend>
-    <label><span class="collapsible">Names </span><input id="bulk-user-field" placeholder="space-separated account names" type="text"></label>
-    <label><input name="admin" style="height: 2vmin; width: 2vmin;"  type="checkbox">&#x1F9D9;<span class="collapsible"> Admin</span></label>
-    <label><input name="fileShares" checked style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F4C1;<span class="collapsible"> Fileshares</span></label>
-    <label><input name="shell" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F4BB;<span class="collapsible"> Shell</span></label>
-    <button onclick="alert('Add User');">&#x02705;<span class="collapsible"> Create</span></button>
-  </fieldset>
+<body
+  onload="AJAX('GET', '/system/health/summary/program', displayAccountHealth); AJAX('GET', '/system/account', displayAccountList);">
+  <p class="caution">
+    This is a partially functioning mock-up. User accounts cannot be created or updated.</p>
 
-  <fieldset>
-    <legend>User Accounts</legend>
-    <table style="width: 100%">
-      <tr>
-        <th>Login</th>
-        <th>Full Name</th>
-        <th colspan="3">Account Privileges</th>
-        <th>&#x1F4DD;</th>
-      </tr>
-      <tr>
-        <td>alpha</td>
-        <td>Alpha T. Dog</td>
-        <td>&#x1F9D9;<span class="collapsible"> Admin</span></td><td>&#x1F4C1;<span class="collapsible"> Fileshares</span></td><td>&#x1F4BB;<span class="collapsible"> Shell</span></td>
-      </tr>
-      <tr>
-        <td>bravo</td>
-        <td>Bravo Maestro</td>
-        <td></td><td>&#x1F4C1;<span class="collapsible"> Fileshares</span></td><td>&#x1F4BB;<span class="collapsible"> Shell</span></td>
-      </tr>
-      <tr>
-        <td>charlie</td>
-        <td>Charlie Root</td>
-        <td>&#x1F9D9;<span class="collapsible"> Admin</span></td><td></td><td>&#x1F4BB;<span class="collapsible"> Shell</span></td>
-      </tr>
-      <tr>
-        <td>dave</td>
-        <td>Dave? Dave's not here, man.</td>
-        <td></td>
-      </tr>
-      <tr>
-        <td>echo</td>
-        <td>Echo, echo, echo...</td>
-        <td></td>
-      </tr>
-      <tr>
-        <td>freebsd</td>
-        <td>The Power to Serve</td>
-        <td>&#x1F9D9;<span class="collapsible"> Admin</span></td><td></td><td>&#x1F4BB;<span class="collapsible"> Shell</span></td>
-      </tr>
-      <tr style="background: linear-gradient(to right, gray, dimgray)">
-        <td>gecos</td>
-        <td><input placeholder="Full Name" style="width: 80%;" type="text"></td>
-        <td><label><input name="admin" type="checkbox">&#x1F9D9;<span class="collapsible"> Admin</span></label></td>
-        <td><label><input name="FileShares" checked type="checkbox">&#x1F4C1;<span class="collapsible"> Fileshares</span></label></td>
-        <td><label><input name="shell" type="checkbox">&#x1F4BB;<span class="collapsible"> Shell</span></label></td>
-        <td><span onclick="alert('Add User');" style="cursor: pointer;">&#x02705; <span class="collapsible">OK</span> <span onclick="alert('Cancel');" style="cursor: pointer;">&#x0274C;<span class="collapsible"> Cancel</span></span></td>
-      </tr>
-      <tr>
-        <td>hotel</td>
-        <td>Hot L Baltimore</td>
-        <td></td>
-      </tr>
-      <tr>
-        <td>indigo</td>
-        <td>Indigofera Tinctoria</td>
-        <td></td><td>&#x1F4C1;<span class="collapsible"> FileShares</span></td><td>&#x1F4BB;<span class="collapsible"><span class="collapsible"> Shell</span></span></td>
-      </tr>
-      <tr>
-        <td>joliet</td>
-        <td>...</td>
-        <td>...</td>
-      </tr>
-      <tr>
-        <td>kilo</td>
-      </tr>
-      <tr>
-        <td>linux</td>
-      </tr>
-      <tr>
-        <td>mike</td>
-      </tr>
-      <tr>
-        <td>november</td>
-      </tr>
-      <tr>
-        <td>oscar</td>
-      </tr>
-      <tr>
-        <td>pi</td>
-      </tr>
-      <tr>
-        <td>quebec</td>
-      </tr>
-      <tr>
-        <td>raspberry</td>
-      </tr>
-      <tr>
-        <td>samba</td>
-      </tr>
-      <tr>
-        <td>tango</td>
-      </tr>
-      <tr>
-        <td>uniform</td>
-      </tr>
-      <tr>
-        <td>victor</td>
-      </tr>
-      <tr>
-        <td>windows</td>
-      </tr>
-      <tr>
-        <td>xray</td>
-      </tr>
-      <tr>
-        <td>yankee</td>
-      </tr>
-      <tr>
-        <td>zulu</td>
-      </tr>
-    </table>
-  </fieldset>
-</form>
+  <form>
+    <fieldset>
+      <legend>User Account Health</legend>
+      <button class="refresh" onclick="AJAX('GET', '/system/health/summary/program', displayAccountHealth);"
+        type="button">&#x1F504;</button>
+      <table>
+        <colgroup>
+          <col style="width: 20%;">
+          <col>
+        </colgroup>
+        <tr>
+          <th>Recent Authentications</th>
+          <th>Status</th>
+        </tr>
+        <tr>
+          <td>ssh</td>
+          <td id="ssh-auth-failed"></td>
+        </tr>
+        <tr>
+          <td>su</td>
+          <td id="su-auth-failed"></td>
+        </tr>
+      </table>
+    </fieldset>
+
+    <fieldset>
+      <legend>User Account Management</legend>
+      <button class="refresh" onclick="AJAX('GET', '/system/account', displayAccountList);"
+        type="button">&#x1F504;</button>
+      <table>
+        <colgroup>
+          <col style="width: 20%;">
+          <col>
+        </colgroup>
+        <thead>
+          <tr>
+            <th>User Account</th>
+            <th>Properties</th>
+          </tr>
+        </thead>
+
+        <!-- TODO: Limit allowed characters in GECOS fields, i.e. not commas, since they are comma separated. -->
+        <tbody>
+          <tr>
+            <td rowspan="6"><select onclick="getAccountDetails(document.getElementById('system-account-list').value);"
+                size="7" id="system-account-list" style="width: 85%;"></select></td>
+          </tr>
+          <tr>
+            <td><input id="system-account-login" placeholder="Login Name" readonly type="text"></td>
+          </tr>
+          <tr>
+            <td>
+              <label><input id="admin" name="admin" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F9D9;<span
+                  class="collapsible"> Admin</span></label>
+              <label><input id="fileshares" name="fileShares" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F4C1;<span
+                  class="collapsible"> Fileshares</span></label>
+              <label><input id="shell" name="shell" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F4BB;<span
+                  class="collapsible"> Shell</span></label>
+              <!--<label><input name="locked" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F512;<span
+                  class="collapsible"> Locked</span></label>-->
+            </td>
+          </tr>
+          <tr>
+            <td><input class="optional" id="system-account-fullname" placeholder="Full Name" type="text">
+            <input class="optional" id="system-account-room" placeholder="Room No. / Location" type="text"></td>
+          </tr>
+          <tr>
+            <td><input class="optional" id="system-account-phone" placeholder="Phone" type="text">
+              <input class="optional" id="system-account-phone-alt" placeholder="Alt. Phone" type="text"></td>
+          </tr>
+          <tr>
+            <td><input class="optional" id="system-account-email-alt" placeholder="Alt. Email" type="text"></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2">
+              <button id="create-button" onclick="alert('Update User');" style="display: none; float: right;">&#x02705;<span class="collapsible">&nbsp;Create</span></button>
+              <button id="update-button" onclick="alert('Update User');" style="float: right;">&#x1F4DD;<span class="collapsible">&nbsp;Update</span></button>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+      <p class="note">Login name is required. All other fields are optional.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Bulk Account Creation</legend>
+      <table>
+        <colgroup>
+          <col style="width: 20%;">
+          <col>
+        </colgroup>
+        <tr>
+          <td>New Login</td>
+          <td><input class="large" id="bulk-user-field" placeholder="Login Name(s)" type="text"></td>
+        </tr>
+        <tr>
+          <td>Access</td>
+          <td>
+            <label><input name="admin" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F9D9;<span
+                class="collapsible"> Admin</span></label>
+            <label><input name="fileShares" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F4C1;<span
+                class="collapsible"> Fileshares</span></label>
+            <label><input name="shell" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F4BB;<span
+                class="collapsible"> Shell</span></label>
+            <!--<label><input name="locked" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F512;<span
+                class="collapsible"> Locked</span></label>-->
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <button onclick="alert('Add User');" style="float: right;">&#x02705;<span class="collapsible">
+                Create</span></button>
+          </td>
+        </tr>
+      </table>
+      <p class="note">Create multiple accounts by separating the login names with spaces. All accounts will have
+        the same access.</p>
+    </fieldset>
+  </form>
 </body>
+
 </html>

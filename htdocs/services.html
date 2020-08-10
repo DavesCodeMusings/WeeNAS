@@ -6,79 +6,69 @@
 
 <head>
   <title>Services</title>
-  <style>
-    body {
-      font-family: sans-serif;
-    }
+  <meta charset="utf-8">
+  <link href="common.css" rel="stylesheet" type="text/css">
+  <script src="common.js"></script>
+  <script>
+    function displayServiceHealth(serviceHealth) {
+      let thead = '<tr><th>Service</th><th>Status</th></tr>';
+      let tbody = '';
 
-    pre {
-      font-weight: bold;
-    }
-
-    /* Apply tweaks for portrait mode devices (tablet, phone) when width is tight. */
-    @media screen and (max-width: 768px) {
-      input[type=text] {
-        width: 100%;
-        /* Forcing the trailing bits to a new line. */
+      // Sort the services in alpha order for readability.
+      let services = Object.keys(serviceHealth).sort();
+      for (let i=0; i<services.length; i++) {
+        tbody += `<tr><td>${services[i]}</td><td>${serviceHealth[services[i]]}</td></tr>`;
       }
-
-      .collapsible {
-        display: none;
-      }
+      document.getElementById('service-health-head').innerHTML = thead;
+      document.getElementById('service-health-body').innerHTML = tbody;
     }
-  </style>
+
+    function displayServiceList(serviceList) {
+      let thead = '<tr><th>Service</th><th>Enabled</th></tr>';
+      let tbody = '';
+
+      // Sort in alpha order for readability.
+      let services = Object.keys(serviceList).sort();
+      for (let i=0; i<services.length; i++) {
+        tbody += `<tr><td>${services[i]}</td><td>${serviceList[services[i]]}</td></tr>`;
+      }
+      document.getElementById('service-list-head').innerHTML = thead;
+      document.getElementById('service-list-body').innerHTML = tbody;
+    }
+  </script>
 </head>
 
-<body>
+<body onload="AJAX('GET', '/system/health/summary/process', displayServiceHealth); AJAX('GET', '/system/service/list', displayServiceList);">
+  <form>
+    <fieldset>
+      <legend>Service Health</legend>
+      <button class="refresh" onclick="AJAX('GET', '/system/health/summary/process', displayServiceHealth);" type="button">&#x1F504;</button>
 
-  <!-- From 'date -u; monit -B summary' filtered to show only process and programs. -->
-  <h1>Monitored Services</h1>
-  <pre>
-    Tue Aug  4 20:14:50 UTC 2020
-    Monit 5.27.0 uptime: 6m
-    Service Name                     Status                      Type
-    weenas_api                       Execution failed | Does...  Process
-    sshd                             OK                          Process
-    nmbd                             OK                          Process
-    smbd                             OK                          Process
-    ntpd                             OK                          Process
-    monit                            OK                          Process
-    fusefs                           Status failed               Program       
-  </pre>
+      <!-- TODO: Add links for detail drilldown with start/stop buttons. -->
+      <table>
+        <colgroup>
+          <col style="width: 50%;">
+          <col>
+        </colgroup>
+        <thead id="service-health-head"></thead>
+        <tbody id="service-health-body"></tbody>
+      </table>
+    </fieldset>
+    <fieldset>
+      <legend>Configured Services</legend>
+      <button class="refresh" onclick="AJAX('GET', '/system/service/list', displayServiceList);" type="button">&#x1F504;</button>
 
-  <!-- From '' -->
-  <h1>All Enabled Services</h1>
-  <pre>
-    /etc/rc.d/hostid
-    /etc/rc.d/hostid_save
-    /etc/rc.d/cleanvar
-    /etc/rc.d/kldxref
-    /etc/rc.d/ip6addrctl
-    /etc/rc.d/netif
-    /etc/rc.d/devd
-    /etc/rc.d/resolv
-    /etc/rc.d/newsyslog
-    /etc/rc.d/syslogd
-    /etc/rc.d/savecore
-    /etc/rc.d/dmesg
-    /etc/rc.d/virecover
-    /usr/local/etc/rc.d/monit
-    /etc/rc.d/motd
-    /etc/rc.d/ntpd
-    /etc/rc.d/rctl
-    /usr/local/etc/rc.d/inspircd
-    /usr/local/etc/rc.d/samba_server
-    /usr/local/etc/rc.d/weenas_api
-    /usr/local/etc/rc.d/pwhelper
-    /etc/rc.d/sshd
-    /etc/rc.d/sendmail
-    /etc/rc.d/cron
-    /etc/rc.d/mixer
-    /etc/rc.d/inetd
-    /etc/rc.d/gptboot
-    /etc/rc.d/devmatch
-    /etc/rc.d/bgfsck    
-  </pre>
+      <!-- TODO: Add enable/disable -->
+      <table>
+        <colgroup>
+          <col style="width: 50%;">
+          <col>
+        </colgroup>
+        <thead id="service-list-head"></thead>
+        <tbody id="service-list-body"></tbody>  
+      </table>
+    </fieldset>
+  </form>
 </body>
 
 </html>

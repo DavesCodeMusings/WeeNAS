@@ -6,56 +6,100 @@
 
 <head>
   <title>Storage</title>
-  <style>
-    body {
-      font-family: sans-serif;
+  <meta charset="utf-8">
+  <link href="common.css" rel="stylesheet" type="text/css">
+  <script src="common.js"></script>
+  <script>
+    function displayFsHealth(fsHealth) {
+      let thead = '<tr><th>Filesystem</th><th>Status</th></tr>';
+      let tbody = '';
+
+      // Sort in alpha order for readability.
+      let filesystems = Object.keys(fsHealth).sort();
+      for (let i=0; i<filesystems.length; i++) {
+        tbody += `<tr><td>${filesystems[i]}</td><td>${fsHealth[filesystems[i]]}</td></tr>`;
+      }
+      document.getElementById('fs-health-head').innerHTML = thead;
+      document.getElementById('fs-health-body').innerHTML = tbody;
     }
 
-    pre {
-      font-weight: bold;
-    }
-    
-    /* Apply tweaks for portrait mode devices (tablet, phone) when width is tight. */
-    @media screen and (max-width: 768px) {
-      #bulk-user-field {
-        width: 100%;  /* Forcing the trailing bits to a new line. */
+    function displayFsStats(fsStats) {
+      let thead = '<tr><th>Filesystem</th><th>Mountpoint</th><th class="numeric">Size</th><th class="numeric">Used</th><th class="numeric">Available</th><th class="numeric">Full%</th></tr>';
+      let tbody = '';
+      for (let i = 0; i < fsStats.length; i++) {
+        tbody += '<tr>';
+        tbody += `<td>${fsStats[i].filesystem}</td>`;
+        tbody += `<td>${fsStats[i].mountpoint}</td>`;
+        tbody += `<td class="numeric">${fsStats[i].size}</td>`;
+        tbody += `<td class="numeric">${fsStats[i].used}</td>`;
+        tbody += `<td class="numeric">${fsStats[i].available}</td>`;
+        tbody += `<td class="numeric">${fsStats[i].capacity}</td>`;
+        tbody += '</tr>';
       }
-      .collapsible {
-        display: none;
-      }
+      document.getElementById('fs-stats-head').innerHTML = thead;
+      document.getElementById('fs-stats-body').innerHTML = tbody;
     }
 
-  </style>
+    function displayFstab(fsTable) {
+      let thead ='<tr><th>Filesystem</th><th>Mountpoint</th><th>Type</th><th>Options</th><th class="numeric">Freq</th><th class="numeric">Pass</th></tr>';
+      let tbody = '';
+      for (let i = 0; i < fsTable.length; i++) {
+        tbody += '<tr>';
+        tbody += `<td>${fsTable[i].filesystem}</td>`;
+        tbody += `<td>${fsTable[i].mountpoint}</td>`;
+        tbody += `<td>${fsTable[i].vfstype}</td>`;
+        tbody += `<td>${fsTable[i].mntops}</td>`;
+        tbody += `<td class="numeric">${fsTable[i].freq}</td>`;
+        tbody += `<td class="numeric">${fsTable[i].passno}</td>`;
+        tbody += '</tr>';
+      }
+      document.getElementById('fs-table-head').innerHTML = thead;
+      document.getElementById('fs-table-body').innerHTML = tbody;
+    }
+  </script>
 </head>
 
-<body>
-  <!-- From 'monit -B summary | grep Filesystems' -->
-  <h1>Monitored Filesystems</h1>
-  <pre>
-    Tue Aug  4 20:14:50 UTC 2020
-    rootfs                           OK                          Filesystem
-    homefs                           OK                          Filesystem
-  </pre>
+<body onload="AJAX('GET', '/system/health/summary/filesystem', displayFsHealth); AJAX('GET', '/filesystem/stats', displayFsStats); AJAX('GET', '/filesystem/table', displayFstab);">
+  <form>
+    <fieldset>
+      <legend>Filesystem Health</legend>
+      <button class="refresh" onclick="AJAX('GET', '/system/health/summary/filesystem', displayFsHealth);" type="button">&#x1F504;</button>
 
-  <!-- From 'date -u ; df -h' -->
-  <h1>Mounted Filesystems</h1>
-  <pre>
-    Filesystem                Size    Used   Avail Capacity  Mounted on
-    /dev/ufs/rootfs            28G     21G    4.6G    82%    /
-    devfs                     1.0K    1.0K      0B   100%    /dev
-    /dev/msdosfs/MSDOSBOOT     50M     17M     33M    33%    /boot/msdos
-    tmpfs                      50M    4.0K     50M     0%    /tmp
-    /dev/ufs/homefs           226G    126G     82G    60%    /home
-  </pre>
-
-  <!-- From 'cat /etc/fstab' -->
-  <h1>Configured Filesystems</h1>
-  <pre>
-    Device                 Mountpoint  FS-Type  Options               Dump Pass
-    /dev/ufs/rootfs        /           ufs      rw                    1    1
-    /dev/msdosfs/MSDOSBOOT /boot/msdos msdosfs  rw,noatime            0    0
-    tmpfs                  /tmp        tmpfs    rw,mode=1777,size=50m 0    0
-    /dev/ufs/homefs        /home       ufs      rw,noatime            0    0
-  </pre>
+      <!-- TODO: add links for detail drilldown with buttons for umount, fsck, & mount. -->
+      <table>
+        <colgroup>
+          <col style="width: 30%;">
+          <col>
+        </colgroup>
+        <thead id="fs-health-head"></thead>
+        <tbody id="fs-health-body"> </tbody>
+      </table>
+    </fieldset>
+    <fieldset>
+      <legend>Mounted Filesystems</legend>
+      <button class="refresh" onclick="AJAX('GET', '/filesystem/stats', displayFsStats);" type="button">&#x1F504;</button>
+      <table>
+        <colgroup>
+          <col style="width: 30%;">
+          <col style="width: 20%;">
+        </colgroup>
+        <thead id="fs-stats-head"></thead>
+        <tbody id="fs-stats-body"></tbody>
+      </table>
+    </fieldset>
+    <fieldset>
+      <legend>Configured Filesystems</legend>
+      <button class="refresh" onclick="AJAX('GET', '/filesystem/table', displayFstab);" type="button">&#x1F504;</button>
+      <table>
+        <colgroup>
+          <col style="width: 30%;">
+          <col style="width: 20%;">
+        </colgroup>
+        <thead id="fs-table-head"></thead>
+        <tbody id="fs-table-body"></tbody>
+      </table>
+    </fieldset>
+  </form>
 </body>
+
 </html>

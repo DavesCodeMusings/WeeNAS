@@ -1,0 +1,106 @@
+/*
+  common.css -- common stylings used throughout all admin pages
+*/
+
+* {
+  box-sizing: border-box;
+  margin: 0px;
+  padding: 0px;
+}
+
+a {
+  color: midnightblue;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+body {
+  font-family: sans-serif;
+}
+
+button {
+  padding: 0.2em;
+}
+
+button.refresh {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  float: right;
+}
+
+fieldset {
+  padding: 0.5em;
+  margin: 1em;
+}
+
+input[type="text"].large {
+  width: 80%;
+}
+
+input[type="text"].optional {
+  font-style: italic;
+}
+
+.no-break {
+  display: inline-block;
+}
+
+p {
+  padding-bottom: 0.25em;
+  padding-top: 0.25em;
+}
+
+p.caution {
+  background: yellow;
+  color: black;
+  font-style: italic;
+}
+
+p.note {
+  font-style: italic;
+  padding-top: 1em;
+}
+
+p.note::before {
+  content: "Note: ";
+}
+
+table {
+  width: 80%;
+}
+
+th, td {
+  text-align: left;
+}
+
+th.numeric, td.numeric {
+  text-align: right;
+}
+
+textarea.terminal {
+  background-image: linear-gradient(to bottom right, #333333, black);
+  color: whitesmoke;
+  font-family: monospace;
+  font-weight: bold;
+  min-height: calc(25em + 75px); /* (1em) * (# chars) + (3px padding) * (# chars) */
+  width: 80%;
+}
+
+/* Apply tweaks for portrait mode devices (tablet, phone) when width is tight. */
+@media screen and (max-width: 768px) {
+  input[type="text"].large {
+    width: 100%;
+    /* Forcing the trailing bits to a new line. */
+  }
+
+  .collapsible {
+    display: none;
+  }
+  table {
+    width: 80%;
+  }
+  
+}

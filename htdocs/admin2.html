@@ -8,8 +8,52 @@
   <title>WeeNAS Administration</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="admin.js"></script>
+  <link href="common.css" rel="stylesheet" type="text/css">
+  <script src="common.js"></script>
   <script>
+    function displayHealthSummary(healthSummary) {
+      let list='';
+      // Start of with optimism.
+      let serviceStatusIcon ='dialog-positive.svg';
+      let filesystemStatusIcon = 'dialog-positive.svg';
+      let systemStatusIcon = 'dialog-positive.svg';
+      let fileShareStatusIcon = 'dialog-positive.svg';
+      let userAccountStatusIcon = 'dialog-positive.svg';
+
+      // Look for evidence to the contrary.
+      for (var component in healthSummary) {
+        if (healthSummary[component].type == 'process') {
+          if (healthSummary[component].status != 'ok') {
+            serviceStatusIcon = 'dialog-warning.svg';
+          }
+        }
+        if (healthSummary[component].type == 'filesystem') {
+          if (healthSummary[component].status != 'ok') {
+            filesystemStatusIcon = 'dialog-warning.svg';
+          }
+        }
+        if (component == 'smbd' || component == 'nmbd') {
+          if (healthSummary[component].status != 'ok') {
+            fileShareStatusIcon = 'dialog-warning.svg';
+          }
+        }
+        if (component == 'failed_ssh' || component == 'failed_su') {
+          if (healthSummary[component].status != 'ok') {
+            userAccountStatusIcon = 'dialog-warning.svg';
+          }
+        }
+        if (component = window.location.hostname) {
+          if (healthSummary[window.location.hostname].status != 'ok') {
+            systemStatusIcon = 'dialog-warning.svg';
+          }
+        }
+      }
+      document.getElementById('system-status-icon').src = systemStatusIcon;
+      document.getElementById('storage-status-icon').src = filesystemStatusIcon;
+      document.getElementById('service-status-icon').src = serviceStatusIcon;
+      document.getElementById('fileshare-status-icon').src = fileShareStatusIcon;
+      document.getElementById('user-account-status-icon').src = userAccountStatusIcon;
+    }
 
     /* Figure out whence we came and put the hostname in the header. */
     function showHostname() {
@@ -28,7 +72,7 @@
       document.getElementById('login-button').style.display = 'none';
       document.getElementById('logout-button').style.display = 'inline';
       document.getElementById('lock-screen').style.display = 'none';
-      document.getElementsByTagName("header")[0].style.opacity = "0.75";
+      document.getElementsByTagName("header")[0].style.opacity = "0.80";
     }
 
     function logoutClick() {
@@ -51,23 +95,18 @@
       let iconName = urlName + '.svg';
       let pageName = urlName + '.html';
       document.getElementById('detail-heading').innerHTML = detailName;
-      document.getElementById('detail-icon').src = urlName + '.svg';
       document.getElementById('detail-frame').src = urlName + '.html';
+      document.getElementById('detail-icon').src = urlName + '.svg';
     }
   </script>
 
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0px;
-      padding: 0px;
-    }
 
+    /* These are in addition to the styles from common.css. */
     body {
       background-attachment: fixed;
       background-image: url('wallpaper.jpg');
       background-size: cover;
-      font-family: sans-serif;
       height: 90vh;
       margin-left: auto;
       margin-right: auto;
@@ -75,7 +114,7 @@
 
     #lock-screen {
       background: black;
-      opacity: 0.85;
+      opacity: 1.0;
       position: fixed;
       top: 0px;
       left: 0px;
@@ -113,6 +152,15 @@
       width: 20vw;
     }
 
+    iframe {
+      border-bottom: 1px solid dimgray;
+      border-left: 0px;
+      border-right: 0px;
+      border-top: 1px solid dimgray;
+      height: 72vh;
+      width: 100%;
+    }
+
     /* Icons for accessing various system details */
     nav {
       float: left;
@@ -127,7 +175,7 @@
       height: calc(15vh + 2px);
       padding: 1vh;
       margin-bottom: 2vh;
-      opacity: 0.75;
+      opacity: 0.80;
       width: calc(21vh + 2px);
     }
 
@@ -157,7 +205,7 @@
       height: calc(83vh + 10px);
       /* (.summary height) * (# items) + (summary margin bottom) * (# items - 1) */
       margin-left: 2vh;
-      opacity: 0.75;
+      opacity: 0.80;
       padding: 1vh;
       width: calc(100vw - 26vh - 2px);
       /* (body width) - (margin) - (summary width) */
@@ -168,14 +216,6 @@
       float: right;
       height: 6vmin;
       width: 6vmin;
-    }
-
-    fieldset {
-      padding: 1vmax;
-    }
-
-    th {
-      text-align: left;
     }
 
     /* Apply tweaks for portrait mode devices (tablet, phone) when width is tight. */
@@ -231,7 +271,7 @@
   </style>
 </head>
 
-<body onload="summaryClick('Welcome');">
+<body onload="summaryClick('Welcome'); AJAX('GET', '/system/health/summary', displayHealthSummary);">
   <header>
     <span id="hostname" style="float: left; font-size: larger;">WeeNAS</span>
     <form style="text-align: right;">
@@ -247,42 +287,41 @@
     <img src="beastie_sdcard.png" style="margin-left: 33vw; width: 33vw; height: auto; margin-top: 20vh;">
   </div>
 
+  <!-- TODO: Working Status Icons -->
   <nav id="toolbox">
 
     <!-- Hardware, Storage and Services -->
     <div class="summary" onclick="summaryClick('System');">
-      <p><img src="system.svg" class="summary-icon"><img src="dialog-positive.svg" class="summary-status"></p>
+      <p><img src="system.svg" class="summary-icon"><img id="system-status-icon" src="dialog-question.svg" class="summary-status"></p>
     </div>
 
     <div class="summary" onclick="summaryClick('Storage');">
-      <p><img src="storage.svg" class="summary-icon"><img src="dialog-positive.svg" class="summary-status">
+      <p><img src="storage.svg" class="summary-icon"><img id="storage-status-icon" src="dialog-question.svg" class="summary-status">
       </p>
     </div>
 
     <div class="summary" onclick="summaryClick('Services');">
-      <p><img src="services.svg" class="summary-icon"><img src="dialog-error.svg" class="summary-status">
+      <p><img src="services.svg" class="summary-icon"><img id="service-status-icon" src="dialog-question.svg" class="summary-status">
       </p>
     </div>
 
     <!-- Shares -->
     <div class="summary" onclick="summaryClick('File Shares');">
-      <p><img src="file-shares.svg" class="summary-icon"><img src="dialog-positive.svg" class="summary-status">
+      <p><img src="file-shares.svg" class="summary-icon"><img id="fileshare-status-icon" src="dialog-question.svg" class="summary-status">
       </p>
     </div>
 
     <!-- User account management -->
     <div class="summary" onclick="summaryClick('User Accounts');">
-      <p><img src="user-accounts.svg" class="summary-icon"><img src="dialog-positive.svg" class="summary-status">
+      <p><img src="user-accounts.svg" class="summary-icon"><img id="user-account-status-icon" src="dialog-question.svg" class="summary-status">
       </p>
     </div>
   </nav>
   <main>
-    <p style="font-size: 5vmin; font-weight: bold; margin-bottom: 2vh;"><span id="detail-heading">Welcome</span> <img id="detail-icon" src="welcome.svg"></p>
-
-    <hr>
+    <h1 style="font-size: 5vmin; font-weight: bold; margin-bottom: 2vh;"><span id="detail-heading">Welcome</span> <img id="detail-icon" src="welcome.svg"></h1>
 
     <!-- The iframe allows modular design. It's height is a total guess, but seems to work well across various screens. -->
-    <iframe id="detail-frame" src="welcome.html" style="border: 0px; height: 72vh; width: 100%;">
+    <iframe id="detail-frame" src="welcome.html">
     </iframe>
   </main>
 </body>
