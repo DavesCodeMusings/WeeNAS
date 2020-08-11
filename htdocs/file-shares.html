@@ -25,6 +25,19 @@
       }
       document.getElementById('smb-share-list').innerHTML = shareList;
     }
+
+    function getShareDetails(smbShare) {
+      if (smbShare == "[New]") {
+        document.getElementById('create-button').style.display='inline';
+        document.getElementById('update-delete-buttons').style.display='none';
+//        displaySmbShareDetails();
+      }
+      else {
+        document.getElementById('create-button').style.display='none';
+        document.getElementById('update-delete-buttons').style.display='inline';
+//        AJAX('GET', '/smb/share/' + login, displaySmbShareDetails);
+      }
+    }
   </script>
 </head>
 
@@ -60,7 +73,12 @@
           <tr><th>Share Name</th><th>Properties</th></tr>
         </thead>
         <tbody>
-          <tr><td rowspan="5"><select id="smb-share-list" size="5" style="width: 85%;"></select></td></tr>
+          <tr>
+            <td rowspan="5">
+              <select id="smb-share-list" onclick="getShareDetails(document.getElementById('smb-share-list').value)"
+                id="smb-share-list" size="5" style="width: 85%;"></select>
+            </td>
+          </tr>
           <tr><td><input type="text" placeholder="share name"></td></tr>
           <tr><td><input type="text" placeholder="server path"></td></tr>
           <tr><td><input class="optional" type="text" placeholder="comment"></td></tr>
@@ -75,53 +93,17 @@
         <tfoot>
           <tr>
             <td colspan="2">
-              <span style="float: right;">
-                <button onclick="alert('Pretending to update a share');" type="button">&#x1F4DD; <span class="collapsible">
-                Update</span></button>
-                <button onclick="alert('Pretending to delete a share');" type="button">&#x0274C; <span class="collapsible">
-                Delete</span></button>
+              <button id="create-button" onclick="alert('Pretending to create a share');" style="float: right;" type="button">
+                &#x02705;<span class="collapsible">&nbsp;Create</span></button>
+              <span id="update-delete-buttons" style="display: none; float: right;">
+                <button onclick="alert('Pretending to update a share');" type="button">&#x1F4DD;<span class="collapsible">&nbsp;Update</span></button>
+                <button onclick="alert('Pretending to delete a share');" type="button">&#x0274C;<span class="collapsible">&nbsp;Delete</span></button>
               </span>
             </td>
           </tr>
         </tfoot>
       </table>
     </fieldset>
-
-    <!--<fieldset>
-      <legend>Share Creation</legend>
-      <table>
-        <colgroup>
-          <col style="width: 20%;">
-          <col>
-        </colgroup>
-        <tr>
-          <td>Share Name</td>
-          <td><input id="bulk-user-field" placeholder="share name" type="text"></td>
-        </tr>
-        <tr>
-          <td>Server Path</td>
-          <td><input type="text" placeholder="server path"></td>
-        </tr>
-        <tr>
-          <td>Comment</td>
-          <td><input class="optional" type="text" placeholder="comment"></td>
-        </tr>
-        <tr>
-          <td>Access</td>
-          <td>
-            <input type="checkbox">&#x1F50D;<span class="collapsible"> browsable</span>
-            <input type="checkbox">&#x270F;&#xFE0F;<span class="collapsible"> writable</span>
-            <input type="checkbox">&#x026D4;<span class="collapsible"> unavailable</span>
-          </td>
-        </tr>
-      <tr>
-          <td colspan="2">
-            <button onclick="alert('Add Share');" style="float: right;">&#x02705;<span class="collapsible">
-                Create</span></button>
-          </td>
-        </tr>
-      </table>
-    </fieldset>-->
   </form>
 </body>
 
