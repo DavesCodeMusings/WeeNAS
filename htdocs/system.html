@@ -40,7 +40,7 @@
 
     function displayOSInfo(osInfo) {
       let info = '';
-      info += `<a href="https://${osInfo.name}:4200" target="_blank">${osInfo.name}</a>`;
+      info += `<a href="https://${osInfo.name}:4200" target="_blank" title="Open web-based terminal.">${osInfo.name}</a>`;
       info += '<br>';
       info += `${osInfo.machine} ${osInfo.release} on ${osInfo.system} architecture.`
       document.getElementById('os-info').innerHTML = info;

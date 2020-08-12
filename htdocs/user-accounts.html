@@ -10,6 +10,7 @@
   <link href="common.css" rel="stylesheet" type="text/css">
   <script src="common.js"></script>
   <script>
+    const accountPrivilege = [ 'Standard User', 'Power User', 'Admin User' ];
     function displayAccountHealth(accountHealth) {
       document.getElementById('ssh-auth-failed').innerHTML = accountHealth.failed_ssh;
       document.getElementById('su-auth-failed').innerHTML = accountHealth.failed_su;
@@ -29,6 +30,11 @@
     function displaySystemAccountDetails(systemAccountDetails) {
       if (systemAccountDetails) {
         document.getElementById('system-account-login').value = systemAccountDetails.login;
+        let accountLevel = 0;
+        if (!systemAccountDetails.shell.match(/nologin/)) {
+          accountLevel = 1;
+        }
+        document.getElementById('system-account-privilege').value = accountPrivilege[accountLevel];
         let gecosFields = systemAccountDetails.gecos.split(",", 5);
 
         // The & is shorthand for login name with first letter capitalized.
@@ -38,20 +44,15 @@
         document.getElementById('system-account-phone').value = gecosFields[2] || "";
         document.getElementById('system-account-phone-alt').value = gecosFields[3] || "";
         document.getElementById('system-account-email-alt').value = gecosFields[4] || "";
-        if (!systemAccountDetails.shell.match(/nologin/)) {
-          document.getElementById('shell').checked = true;
-        }
       }
       else {
+        document.getElementById('system-account-privilege').value = accountPrivilege[0];
         document.getElementById('system-account-login').value = "";
         document.getElementById('system-account-fullname').value = "";
         document.getElementById('system-account-room').value = "";
         document.getElementById('system-account-phone').value = "";
         document.getElementById('system-account-phone-alt').value = "";
         document.getElementById('system-account-email-alt').value = "";
-        document.getElementById('admin').checked = false;
-        document.getElementById('fileshares').checked = false;
-        document.getElementById('shell').checked = false;
       }
     }
 
@@ -63,16 +64,16 @@
 
     function getAccountDetails(login) {
       if (login == "[new]") {
-        document.getElementById('create-button').style.display='inline';
-        document.getElementById('update-button').style.display='none';
+        document.getElementById('create-button').style.display = 'inline';
+        document.getElementById('update-button').style.display = 'none';
         displaySystemAccountDetails();
-        displaySmbAccountDetails();
+        // displaySmbAccountDetails();
       }
       else {
-        document.getElementById('create-button').style.display='none';
-        document.getElementById('update-button').style.display='inline';
+        document.getElementById('create-button').style.display = 'none';
+        document.getElementById('update-button').style.display = 'inline';
         AJAX('GET', '/system/account/' + login, displaySystemAccountDetails);
-        AJAX('GET', '/smb/account/' + login, displaySmbAccountDetails);
+        // AJAX('GET', '/smb/account/' + login, displaySmbAccountDetails);
       }
     }
   </script>
@@ -127,27 +128,22 @@
         <!-- TODO: Limit allowed characters in GECOS fields, i.e. not commas, since they are comma separated. -->
         <tbody>
           <tr>
-            <td rowspan="6"><select onclick="getAccountDetails(document.getElementById('system-account-list').value);"
-                size="7" id="system-account-list" style="width: 85%;"></select></td>
-          </tr>
-          <tr>
-            <td><input id="system-account-login" placeholder="Login Name" readonly type="text"></td>
+            <td rowspan="5"><select onclick="getAccountDetails(document.getElementById('system-account-list').value);"
+                size="6" id="system-account-list" style="width: 85%;"></select></td>
           </tr>
           <tr>
             <td>
-              <label><input id="admin" name="admin" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F9D9;<span
-                  class="collapsible"> Admin</span></label>
-              <label><input id="fileshares" name="fileShares" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F4C1;<span
-                  class="collapsible"> Fileshares</span></label>
-              <label><input id="shell" name="shell" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F4BB;<span
-                  class="collapsible"> Shell</span></label>
-              <!--<label><input name="locked" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F512;<span
-                  class="collapsible"> Locked</span></label>-->
+              <input id="system-account-login" placeholder="Login Name" readonly type="text">
+              <select id="system-account-privilege">
+                <option><script>document.write(accountPrivilege[0]);</script></option>
+                <option><script>document.write(accountPrivilege[1]);</script></option>
+                <option><script>document.write(accountPrivilege[2]);</script></option>
+              </select>
             </td>
           </tr>
           <tr>
             <td><input class="optional" id="system-account-fullname" placeholder="Full Name" type="text">
-            <input class="optional" id="system-account-room" placeholder="Room No. / Location" type="text"></td>
+              <input class="optional" id="system-account-room" placeholder="Room No. / Location" type="text"></td>
           </tr>
           <tr>
             <td><input class="optional" id="system-account-phone" placeholder="Phone" type="text">
@@ -160,8 +156,10 @@
         <tfoot>
           <tr>
             <td colspan="2">
-              <button id="create-button" onclick="alert('Update User');" style="display: none; float: right;">&#x02705;<span class="collapsible">&nbsp;Create</span></button>
-              <button id="update-button" onclick="alert('Update User');" style="float: right;">&#x1F4DD;<span class="collapsible">&nbsp;Update</span></button>
+              <button id="create-button" onclick="alert('Update User');">&#x02705;<span
+                  class="collapsible">&nbsp;Create</span></button>
+              <button id="update-button" onclick="alert('Update User');"
+                style="display: none;">&#x1F4DD;<span class="collapsible">&nbsp;Update</span></button>
             </td>
           </tr>
         </tfoot>
@@ -171,37 +169,15 @@
 
     <fieldset>
       <legend>Bulk Account Creation</legend>
-      <table>
-        <colgroup>
-          <col style="width: 20%;">
-          <col>
-        </colgroup>
-        <tr>
-          <td>New Login</td>
-          <td><input class="large" id="bulk-user-field" placeholder="Login Name(s)" type="text"></td>
-        </tr>
-        <tr>
-          <td>Access</td>
-          <td>
-            <label><input name="admin" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F9D9;<span
-                class="collapsible"> Admin</span></label>
-            <label><input name="fileShares" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F4C1;<span
-                class="collapsible"> Fileshares</span></label>
-            <label><input name="shell" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F4BB;<span
-                class="collapsible"> Shell</span></label>
-            <!--<label><input name="locked" style="height: 2vmin; width: 2vmin;" type="checkbox">&#x1F512;<span
-                class="collapsible"> Locked</span></label>-->
-          </td>
-        </tr>
-        <tr>
-          <td colspan="2">
-            <button onclick="alert('Add User');" style="float: right;">&#x02705;<span class="collapsible">
-                Create</span></button>
-          </td>
-        </tr>
-      </table>
-      <p class="note">Create multiple accounts by separating the login names with spaces. All accounts will have
-        the same access.</p>
+      <input class="large" id="bulk-user-field" placeholder="Login Name(s)" type="text">
+      <select>
+        <option>Standard User</option>
+        <option>Power User</option>
+        <option>Admin User</option>
+      </select>
+      <button onclick="alert('Add User');">&#x02705;<span class="collapsible">
+        Create</span></button>
+      <p class="note">Separating mulitiple login names with spaces. All accounts will have the same access.</p>
     </fieldset>
   </form>
 </body>

@@ -37,7 +37,7 @@ fieldset {
 }
 
 input[type="text"].large {
-  width: 80%;
+  width: 67%;
 }
 
 input[type="text"].optional {
@@ -69,7 +69,7 @@ p.note::before {
 }
 
 table {
-  width: 80%;
+  width: calc(100% - 2em);  /* Allow space for a float right refresh button. */
 }
 
 th, td {
@@ -92,15 +92,10 @@ textarea.terminal {
 /* Apply tweaks for portrait mode devices (tablet, phone) when width is tight. */
 @media screen and (max-width: 768px) {
   input[type="text"].large {
-    width: 100%;
-    /* Forcing the trailing bits to a new line. */
+    width: 100%;   /* Forcing the trailing bits to a new line. */
   }
 
   .collapsible {
     display: none;
   }
-  table {
-    width: 80%;
-  }
-  
 }

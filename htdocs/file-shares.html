@@ -18,56 +18,118 @@
       document.getElementById('smb-service-status').innerHTML = tbody;
     }
 
-    function displaySmbShares(smbConfigShares) {
+    function displayConfigGlobal(configGlobal) {
+      if (configGlobal['server string']) {
+        document.getElementById('global-server-string').innerHTML = configGlobal['server string'];
+      }
+      else {
+        document.getElementById('global-server-string').innerHTML = 'Samba %v'; // default
+      }
+      if (configGlobal.workgroup) {
+        document.getElementById('global-workgroup').innerHTML = configGlobal.workgroup;
+      }
+      else {
+        document.getElementById('global-workgroup').innerHTML = 'WORKGROUP'; // default
+      }
+    }
+
+    function displayConfigShares(configShares) {
       let shareList = '<option selected>[New]</option>';
-      for (let i = 0; i < smbConfigShares.length; i++) {
-        shareList += `<option>${smbConfigShares[i]}</option>`;
+      for (let i = 0; i < configShares.length; i++) {
+        if (configShares[i] != 'global') {
+          shareList += `<option>${configShares[i]}</option>`;
+        }
       }
       document.getElementById('smb-share-list').innerHTML = shareList;
     }
 
-    function getShareDetails(smbShare) {
-      if (smbShare == "[New]") {
-        document.getElementById('create-button').style.display='inline';
-        document.getElementById('update-delete-buttons').style.display='none';
-//        displaySmbShareDetails();
+    function displaySmbShareDetails(shareDetails) {
+      if (shareDetails) {
+        document.getElementById('name').value = shareDetails.name;
+        if (shareDetails.name == "homes") {
+          document.getElementById('path').value = "/home/login";
+          document.getElementById('path').readOnly = true;
+        }
+        else {
+          document.getElementById('path').value = shareDetails.path;
+          document.getElementById('path').readOnly = false;
+        }
+        document.getElementById('comment').value = shareDetails.comment || '';
+        document.getElementById('browseable').checked = (shareDetails['browseable'] != 'No');
+        document.getElementById('writable').checked = (shareDetails['read only'] == 'No');
+        document.getElementById('unavailable').checked = (shareDetails['available'] == 'No');
       }
       else {
-        document.getElementById('create-button').style.display='none';
-        document.getElementById('update-delete-buttons').style.display='inline';
-//        AJAX('GET', '/smb/share/' + login, displaySmbShareDetails);
+        document.getElementById('name').value = '';
+        document.getElementById('path').value = '';
+        document.getElementById('path').readOnly = false;
+        document.getElementById('comment').value = '';
+        document.getElementById('browseable').checked = true;
+        document.getElementById('writable').checked = true;
+        document.getElementById('unavailable').checked = false;
+      }
+    }
+
+    function getShareDetails(smbShareName) {
+      if (smbShareName == "[New]") {
+        document.getElementById('create-button').style.display = 'inline';
+        document.getElementById('update-delete-buttons').style.display = 'none';
+        displaySmbShareDetails();
+      }
+      else {
+        document.getElementById('create-button').style.display = 'none';
+        document.getElementById('update-delete-buttons').style.display = 'inline';
+        AJAX('GET', '/smb/config/section/' + smbShareName, displaySmbShareDetails);
       }
     }
   </script>
 </head>
 
 <body
-  onload="AJAX('GET', '/system/health/summary', displayServiceHealth); AJAX('GET', '/smb/config/shares', displaySmbShares);">
+  onload="AJAX('GET', '/system/health/summary', displayServiceHealth); AJAX('GET', '/smb/config/section', displayConfigShares); AJAX('GET', '/smb/config/section/global', displayConfigGlobal);">
   <p class="caution">This is a partially functioning mock-up. Shares cannot be created or deleted.</p>
   <form>
     <fieldset>
       <legend>SMB Service Health</legend>
-      <button class="refresh"
-        onclick="AJAX('GET', '/system/health/summary', displayServiceHealth);"
+      <button class="refresh" onclick="AJAX('GET', '/system/health/summary', displayServiceHealth);"
         type="button">&#x1F504;</button>
       <table>
         <colgroup>
-          <col style="width: 20%">
-          <col>
+          <col style="width: 20%"><col>
         </colgroup>
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Status</th>
+          </tr>
+        </thead>
         <tbody id="smb-service-status"></tbody>
       </table>
     </fieldset>
 
     <fieldset>
-      <legend>Share Management</legend>
-      <button class="refresh"
-        onclick="AJAX('GET', '/system/smb/config/shares', displaySmbShares);"
-        type="button">&#x1F504;</button>
+      <legend>Global Parameters</legend>
+      <button class="refresh" onclick="AJAX('GET', '/smb/config/section/global', displayConfigGlobal);" type="button">&#x1F504;</button>
       <table>
         <colgroup>
-          <col style="width: 20%">
-          <col>
+          <col style="width: 20%"><col>
+        </colgroup>
+        <thead>
+          <tr><th>Property</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>server string</td><td id="global-server-string"></td></tr>
+          <tr><td>workgroup</td><td id="global-workgroup"></td></tr>
+        </tbody>
+      </table>
+    </fieldset>
+
+    <fieldset>
+      <legend>Share Management</legend>
+      <button class="refresh" onclick="AJAX('GET', '/smb/config/section', displayConfigShares);" type="button">&#x1F504;</button>
+      <table>
+        <colgroup>
+          <col style="width: 20%"><col>
         </colgroup>
         <thead>
           <tr><th>Share Name</th><th>Properties</th></tr>
@@ -75,27 +137,32 @@
         <tbody>
           <tr>
             <td rowspan="5">
-              <select id="smb-share-list" onclick="getShareDetails(document.getElementById('smb-share-list').value)"
-                id="smb-share-list" size="5" style="width: 85%;"></select>
+              <select id="smb-share-list" onclick="getShareDetails(document.getElementById('smb-share-list').value);"
+                size="5" style="width: 85%;"></select>
             </td>
           </tr>
-          <tr><td><input type="text" placeholder="share name"></td></tr>
-          <tr><td><input type="text" placeholder="server path"></td></tr>
-          <tr><td><input class="optional" type="text" placeholder="comment"></td></tr>
+          <tr>
+            <td><input id="name" placeholder="share name" type="text" ></td>
+          </tr>
+          <tr>
+            <td><input id="path" placeholder="server path" type="text" ></td>
+          </tr>
+          <tr>
+            <td><input id="comment" class="optional" placeholder="comment" type="text" ></td>
+          </tr>
           <tr>
             <td>
-              <input type="checkbox">&#x1F50D;<span class="collapsible"> browsable</span>
-              <input type="checkbox">&#x270F;&#xFE0F;<span class="collapsible"> writable</span>
-              <input type="checkbox">&#x026D4;<span class="collapsible"> unavailable</span>
+              <input id="browseable" checked type="checkbox">&#x1F50D;<span class="collapsible">&nbsp;browsable</span>
+              <input id="writable" checked type="checkbox">&#x270F;&#xFE0F;<span class="collapsible">&nbsp;writable</span>
+              <input id="unavailable" type="checkbox">&#x026D4;<span class="collapsible">&nbsp;unavailable</span>
             </td>
           </tr>
         </tbody>
         <tfoot>
           <tr>
             <td colspan="2">
-              <button id="create-button" onclick="alert('Pretending to create a share');" style="float: right;" type="button">
-                &#x02705;<span class="collapsible">&nbsp;Create</span></button>
-              <span id="update-delete-buttons" style="display: none; float: right;">
+              <button id="create-button" onclick="alert('Pretending to create a share');" type="button">&#x02705;<span class="collapsible">&nbsp;Create</span></button>
+              <span id="update-delete-buttons" style="display: none;">
                 <button onclick="alert('Pretending to update a share');" type="button">&#x1F4DD;<span class="collapsible">&nbsp;Update</span></button>
                 <button onclick="alert('Pretending to delete a share');" type="button">&#x0274C;<span class="collapsible">&nbsp;Delete</span></button>
               </span>
