@@ -9,9 +9,8 @@
 #
 PATH=$PATH:/usr/local/bin
 
-EXITCODE=0
-STATUS=$(testparm -s $1 2>&1 | awk '/OK/ { printf "%s\n", (NR==2)?"ok":"corrupt" }')
-if [ "$STATUS" != "ok" ]; then EXITCODE=1; fi
+STATUS=$(testparm -s $1 2>&1 | awk '/!/ { error++ } /WARNING/ { warning++ } /NOTE/ { note++ } END { printf "Errors: %i, Warnings: %i, Notes: %i\n", error, warning, note; status=4*(error!=0)+2*(warning!=0)+(note!=0); exit status }')
+EXITCODE=$?
 
 echo $STATUS
 exit $EXITCODE
