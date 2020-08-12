@@ -1,248 +1,339 @@
 <!DOCTYPE html>
 
+<!-- Mockup of new WeeNAS admin interface. -->
+
 <html lang="en-US">
 
 <head>
   <title>WeeNAS Administration</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link id="page-style" href="hello.css" rel="stylesheet" type="text/css">
-  <script src="admin.js"></script>
-  <script src="tzNamesLib.js"></script>
+  <link href="common.css" rel="stylesheet" type="text/css">
+  <script src="common.js"></script>
   <script>
+    function displayHealthSummary(healthSummary) {
+      let list='';
+      // Start of with optimism.
+      let serviceStatusIcon ='dialog-positive.svg';
+      let filesystemStatusIcon = 'dialog-positive.svg';
+      let systemStatusIcon = 'dialog-positive.svg';
+      let fileShareStatusIcon = 'dialog-positive.svg';
+      let userAccountStatusIcon = 'dialog-positive.svg';
+
+      // Look for evidence to the contrary.
+      for (var component in healthSummary) {
+
+        /* Host */
+        if (component == window.location.hostname) {
+          if (healthSummary[window.location.hostname].status != 'ok') {
+            systemStatusIcon = 'dialog-warning.svg';
+          }
+        }
+
+        /* Storage */
+        if (healthSummary[component].type == 'filesystem') {
+          if (healthSummary[component].status != 'ok') {
+            filesystemStatusIcon = 'dialog-warning.svg';
+          }
+        }
+
+        /* Services */
+        if (healthSummary[component].type == 'process') {
+          if (healthSummary[component].status != 'ok') {
+            serviceStatusIcon = 'dialog-warning.svg';
+          }
+        }
+
+        /* File Shares */
+        if (component == 'smbd' || component == 'nmbd' || component == 'smbconf') {
+          if (healthSummary[component].status != 'ok') {
+            fileShareStatusIcon = 'dialog-warning.svg';
+          }
+        }
+
+        /* User Accounts */
+        if (component == 'failed_ssh' || component == 'failed_su') {
+          if (healthSummary[component].status != 'ok') {
+            userAccountStatusIcon = 'dialog-warning.svg';
+          }
+        }
+      }
+      document.getElementById('system-status-icon').src = systemStatusIcon;
+      document.getElementById('storage-status-icon').src = filesystemStatusIcon;
+      document.getElementById('service-status-icon').src = serviceStatusIcon;
+      document.getElementById('fileshare-status-icon').src = fileShareStatusIcon;
+      document.getElementById('user-account-status-icon').src = userAccountStatusIcon;
+    }
+
     /* Figure out whence we came and put the hostname in the header. */
     function showHostname() {
       if (window.location.hostname) {
         document.getElementById('hostname').innerHTML = window.location.hostname;
       }
     }
+
+    function loginClick() {
+      let usernameField = document.getElementById('username');
+      let passwordField = document.getElementById('password');
+
+      /* Process login and clean up if okay. */
+      usernameField.style.display = 'none';
+      passwordField.style.display = 'none';
+      document.getElementById('login-button').style.display = 'none';
+      document.getElementById('logout-button').style.display = 'inline';
+      document.getElementById('lock-screen').style.display = 'none';
+      document.getElementsByTagName("header")[0].style.opacity = "0.80";
+    }
+
+    function logoutClick() {
+      let usernameField = document.getElementById('username');
+      let passwordField = document.getElementById('password');
+
+      /* Process logout. */
+      usernameField.value = "";
+      passwordField.value = "";
+      usernameField.style.display = "inline";
+      passwordField.style.display = "inline";
+      document.getElementById('login-button').style.display = "inline";
+      document.getElementById('logout-button').style.display = "none";
+      document.getElementById('lock-screen').style.display = 'block';
+      document.getElementsByTagName("header")[0].style.opacity = "1.0";
+    }
+
+    function summaryClick(detailName) {
+      let urlName = detailName.toLowerCase().replace(/ /g, '-');
+      let iconName = urlName + '.svg';
+      let pageName = urlName + '.html';
+      document.getElementById('detail-heading').innerHTML = detailName;
+      document.getElementById('detail-frame').src = urlName + '.html';
+      document.getElementById('detail-icon').src = urlName + '.svg';
+    }
   </script>
+
+  <style>
+
+    /* These are in addition to the styles from common.css. */
+    body {
+      background-attachment: fixed;
+      background-image: url('wallpaper.jpg');
+      background-size: cover;
+      height: 90vh;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #lock-screen {
+      background: black;
+      opacity: 1.0;
+      position: fixed;
+      top: 0px;
+      left: 0px;
+      height: 100%;
+      width: 100%;
+      z-index: 100;
+    }
+
+    /* Logo and login box */
+    header {
+      border: 1px solid black;
+      background: black;
+      color: white;
+      font-size: 3vh;
+      height: 8vh;
+      margin-bottom: 2vh;
+      padding: 2vh;
+      position: relative;
+      z-index: 101;
+    }
+
+    header button {
+      font-size: 2vh;
+      max-width: 6em;
+      width: 16vw;
+    }
+
+    header form {
+      float: right;
+    }
+
+    header input {
+      font-size: 2vh;
+      max-width: 12em;
+      width: 20vw;
+    }
+
+    iframe {
+      border-bottom: 1px solid dimgray;
+      border-left: 0px;
+      border-right: 0px;
+      border-top: 1px solid dimgray;
+      height: 72vh;
+      width: 100%;
+    }
+
+    /* Icons for accessing various system details */
+    nav {
+      float: left;
+      margin-left: 1vh;
+    }
+
+    .summary {
+      background-image: linear-gradient(to bottom right, lightgray, darkgray);
+      border: 1px solid dimgray;
+      box-shadow: 1vw 1vh 1vw black;
+      cursor: pointer;
+      height: calc(15vh + 2px);
+      padding: 1vh;
+      margin-bottom: 2vh;
+      opacity: 0.80;
+      width: calc(21vh + 2px);
+    }
+
+    .summary p {
+      margin: 0px;
+    }
+
+    .summary-icon {
+      height: 13vh;
+      width: 13vh;
+    }
+
+    .summary-status {
+      height: 6vh;
+      width: 6vh;
+      vertical-align: top;
+    }
+
+    /* Details for the selected summary icon */
+    main {
+      background-image: linear-gradient(to bottom right, lightgray, dimgray);
+      border: 1px solid black;
+      box-shadow: 1vw 1vh 1vw black;
+      float: left;
+      font-size: calc((100vw - 24vh - 2px) / 50);
+      /* (this width) / (surprisingly not # columns) */
+      height: calc(83vh + 10px);
+      /* (.summary height) * (# items) + (summary margin bottom) * (# items - 1) */
+      margin-left: 2vh;
+      opacity: 0.80;
+      padding: 1vh;
+      width: calc(100vw - 26vh - 2px);
+      /* (body width) - (margin) - (summary width) */
+      overflow: auto;
+    }
+
+    #detail-icon {
+      float: right;
+      height: 6vmin;
+      width: 6vmin;
+    }
+
+    /* Apply tweaks for portrait mode devices (tablet, phone) when width is tight. */
+    @media screen and (max-aspect-ratio: 1/1) {
+      .summary {
+        float: left;
+        margin-right: 1vw;
+        height: calc(12vw + 2px);
+        width: calc(18vw + 2px);
+      }
+
+      .summary-icon {
+        height: 9vw;
+        width: 9vw;
+      }
+
+      .summary-status {
+        height: 5vw;
+        width: 5vw;
+        vertical-align: top;
+      }
+
+      nav {
+        margin-left: 1vw;
+      }
+
+      main {
+        margin-left: 1vw;
+        width: calc(94vw + 10px);
+      }
+
+    }
+
+    /*
+    Constrain to 1280px width for larger screens (laptop, desktop.)
+    */
+    @media screen and (min-width: 1280px) {
+      body {
+        max-width: 1280px;
+      }
+
+      nav {
+        margin-left: 0px;
+      }
+
+      main {
+        font-size: calc((1278px - 23vh) / 49);
+        /* (this width) / (surprisingly not # columns) */
+        width: calc(1278px - 23vh);
+        /* (body max-width) - (summary width) */
+      }
+    }
+  </style>
 </head>
 
-<body onload="showHostname(); document.getElementById('credentials-username').focus();">
-  <!-- Turn on night mode between the hours of 6 p.m. and 6 a.m. -->
-  <script>let d = new Date(); if (d.getHours() < 6 || d.getHours() >= 18) document.getElementById('page-style').setAttribute('href', 'hello-night.css');</script>
-
+<body onload="summaryClick('Welcome'); AJAX('GET', '/system/health/summary', displayHealthSummary);">
   <header>
-    <h1 id="hostname">WeeNAS</h1>
+    <span id="hostname" style="float: left; font-size: larger;">WeeNAS</span>
+    <form style="text-align: right;">
+      <input id="username" placeholder="username" style="display: inline;" type="text">
+      <input id="password" placeholder="password" style="display: inline;" type="password">
+      <button id="login-button" onclick="loginClick();" style="display: inline;" type="button">Login</button>
+      <button id="logout-button" onclick="logoutClick();" style="display: none;" type="button">Logout</button>
+    </form>
   </header>
 
-  <nav>
-    <p>
-      <a href="javascript:logOut();">Log Out</a>
-    </p>
+  <!-- Lock Screen -->
+  <div id="lock-screen" style="display: hidden">
+    <img src="beastie_sdcard.png" style="margin-left: 33vw; width: 33vw; height: auto; margin-top: 20vh;">
+  </div>
+
+  <!-- TODO: Working Status Icons -->
+  <nav id="toolbox">
+
+    <!-- Hardware, Storage and Services -->
+    <div class="summary" onclick="summaryClick('System');">
+      <p><img src="system.svg" class="summary-icon"><img id="system-status-icon" src="dialog-question.svg" class="summary-status"></p>
+    </div>
+
+    <div class="summary" onclick="summaryClick('Storage');">
+      <p><img src="storage.svg" class="summary-icon"><img id="storage-status-icon" src="dialog-question.svg" class="summary-status">
+      </p>
+    </div>
+
+    <div class="summary" onclick="summaryClick('Services');">
+      <p><img src="services.svg" class="summary-icon"><img id="service-status-icon" src="dialog-question.svg" class="summary-status">
+      </p>
+    </div>
+
+    <!-- Shares -->
+    <div class="summary" onclick="summaryClick('File Shares');">
+      <p><img src="file-shares.svg" class="summary-icon"><img id="fileshare-status-icon" src="dialog-question.svg" class="summary-status">
+      </p>
+    </div>
+
+    <!-- User account management -->
+    <div class="summary" onclick="summaryClick('User Accounts');">
+      <p><img src="user-accounts.svg" class="summary-icon"><img id="user-account-status-icon" src="dialog-question.svg" class="summary-status">
+      </p>
+    </div>
   </nav>
+  <main>
+    <h1 style="font-size: 5vmin; font-weight: bold; margin-bottom: 2vh;"><span id="detail-heading">Welcome</span> <img id="detail-icon" src="welcome.svg"></h1>
 
-  <main class="narrow">
-    <h2>Administration</h2>
-
-    <details id="credentials" open>
-      <summary><span id="credentials-icon" style="opacity: 0.25;">&#x1F511;</span> Admin Credentials</summary>
-      <div class="indent">
-        <table>
-          <tr>
-            <td><label>Username</label></td>
-            <td><input id="credentials-username" type="text"></td>
-          </tr>
-          <tr>
-            <td><label>Password</label></td>
-            <td><input id="credentials-password" type="password"
-                onchange="createAuth(document.getElementById('credentials-username').value, document.getElementById('credentials-password').value, credentialsEntered);">
-              <span id="credentials-state"></span>
-            </td>
-          </tr>
-        </table>
-      </div>
-    </details>
-
-    <!-- User Account Management -->
-    <details>
-      <summary>&#x1F464; User Accounts</summary>
-      <div class="indent">
-        <details>
-          <summary>&#x02795; Add</summary>
-          <div class="indent">
-              <table>
-                <tr>
-                  <td><input id="user-add-list" type="text" size="35em" maxlength="60" pattern="[a-z0-9 ]+"
-                      placeholder="Lowercase; separate with spaces."></td>
-                  <td>
-                    <button onclick="addUserList(document.getElementById('user-add-list').value)" type="button">&#x1F464;&#x0279C;&#x1F4BB;</button>
-                  </td>
-                </tr>
-              </table>
-          </div>
-        </details>
-        <details id="users-manage">
-          <summary
-            onclick="if (!document.getElementById('users-manage').hasAttribute('open')) getUsers(updateUserList);">
-            &#x1F527; Manage</summary>
-          <div class="indent">
-              <table>
-                <tr>
-                  <th>User</th>
-                  <th>Details</th>
-                </tr>
-                <tr>
-                  <td><select id="user-list" onchange="getuserDetails(document.getElementById('user-list').value, updateUserDetails);" size=6 style="width: 10em;"></select></td>
-                  <td>
-                      <input id="user-locked" onchange="user=document.getElementById('user-list').value; if (document.getElementById('user-locked').checked) setUserAttribute(user, 'locked'); else setUserAttribute(user,'unlocked');" type="checkbox"> &#x1F512; Account Locked<br>
-                      <input id="user-samba" onchange="user=document.getElementById('user-list').value; if (document.getElementById('user-samba').checked) setUserAttribute(user, 'samba'); else setUserAttribute(user,'nosamba');" type="checkbox"> &#x1F4C2; Network Shares<br>
-                      <input id="user-shell" onchange="user=document.getElementById('user-list').value; if (document.getElementById('user-shell').checked) setUserAttribute(user, 'shell'); else setUserAttribute(user,'nologin');" type="checkbox"> &#x1F4BB; Shell Access<br>
-                      <input id="user-admin" onchange="user=document.getElementById('user-list').value; if (document.getElementById('user-admin').checked) setUserAttribute(user, 'admin'); else setUserAttribute(user,'regular');" type="checkbox"> &#x1F9D9; Admin User<br>
-                      <input id="user-delete-confirm" type="checkbox"> &#x1F47B; <button onclick="delUser(document.getElementById('user-list').value, document.getElementById('user-delete-confirm').checked)" type="button">&#x0274C;</button>
-                  </td>
-                </tr>
-              </table>
-          </div>
-        </details>
-      </div>
-    </details>
-
-    <!-- Storage Management -->
-
-    <details>
-      <summary>&#x1F4BE; Storage Devices</summary>
-      <div class="indent">
-        <details id="storage-home">
-          <summary onclick="if (!document.getElementById('storage-home').hasAttribute('open')) getFilesystemInfo('homefs', updateHomefsInfo);">&#x1F3E1; Home Filesystem</summary>
-          <div class="indent">
-            <table>
-              <tr>
-                <td>Label:</td>
-                <td>homefs</td>
-              </tr>
-              <tr>
-                <td>Capacity:</td>
-                <td id="storage-home-total"></td>
-              </tr>
-              <tr>
-                <td>Free:</td>
-                <td id="storage-home-free"></td>
-              </tr>
-              <tr>
-                <td>Percent Full:</td>
-                <td id="storage-home-percent"></td>
-              </tr>
-            </table>
-          </div>
-        </details>
-      </div>
-    </details>
-
-    <!-- System Settings -->
-
-    <details>
-      <summary>&#x1F4BB; System Settings</summary>
-      <div class="indent">
-
-        <!-- Host and Domain Name -->
-        <details id="host-and-domain">
-          <summary onclick="if (!document.getElementById('hostname').hasAttribute('open')) getHostname();">
-            &#x1F5A5;&#x0FE0F; Host and Domain Name</summary>
-          <div class="indent">
-            <input id="hostname-host" type="text"> . <input id="hotname-domain" type="text">
-          </div>
-        </details>
-
-        <!-- TimeZone -->
-        <details id="timezone">
-          <summary>&#x1F5FA;&#x0FE0F; Timezone</summary>
-          <div class="indent">
-            <select id="tz-area" onchange="tzUpdateLocations('tz-area', 'tz-location')">
-              <option>Africa</option>
-              <option>America</option>
-              <option>Antarctica</option>
-              <option>Asia</option>
-              <option>Atlantic</option>
-              <option>Australia</option>
-              <option selected>Etc</option>
-              <option>Europe</option>
-              <option>Indian</option>
-              <option>Pacific</option>
-            </select>
-            /
-            <select id="tz-location">
-              <option>GMT</option>
-            </select>
-            <button
-              onclick="setTimeZone(document.getElementById('tz-area').options[document.getElementById('tz-area').selectedIndex].value, document.getElementById('tz-location').options[document.getElementById('tz-location').selectedIndex].value)"
-              title="Copy timezone configuration to server." type="button">&#x1F4CB;&#x0279C;&#x1F4BB;</button>
-          </div>
-        </details>
-
-        <!-- Date and Time -->
-        <details id="time">
-          <summary
-            onclick="if (!document.getElementById('time').hasAttribute('open')) { getDateTime(updateDateTime); getServiceStatus('ntpd', updateNtpd); }">
-            &#x0231A;
-            Date and Time
-          </summary>
-          <div class="indent">
-            <form>
-              <table>
-                <tr>
-                  <td>Client:</td>
-                  <td id="time-client"></td>
-                </tr>
-                <tr>
-                  <td>Server:</td>
-                  <td id="time-server"></td>
-                </tr>
-                <tr>
-                  <td><label>Sync:</label></td>
-                  <td id="time-ntpd"></td>
-                </tr>
-              </table>
-              <button onclick="getDateTime(updateDateTime); getServiceStatus('ntpd', updateNtpd);" title="Refresh Time"
-                type="button">&#x21BB;</button>
-            </form>
-          </div>
-        </details>
-      </div>
-    </details>
+    <!-- The iframe allows modular design. It's height is a total guess, but seems to work well across various screens. -->
+    <iframe id="detail-frame" src="welcome.html">
+    </iframe>
   </main>
-
-  <!-- Logs and Email -->
-  <aside class="wide">
-    <h2>Logs &amp; Messages</h2>
-    <details id="logs">
-      <summary onclick="if (!document.getElementById('logs').hasAttribute('open')) getLog(logFileName, updateLog);">
-        &#x1F4C4; Log Viewer</summary>
-      <p>
-        <button onclick="getLog(logFileName = 'messages', updateLog);" type="button">system</button>
-        <button onclick="getLog(logFileName = 'smbd', updateLog);" type="button">smbd</button>
-        <button onclick="getLog(logFileName = 'nmbd', updateLog);" type="button">nmbd</button>
-        <button onclick="getLog(logFileName = 'cron', updateLog);" type="button">cron</button>
-        <button onclick="getLog(logFileName = 'weenas_api', updateLog);" type="button">api</button>
-        <button onclick="getLog(logFileName, updateLog);" title="Refresh Log" type="button">&#x21BB;</button>
-      </p>
-      <textarea readonly rows=25 cols=80 id="log-viewer"></textarea>
-    </details>
-    <details id="mail">
-      <summary onclick="if (!document.getElementById('mail').hasAttribute('open')) getMail(0, updateMail);">&#x1F4E7;
-        System Mail</summary>
-      <p>
-        <button onclick="getMail(0,updateMail);" title="Header View" type="button">&#x1F4D1;</button>
-        <button onclick="mailMsgNum = Math.max(--mailMsgNum, 0); getMail(mailMsgNum, updateMail);"
-          title="Previous Message" type="button">&#x25B2;</button>
-        <button onclick="getMail(++mailMsgNum, updateMail);" title="Next Message" type="button">&#x25BC;</button>
-        <button onclick="delMail(mailMsgNum); getmail(0, updateMail);" title="Delete Message"
-          type="button">&#x274C;</button>
-      </p>
-      <textarea readonly rows="25" cols="80" id="mail-view"></textarea>
-    </details>
-  </aside>
-
-  <footer>
-    <p>
-      <a href="https://davescodemusings.github.io/WeeNAS" target="_blank">WeeNAS</a>
-      = <a href="https://www.raspberrypi.org" target="_blank">Raspberry Pi &trade;</a>
-      + <a href="https://en.wikipedia.org/wiki/USB_flash_drive" target="_blank">Flash Drive</a>
-      + <a href="https://www.freebsd.org/" target="_blank">FreeBSD &reg;</a>
-      + <a href="https://www.samba.org/" target="_blank">Samba &trade;</a>
-    </p>
-  </footer>
 </body>
 
 </html>
