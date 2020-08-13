@@ -11,7 +11,6 @@
   <script src="common.js"></script>
   <script>
     function displayFsHealth(fsHealth) {
-      let thead = '<tr><th>Filesystem</th><th>Status</th></tr>';
       let tbody = '';
 
       // Sort in alpha order for readability.
@@ -19,12 +18,10 @@
       for (let i=0; i<filesystems.length; i++) {
         tbody += `<tr><td>${filesystems[i]}</td><td>${fsHealth[filesystems[i]]}</td></tr>`;
       }
-      document.getElementById('fs-health-head').innerHTML = thead;
       document.getElementById('fs-health-body').innerHTML = tbody;
     }
 
     function displayFsStats(fsStats) {
-      let thead = '<tr><th>Filesystem</th><th>Mountpoint</th><th class="numeric">Size</th><th class="numeric">Used</th><th class="numeric">Available</th><th class="numeric">Full%</th></tr>';
       let tbody = '';
       for (let i = 0; i < fsStats.length; i++) {
         tbody += '<tr>';
@@ -36,12 +33,10 @@
         tbody += `<td class="numeric">${fsStats[i].capacity}</td>`;
         tbody += '</tr>';
       }
-      document.getElementById('fs-stats-head').innerHTML = thead;
       document.getElementById('fs-stats-body').innerHTML = tbody;
     }
 
     function displayFstab(fsTable) {
-      let thead ='<tr><th>Filesystem</th><th>Mountpoint</th><th>Type</th><th>Options</th><th class="numeric">Freq</th><th class="numeric">Pass</th></tr>';
       let tbody = '';
       for (let i = 0; i < fsTable.length; i++) {
         tbody += '<tr>';
@@ -53,7 +48,6 @@
         tbody += `<td class="numeric">${fsTable[i].passno}</td>`;
         tbody += '</tr>';
       }
-      document.getElementById('fs-table-head').innerHTML = thead;
       document.getElementById('fs-table-body').innerHTML = tbody;
     }
   </script>
@@ -71,8 +65,8 @@
           <col style="width: 30%;">
           <col>
         </colgroup>
-        <thead id="fs-health-head"></thead>
-        <tbody id="fs-health-body"> </tbody>
+        <thead><tr><th>Filesystem</th><th>Status</th></tr></thead>
+        <tbody id="fs-health-body"></tbody>
       </table>
     </fieldset>
     <fieldset>
@@ -82,8 +76,9 @@
         <colgroup>
           <col style="width: 30%;">
           <col style="width: 20%;">
+          <col><col><col><col>
         </colgroup>
-        <thead id="fs-stats-head"></thead>
+        <thead><tr><th>Filesystem</th><th>Mountpoint</th><th class="numeric">Size</th><th class="numeric">Used</th><th class="numeric">Available</th><th class="numeric">Full%</th></tr></thead>
         <tbody id="fs-stats-body"></tbody>
       </table>
     </fieldset>
@@ -94,8 +89,9 @@
         <colgroup>
           <col style="width: 30%;">
           <col style="width: 20%;">
+          <col><col><col><col>
         </colgroup>
-        <thead id="fs-table-head"></thead>
+        <thead><tr><th>Filesystem</th><th>Mountpoint</th><th>Type</th><th>Options</th><th class="numeric">Freq</th><th class="numeric">Pass</th></tr></thead>
         <tbody id="fs-table-body"></tbody>
       </table>
     </fieldset>

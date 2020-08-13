@@ -1,7 +1,5 @@
 <!DOCTYPE html>
 
-<!-- Mockup of new WeeNAS admin interface. -->
-
 <html lang="en-US">
 
 <head>
@@ -10,7 +8,16 @@
   <link href="common.css" rel="stylesheet" type="text/css">
   <script src="common.js"></script>
   <script>
-    const accountPrivilege = [ 'Standard User', 'Power User', 'Admin User' ];
+    const accountPrivilege = [
+      'Basic User',
+      'Standard User',
+      'Shell Only',
+      'Power User',
+      'undef',
+      'undef',
+      'Admin (Shell Only)',
+      'Admin User',
+    ];
     function displayAccountHealth(accountHealth) {
       document.getElementById('ssh-auth-failed').innerHTML = accountHealth.failed_ssh;
       document.getElementById('su-auth-failed').innerHTML = accountHealth.failed_su;
@@ -24,35 +31,44 @@
       for (let i = 0; i < accounts.length; i++) {
         list += `<option>${accounts[i]}</option>`;
       }
-      document.getElementById('system-account-list').innerHTML = list;
+      document.getElementById('account-list').innerHTML = list;
     }
 
-    function displaySystemAccountDetails(systemAccountDetails) {
-      if (systemAccountDetails) {
-        document.getElementById('system-account-login').value = systemAccountDetails.login;
+    function displayAccountDetails(accountDetails) {
+      if (accountDetails) {
+        document.getElementById('account-login').value = accountDetails.login;
         let accountLevel = 0;
-        if (!systemAccountDetails.shell.match(/nologin/)) {
-          accountLevel = 1;
-        }
-        document.getElementById('system-account-privilege').value = accountPrivilege[accountLevel];
-        let gecosFields = systemAccountDetails.gecos.split(",", 5);
+        if (accountDetails.samba) accountLevel +=1;
+        if (accountDetails.shell) accountLevel +=2;
+        if (accountDetails.admin) accountLevel +=4;
+        document.getElementById('account-privilege').value = accountPrivilege[accountLevel];
+        let gecosFields = accountDetails.gecos.split(',', 5);
 
         // The & is shorthand for login name with first letter capitalized.
-        gecosFields[0] = gecosFields[0].replace(/&/, systemAccountDetails.login.charAt(0).toUpperCase() + systemAccountDetails.login.slice(1));
-        document.getElementById('system-account-fullname').value = gecosFields[0];
-        document.getElementById('system-account-room').value = gecosFields[1] || "";
-        document.getElementById('system-account-phone').value = gecosFields[2] || "";
-        document.getElementById('system-account-phone-alt').value = gecosFields[3] || "";
-        document.getElementById('system-account-email-alt').value = gecosFields[4] || "";
+        gecosFields[0] = gecosFields[0].replace(/&/, accountDetails.login.charAt(0).toUpperCase() + accountDetails.login.slice(1));
+        document.getElementById('account-fullname').value = gecosFields[0];
+        document.getElementById('account-room').value = gecosFields[1] || '';
+        document.getElementById('account-phone').value = gecosFields[2] || '';
+        document.getElementById('account-phone-alt').value = gecosFields[3] || '';
+        document.getElementById('account-email-alt').value = gecosFields[4] || '';
+        if (accountDetails.locked) {
+          document.getElementById('account-locked').style.display = 'inline';
+          document.getElementById('update-button').disabled = true;
+        }
+        else {
+          document.getElementById('account-locked').style.display = 'none';
+          document.getElementById('update-button').disabled = false;
+        }
       }
       else {
-        document.getElementById('system-account-privilege').value = accountPrivilege[0];
-        document.getElementById('system-account-login').value = "";
-        document.getElementById('system-account-fullname').value = "";
-        document.getElementById('system-account-room').value = "";
-        document.getElementById('system-account-phone').value = "";
-        document.getElementById('system-account-phone-alt').value = "";
-        document.getElementById('system-account-email-alt').value = "";
+        document.getElementById('account-privilege').value = accountPrivilege[1];
+        document.getElementById('account-login').value = '';
+        document.getElementById('account-fullname').value = '';
+        document.getElementById('account-room').value = '';
+        document.getElementById('account-phone').value = '';
+        document.getElementById('account-phone-alt').value = '';
+        document.getElementById('account-email-alt').value = '';
+        document.getElementById('account-locked').style.display = 'none';
       }
     }
 
@@ -66,14 +82,12 @@
       if (login == "[new]") {
         document.getElementById('create-button').style.display = 'inline';
         document.getElementById('update-button').style.display = 'none';
-        displaySystemAccountDetails();
-        // displaySmbAccountDetails();
+        displayAccountDetails();
       }
       else {
         document.getElementById('create-button').style.display = 'none';
         document.getElementById('update-button').style.display = 'inline';
-        AJAX('GET', '/system/account/' + login, displaySystemAccountDetails);
-        // AJAX('GET', '/smb/account/' + login, displaySmbAccountDetails);
+        AJAX('GET', '/account/' + login, displayAccountDetails);
       }
     }
   </script>
@@ -128,29 +142,31 @@
         <!-- TODO: Limit allowed characters in GECOS fields, i.e. not commas, since they are comma separated. -->
         <tbody>
           <tr>
-            <td rowspan="5"><select onclick="getAccountDetails(document.getElementById('system-account-list').value);"
-                size="6" id="system-account-list" style="width: 85%;"></select></td>
-          </tr>
-          <tr>
+            <td rowspan="4"><select onchange="getAccountDetails(document.getElementById('account-list').value);"
+                size="5" id="account-list" style="width: 85%;"></select></td>
             <td>
-              <input id="system-account-login" placeholder="Login Name" readonly type="text">
-              <select id="system-account-privilege">
+              <input id="account-login" placeholder="Login Name" readonly type="text">
+              <select id="account-privilege">
                 <option><script>document.write(accountPrivilege[0]);</script></option>
-                <option><script>document.write(accountPrivilege[1]);</script></option>
-                <option><script>document.write(accountPrivilege[2]);</script></option>
+                <option selected><script>document.write(accountPrivilege[1]);</script></option>
+                <option><script>document.write(accountPrivilege[3]);</script></option>
+                <option><script>document.write(accountPrivilege[7]);</script></option>
+                <option disabled><script>document.write(accountPrivilege[2]);</script></option>
+                <option disabled><script>document.write(accountPrivilege[6]);</script></option>
               </select>
             </td>
           </tr>
           <tr>
-            <td><input class="optional" id="system-account-fullname" placeholder="Full Name" type="text">
-              <input class="optional" id="system-account-room" placeholder="Room No. / Location" type="text"></td>
+            <td><input class="optional" id="account-fullname" placeholder="Full Name" type="text">
+              <input class="optional" id="account-room" placeholder="Room No. / Location" type="text"></td>
           </tr>
           <tr>
-            <td><input class="optional" id="system-account-phone" placeholder="Phone" type="text">
-              <input class="optional" id="system-account-phone-alt" placeholder="Alt. Phone" type="text"></td>
+            <td><input class="optional" id="account-phone" placeholder="Phone" type="text">
+              <input class="optional" id="account-phone-alt" placeholder="Alt. Phone" type="text"></td>
           </tr>
           <tr>
-            <td><input class="optional" id="system-account-email-alt" placeholder="Alt. Email" type="text"></td>
+            <td><input class="optional" id="account-email-alt" placeholder="Alt. Email" type="text">
+              <span id="account-locked" style="display: none;">&#x1F512;&nbsp;Locked</span></td>
           </tr>
         </tbody>
         <tfoot>

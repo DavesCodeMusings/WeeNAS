@@ -11,7 +11,6 @@
   <script src="common.js"></script>
   <script>
     function displayServiceHealth(serviceHealth) {
-      let thead = '<tr><th>Service</th><th>Status</th></tr>';
       let tbody = '';
 
       // Sort the services in alpha order for readability.
@@ -19,12 +18,10 @@
       for (let i=0; i<services.length; i++) {
         tbody += `<tr><td>${services[i]}</td><td>${serviceHealth[services[i]]}</td></tr>`;
       }
-      document.getElementById('service-health-head').innerHTML = thead;
       document.getElementById('service-health-body').innerHTML = tbody;
     }
 
     function displayServiceList(serviceList) {
-      let thead = '<tr><th>Service</th><th>Enabled</th></tr>';
       let tbody = '';
 
       // Sort in alpha order for readability.
@@ -32,13 +29,12 @@
       for (let i=0; i<services.length; i++) {
         tbody += `<tr><td>${services[i]}</td><td>${serviceList[services[i]]}</td></tr>`;
       }
-      document.getElementById('service-list-head').innerHTML = thead;
       document.getElementById('service-list-body').innerHTML = tbody;
     }
   </script>
 </head>
 
-<body onload="AJAX('GET', '/system/health/summary/process', displayServiceHealth); AJAX('GET', '/system/service/list', displayServiceList);">
+<body onload="AJAX('GET', '/system/health/summary/process', displayServiceHealth); AJAX('GET', '/system/service', displayServiceList);">
   <form>
     <fieldset>
       <legend>Service Health</legend>
@@ -50,13 +46,13 @@
           <col style="width: 50%;">
           <col>
         </colgroup>
-        <thead id="service-health-head"></thead>
+        <thead><tr><th>Service</th><th>Status</th></tr></thead>
         <tbody id="service-health-body"></tbody>
       </table>
     </fieldset>
     <fieldset>
       <legend>Configured Services</legend>
-      <button class="refresh" onclick="AJAX('GET', '/system/service/list', displayServiceList);" type="button">&#x1F504;</button>
+      <button class="refresh" onclick="AJAX('GET', '/system/service', displayServiceList);" type="button">&#x1F504;</button>
 
       <!-- TODO: Add enable/disable -->
       <table>
@@ -64,7 +60,7 @@
           <col style="width: 50%;">
           <col>
         </colgroup>
-        <thead id="service-list-head"></thead>
+        <thead><tr><th>Service</th><th>Enabled</th></tr></thead>
         <tbody id="service-list-body"></tbody>  
       </table>
     </fieldset>

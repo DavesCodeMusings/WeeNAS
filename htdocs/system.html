@@ -76,7 +76,7 @@
   </script>
 </head>
 
-<body onload="AJAX('GET', `/system/health/status/${location.hostname}`, displaySystemHealth); AJAX('GET', '/system/board/revcode', displayRpiInfo); AJAX('GET', '/system/os/info', displayOSInfo); AJAX('GET', '/system/processes/top', displayTopProc);">
+<body onload="AJAX('GET', `/system/health/status/${location.hostname}`, displaySystemHealth); AJAX('GET', '/system/board/revcode', displayRpiInfo); AJAX('GET', '/system/os', displayOSInfo); AJAX('GET', '/system/processes/top', displayTopProc);">
   <form>
     <fieldset>
       <legend>System Health</legend>

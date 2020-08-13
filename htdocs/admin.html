@@ -13,94 +13,123 @@
   <script>
     function displayHealthSummary(healthSummary) {
       let list='';
-      // Start of with optimism.
-      let serviceStatusIcon ='dialog-positive.svg';
-      let filesystemStatusIcon = 'dialog-positive.svg';
-      let systemStatusIcon = 'dialog-positive.svg';
-      let fileShareStatusIcon = 'dialog-positive.svg';
-      let userAccountStatusIcon = 'dialog-positive.svg';
+      let systemStatusIcon = 'dialog-question.svg';
+      let serviceStatusIcon ='dialog-question.svg';
+      let serviceFailures = 0;
+      let storageStatusIcon = 'dialog-question.svg';
+      let filesystemFailures = 0;
+      let fileShareStatusIcon = 'dialog-question.svg';
+      let userAccountStatusIcon = 'dialog-question.svg';
 
       // Look for evidence to the contrary.
       for (var component in healthSummary) {
 
-        /* Host */
+        /* System (Host) */
         if (component == window.location.hostname) {
-          if (healthSummary[window.location.hostname].status != 'ok') {
+          if (healthSummary[window.location.hostname].status == 'ok') {
+            systemStatusAlt = 'Status OK';
+            systemStatusIcon = 'dialog-positive.svg';
+          }
+          else {
+            systemStatusAlt = 'Status Warning';
             systemStatusIcon = 'dialog-warning.svg';
           }
         }
 
-        /* Storage */
+        /* Storage
+           There can be more than one filesystem. A single failure indicates warning. */
         if (healthSummary[component].type == 'filesystem') {
-          if (healthSummary[component].status != 'ok') {
-            filesystemStatusIcon = 'dialog-warning.svg';
+          if (healthSummary[component].status == 'ok' && filesystemFailures == 0) {
+            storageStatusAlt = 'Status OK';
+            storageStatusIcon = 'dialog-positive.svg';
+          }
+          else {
+            filesystemFailures++;
+            storageStatusAlt = 'Status Warning';
+            storageStatusIcon = 'dialog-warning.svg';
           }
         }
 
-        /* Services */
+        /* Services
+          There is more than one service. A single failure indicates warning. */
         if (healthSummary[component].type == 'process') {
-          if (healthSummary[component].status != 'ok') {
+          if (healthSummary[component].status != 'ok' && serviceFailures == 0) {
+            serviceStatusAlt = 'Status OK';
+            serviceStatusIcon = 'dialog-positive.svg';
+          }
+          else {
+            serviceStatusAlt = 'Status Warning';
             serviceStatusIcon = 'dialog-warning.svg';
           }
         }
 
         /* File Shares */
         if (component == 'smbd' || component == 'nmbd' || component == 'smbconf') {
-          if (healthSummary[component].status != 'ok') {
+          if (healthSummary[component].status == 'ok') {
+            fileShareStatusAlt = 'Status OK';
+            fileShareStatusIcon = 'dialog-positive.svg';
+          }
+          else {
+            fileShareStatusAlt = 'Status Warning';
             fileShareStatusIcon = 'dialog-warning.svg';
           }
         }
 
         /* User Accounts */
         if (component == 'failed_ssh' || component == 'failed_su') {
-          if (healthSummary[component].status != 'ok') {
+          if (healthSummary[component].status == 'ok') {
+            userAccountStatusAlt = 'Status OK';
+            userAccountStatusIcon = 'dialog-positive.svg';
+          }
+          else {
+            userAccountStatusAlt = 'Status Warning';
             userAccountStatusIcon = 'dialog-warning.svg';
           }
         }
       }
+      document.getElementById('system-status-icon').alt = systemStatusAlt;
       document.getElementById('system-status-icon').src = systemStatusIcon;
-      document.getElementById('storage-status-icon').src = filesystemStatusIcon;
+      document.getElementById('storage-status-icon').alt = storageStatusAlt;
+      document.getElementById('storage-status-icon').src = storageStatusIcon;
       document.getElementById('service-status-icon').src = serviceStatusIcon;
       document.getElementById('fileshare-status-icon').src = fileShareStatusIcon;
       document.getElementById('user-account-status-icon').src = userAccountStatusIcon;
     }
 
-    /* Figure out whence we came and put the hostname in the header. */
-    function showHostname() {
-      if (window.location.hostname) {
-        document.getElementById('hostname').innerHTML = window.location.hostname;
-      }
-    }
-
-    function loginClick() {
+    function processLogin() {
       let usernameField = document.getElementById('username');
       let passwordField = document.getElementById('password');
 
-      /* Process login and clean up if okay. */
+      /* Create an authorization token and reset login form. */
+      sessionStorage.setItem('auth', 'Basic ' + btoa(`${usernameField.value}:${passwordField.value}`));
+      usernameField.value = '';
+      passwordField.value = '';
       usernameField.style.display = 'none';
       passwordField.style.display = 'none';
       document.getElementById('login-button').style.display = 'none';
       document.getElementById('logout-button').style.display = 'inline';
       document.getElementById('lock-screen').style.display = 'none';
-      document.getElementsByTagName("header")[0].style.opacity = "0.80";
+      document.getElementsByTagName('header')[0].style.opacity = '0.80';
+      loadFrame('Welcome');
+      AJAX('GET', '/system/health/summary', displayHealthSummary);
     }
 
-    function logoutClick() {
+    function processLogout() {
       let usernameField = document.getElementById('username');
       let passwordField = document.getElementById('password');
 
       /* Process logout. */
-      usernameField.value = "";
-      passwordField.value = "";
-      usernameField.style.display = "inline";
-      passwordField.style.display = "inline";
-      document.getElementById('login-button').style.display = "inline";
-      document.getElementById('logout-button').style.display = "none";
+      usernameField.value = '';
+      passwordField.value = '';
+      usernameField.style.display = 'inline';
+      passwordField.style.display = 'inline';
+      document.getElementById('login-button').style.display = 'inline';
+      document.getElementById('logout-button').style.display = 'none';
       document.getElementById('lock-screen').style.display = 'block';
-      document.getElementsByTagName("header")[0].style.opacity = "1.0";
+      document.getElementsByTagName('header')[0].style.opacity = '1.0';
     }
 
-    function summaryClick(detailName) {
+    function loadFrame(detailName) {
       let urlName = detailName.toLowerCase().replace(/ /g, '-');
       let iconName = urlName + '.svg';
       let pageName = urlName + '.html';
@@ -281,54 +310,54 @@
   </style>
 </head>
 
-<body onload="summaryClick('Welcome'); AJAX('GET', '/system/health/summary', displayHealthSummary);">
+<body>
   <header>
-    <span id="hostname" style="float: left; font-size: larger;">WeeNAS</span>
+    <p style="float: left; font-size: larger; padding-top: 0px;">WeeNAS</p>
     <form style="text-align: right;">
       <input id="username" placeholder="username" style="display: inline;" type="text">
       <input id="password" placeholder="password" style="display: inline;" type="password">
-      <button id="login-button" onclick="loginClick();" style="display: inline;" type="button">Login</button>
-      <button id="logout-button" onclick="logoutClick();" style="display: none;" type="button">Logout</button>
+      <button id="login-button" onclick="processLogin();" style="display: inline;" type="button">Login</button>
+      <button id="logout-button" onclick="processLogout();" style="display: none;" type="button">Logout</button>
     </form>
   </header>
 
   <!-- Lock Screen -->
-  <div id="lock-screen" style="display: hidden">
-    <img src="beastie_sdcard.png" style="margin-left: 33vw; width: 33vw; height: auto; margin-top: 20vh;">
+  <div id="lock-screen" style="display: block;">
+    <img alt="WeeNAS Mascot" src="beastie_sdcard.png" style="margin-left: 33vw; width: 33vw; height: auto; margin-top: 20vh;">
   </div>
 
   <!-- TODO: Working Status Icons -->
   <nav id="toolbox">
 
     <!-- Hardware, Storage and Services -->
-    <div class="summary" onclick="summaryClick('System');">
-      <p><img src="system.svg" class="summary-icon"><img id="system-status-icon" src="dialog-question.svg" class="summary-status"></p>
+    <div class="summary" onclick="loadFrame('System');">
+      <p><img alt="System" src="system.svg" class="summary-icon"><img id="system-status-icon" alt="Status Unknown" src="dialog-question.svg" class="summary-status"></p>
     </div>
 
-    <div class="summary" onclick="summaryClick('Storage');">
-      <p><img src="storage.svg" class="summary-icon"><img id="storage-status-icon" src="dialog-question.svg" class="summary-status">
+    <div class="summary" onclick="loadFrame('Storage');">
+      <p><img alt="Storage" src="storage.svg" class="summary-icon"><img id="storage-status-icon" alt="Status Unknown" src="dialog-question.svg" class="summary-status">
       </p>
     </div>
 
-    <div class="summary" onclick="summaryClick('Services');">
-      <p><img src="services.svg" class="summary-icon"><img id="service-status-icon" src="dialog-question.svg" class="summary-status">
+    <div class="summary" onclick="loadFrame('Services');">
+      <p><img alt="Services" src="services.svg" class="summary-icon"><img id="service-status-icon" alt="Status Unknown" src="dialog-question.svg" class="summary-status">
       </p>
     </div>
 
     <!-- Shares -->
-    <div class="summary" onclick="summaryClick('File Shares');">
-      <p><img src="file-shares.svg" class="summary-icon"><img id="fileshare-status-icon" src="dialog-question.svg" class="summary-status">
+    <div class="summary" onclick="loadFrame('File Shares');">
+      <p><img alt="File Shares" src="file-shares.svg" class="summary-icon"><img id="fileshare-status-icon" alt="Status Unknown" src="dialog-question.svg" class="summary-status">
       </p>
     </div>
 
     <!-- User account management -->
-    <div class="summary" onclick="summaryClick('User Accounts');">
-      <p><img src="user-accounts.svg" class="summary-icon"><img id="user-account-status-icon" src="dialog-question.svg" class="summary-status">
+    <div class="summary" onclick="loadFrame('User Accounts');">
+      <p><img alt="User Accounts" src="user-accounts.svg" class="summary-icon"><img id="user-account-status-icon" alt="Status Unknown" src="dialog-question.svg" class="summary-status">
       </p>
     </div>
   </nav>
   <main>
-    <h1 style="font-size: 5vmin; font-weight: bold; margin-bottom: 2vh;"><span id="detail-heading">Welcome</span> <img id="detail-icon" src="welcome.svg"></h1>
+    <h1 style="font-size: 5vmin; font-weight: bold; margin-bottom: 2vh;"><span id="detail-heading">Welcome</span> <img id="detail-icon" alt="Smiling Face" src="welcome.svg"></h1>
 
     <!-- The iframe allows modular design. It's height is a total guess, but seems to work well across various screens. -->
     <iframe id="detail-frame" src="welcome.html">
