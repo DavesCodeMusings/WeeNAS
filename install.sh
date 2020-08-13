@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Defaults for dialog boxes.
-BACKTITLE="WeeNAS = Raspberry Pi(TM) + Flash Drive + FreeBSD(R) + Samba(TM)"
+BACKTITLE="WeeNAS Network Attached Storage"
 BOX_W=60
 INFO_PAUSE="2"
 
@@ -346,4 +346,4 @@ echo "Installation complete." >>$LOGFILE
 HOSTNAME=$(hostname)
 IP_ADDR="$(ifconfig ue0 | awk '/inet/ { print $2 }')"
 dialog --no-lines --backtitle "$BACKTITLE" --title "Installation Complete" \
- --msgbox "To add users, open a web browser to either:\n\n  * https://${HOSTNAME}:9000/admin.html\n  * https://${IP_ADDR}:9000/admin.html\n\nUse an initial username/password combination of freebsd/freebsd to sign in.\n\nWeeNAS uses a self-signed TLS certificate, so you must add an exception for your browser to display the page." 14 $BOX_W
+ --msgbox "To add users, open a web browser to either:\n\n  * https://${HOSTNAME}:9000/admin.html\n  * https://${IP_ADDR}:9000/admin.html\n\nUse a username/password of freebsd/freebsd for first sign in.\n\nWeeNAS uses a self-signed TLS certificate, so you must add an exception for your browser to display the page." 14 $BOX_W
