@@ -8,7 +8,7 @@ const childProcess = require('child_process');
 const crypto = require('crypto');
 const process = require('process');
 
-const weenasVersion = '0.1 dev'
+const weenasVersion = '0.2 dev'
 const pidFile = path.join('/var/run', path.basename(__filename, '.js') + '.pid');
 const port = 9000;
 const EGENERIC = "Sorry, Charlie.";
@@ -62,13 +62,13 @@ catch {
 }
 
 // API commands and their corresponding shell commands.
-var apiCmdDict = {};
-const apiCmdDictFile = path.join(__dirname, 'etc', 'api_cmds.json');
+var apiCmds = {};
+const apiCmdsFile = path.join(__dirname, 'etc', 'api_cmds.json');
 try {
-  apiCmdDict = JSON.parse(fs.readFileSync(apiCmdDictFile));
+  apiCmds = JSON.parse(fs.readFileSync(apiCmdsFile));
 }
 catch {
-  log(`Unable to read API commands from ${apiCmdDictFile}. Your installation is corrupt.`);
+  log(`Unable to read API commands from ${apiCmdsFile}. Your installation is corrupt.`);
   process.exit(2);
 }
 
@@ -161,7 +161,7 @@ function runApiCommand(user, apiCmd, apiBody) {
   let shellCmd = '';
 
   // Look for apiCmd by looping through available commands until a regex match occurs.
-  for (var cmdPattern in apiCmdDict) {
+  for (var cmdPattern in apiCmds) {
     if (apiCmd.match(cmdPattern)) {
 
       // Apply the matching regex pattern to the apiCmd to capture group matches.
@@ -170,7 +170,7 @@ function runApiCommand(user, apiCmd, apiBody) {
 
       // Substitute regex group matches into shell command %1 and %2 placeholders.
       // And, substitute the request body into the shell command's %0 placeholder.
-      shellCmd = apiCmdDict[cmdPattern];
+      shellCmd = apiCmds[cmdPattern];
       if (match[1]) shellCmd = shellCmd.replace(/%1/g, match[1]);
       if (match[2]) shellCmd = shellCmd.replace(/%2/g, match[2]);
       if (apiBody) shellCmd = shellCmd.replace(/%0/, apiBody);
@@ -262,7 +262,7 @@ const server = https.createServer(httpsOptions, (request, response) => {
 
     // Complain if no authorization was provided.
     else {
-      response.writeHead(401, 'Unauthorized', { 'Content-Type': 'text/plain' });
+      response.writeHead(401, 'Unauthorized', { 'WWW-Authenticate': 'Basic' });
       response.end('You need to be logged in.');
     }
   });
