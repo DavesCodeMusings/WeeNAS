@@ -118,6 +118,7 @@ if [ "$NEW_HOSTNAME" != "$(hostname)" ] || ! [ -f "/usr/local/etc/ssl/${NEW_HOST
   sysrc hostname="$NEW_HOSTNAME" >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up identity. Please be patient, this can take some time.\n\n  [x] Set hostname to $NEW_HOSTNAME\n  [ ] Create TLS certificate." 8 $BOX_W
+  install -o0 -g0 -m755 -d /usr/local/etc/ssl
   openssl req -x509 -newkey rsa:4096 -keyout /usr/local/etc/ssl/${NEW_HOSTNAME}.key -out /usr/local/etc/ssl/${NEW_HOSTNAME}.cer -days 730 -nodes -subj "/CN=$NEW_HOSTNAME" >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up identity. Please be patient, this can take some time.\n\n  [x] Set hostname to $NEW_HOSTNAME\n  [x] Create TLS certificate." 8 $BOX_W
@@ -130,7 +131,7 @@ fi
 # Bootstrap / update package manager.
 TITLE="Package Manager"
 echo "$TITLE: installing pkg and updating repositories." >>$LOGFILE 2>&1
-if ! pkg bootstrap | grep 'already bootstrapped'; then
+if ! pkg bootstrap -y | grep 'already bootstrapped'; then
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Installing pkg and updating repositories.\n\n  [ ] Bootstrap pkg.\n  [ ] Update repositories." 7 $BOX_W
   pkg bootstrap >>$LOGFILE 2>&1
