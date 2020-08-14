@@ -5,11 +5,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" type="text/css" href="style.css">
   <style>
     body {
-      background: dimgray;
-      color: lightgray;
+      background-color: #33333333;
+      background-attachment: fixed;
+      background-image: url('wallpaper.jpg');
+      background-size: cover;
+      color: #333333;
       margin-left: auto;
       margin-right: auto;
     }
@@ -24,18 +26,27 @@
     }
 
     #login-box {
+      background-image: linear-gradient(to bottom right, lightgray, darkgray);
+      border: 1px solid #999999;
+      color: #333333;
       margin-left: auto;
       margin-right: auto;
       margin-top: 30vh;
+      opacity: 0.80;
       text-align: center;
       width: 15em;
     }
 
     #login-help {
+      background-image: linear-gradient(to bottom right, lightgray, darkgray);
+      border: 1px solid #999999;
+      color: #333333;
       display: none;
       margin-left: auto;
       margin-right: auto;
+      margin-top: 1em;
       max-width: 640px;
+      opacity: 0.80;
       padding: 0.5em;
       text-align: justify;
     }
@@ -47,9 +58,11 @@
     }
     function revealSecret() {
       document.getElementById('secret').type = 'text';
+      document.getElementById('password').type = 'text';
     }
     function hideSecret() {
       document.getElementById('secret').type = 'password';
+      document.getElementById('password').type = 'password';
     }
   </script>
   <title>Password Helper</title>
@@ -58,24 +71,23 @@
 <body>
   <form method="post">
     <fieldset id="login-box">
-      <legend>
-        <script>document.write(window.location.hostname);</script>
-      </legend>
       <br>
       <input id="username" name="username" type="text" placeholder="What's your name?" tabindex="1"><br>
       <br>
       <input id="secret" name="secret" type="password" placeholder="Tell me a secret." tabindex="2"><br>
       <br>
-      <button onclick="showLoginHelp();" title="Get help" type="button">&#x02753;</button>
-      <button title="Log in" type="submit" tabindex="3">&#x02714;</button>
-      <button onmousedown="revealSecret();" onmouseup="hideSecret();" title="Show secret"
+      <input id="password" name="password" type="password" placeholder="Tell me your new password." tabindex="3"><br>
+      <br> 
+      <button onclick="showLoginHelp();" title="Get Help" type="button">&#x02753;</button>
+      <button title="Change Password" type="submit" tabindex="4">&#x02714;</button>
+      <button onmousedown="revealSecret();" onmouseup="hideSecret();" title="Show Secret and Password"
         type="button">&#x1F440;&#x0FE0F;</button>
     </fieldset>
   </form>
   <div id="login-help">
     <p>
     Hi, you must be new around here. I'm <script>document.write(window.location.hostname);</script> the unobtrusive
-    little box that stores files for people. Before we start working together, I'd like you to tell me a secret.
+    little box that stores your files and stuff. Before we start working together, I'd like you to tell me a secret.
     </p>
     <p>
       You see, I don't really do the whole password thing, so a secret is how I know it's you. A secret can be almost
