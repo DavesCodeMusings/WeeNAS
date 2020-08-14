@@ -118,8 +118,8 @@ if [ "$NEW_HOSTNAME" != "$(hostname)" ] || ! [ -f "/usr/local/etc/ssl/${NEW_HOST
   sysrc hostname="$NEW_HOSTNAME" >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up identity. Please be patient, this can take some time.\n\n  [x] Set hostname to $NEW_HOSTNAME\n  [ ] Create TLS certificate." 8 $BOX_W
-  install -o0 -g0 -m755 -d /usr/local/etc/ssl
-  openssl req -x509 -newkey rsa:4096 -keyout /usr/local/etc/ssl/${NEW_HOSTNAME}.key -out /usr/local/etc/ssl/${NEW_HOSTNAME}.cer -days 730 -nodes -subj "/CN=$NEW_HOSTNAME" >>$LOGFILE 2>&1
+  install -o0 -g0 -m755 -d /usr/local/etc/weenas
+  openssl req -x509 -newkey rsa:4096 -keyout /usr/local/etc/weenas/${NEW_HOSTNAME}.key -out /usr/local/weenas/ssl/${NEW_HOSTNAME}.cer -days 730 -nodes -subj "/CN=$NEW_HOSTNAME" >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up identity. Please be patient, this can take some time.\n\n  [x] Set hostname to $NEW_HOSTNAME\n  [x] Create TLS certificate." 8 $BOX_W
 else
@@ -183,7 +183,7 @@ if ! kldstat | grep fuse >>$LOGFILE 2>&1; then
   kldload fuse
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Configuring fusefs and devd.\n\n  [x] Install fusefs package.\n  [x] Enable fusefs.\n  [ ] Configure devd for hot-plug.\n  [ ] Restart devd." 9 $BOX_W
-  [ -d /usr/local/etc/devd ] || mkdir /usr/local/etc/devd >>$LOGFILE 2>&1
+  [ -d /usr/local/etc/devd ] || install -o0 -g0 -m755 -d /usr/local/etc/devd >>$LOGFILE 2>&1
   [ -f /usr/local/etc/devd/flashmount.conf ] || cp etc/flashmount.conf /usr/local/etc/devd >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Configuring fusefs and devd.\n\n  [x] Install fusefs package.\n  [x] Enable fusefs.\n  [x] Configure devd for hot-plug.\n  [ ] Restart devd." 9 $BOX_W
@@ -232,7 +232,10 @@ if ! service weenas_api onestatus >/dev/null 2>&1; then
    --infobox "Setting up WeeNAS administration.\n\n  [x] Install Node.js\n  [ ] Install weenas_api service.\n  [ ] Start service." 8 $BOX_W
   install -o0 -g0 -m755 etc/rc.d/weenas_api /usr/local/etc/rc.d >>$LOGFILE 2>&1
   sysrc weenas_api_enable="YES" >>$LOGFILE 2>&1
-  sysrc weenas_api_home="$(pwd)" >>$LOGFILE 2>&1
+  sysrc weenas_api_dir="/usr/local/libexec" >>$LOGFILE 2>&1
+  install -o0 -g0 -m755 -d /usr/local/etc/weenas && cp -R etc/weenas/* /usr/local/etc/weenas
+  cp libexec/weenas_api.js /usr/local/libexec
+  install -o0 -g0 -m755 -d /usr/local/share/weenas/htdocs && cp -R etc/weenas/share/htdocs/* /usr/local/share/weenas/htdocs
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up WeeNAS administration.\n\n  [x] Install Node.js\n  [x] Install weenas_api service.\n  [ ] Start service." 8 $BOX_W
   service weenas_api start >>$LOGFILE 2>&1
