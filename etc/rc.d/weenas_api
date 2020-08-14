@@ -41,7 +41,6 @@ weenas_api_start()
 
 weenas_api_status()
 {
-  echo "Starting ${name}."
   if [ "$pid" != "" ]; then
     echo "${name} is running as PID: $pid."
   else
@@ -52,7 +51,7 @@ weenas_api_status()
 
 weenas_api_stop()
 {
-  echo "Starting ${name}."
+  echo "Stopping ${name}."
   if [ "$pid" != "" ]; then
     pkill -F /var/run/${name}.pid
     pgrep -F /var/run/${name}.pid 2>/dev/null && echo "Stop failed."
