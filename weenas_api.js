@@ -8,9 +8,11 @@ const childProcess = require('child_process');
 const crypto = require('crypto');
 const process = require('process');
 
-const weenasVersion = '0.2 dev'
-const pidFile = path.join('/var/run', path.basename(__filename, '.js') + '.pid');
+const installationBase = '/root/weenas';
 const port = 9000;
+
+const weenasVersion = '0.2 dev'
+const pidFile = path.join('/var', 'run', path.basename(__filename, '.js') + '.pid');
 const EGENERIC = "Sorry, Charlie.";
 
 // Log to stdout with a date stamp.
@@ -20,7 +22,7 @@ function log(message) {
 }
 
 // Log startup information.
-console.log (`WeeNAS version ${weenasVersion}\nCopyright (c)2020 David Horton https://davescodemusings.github.io/WeeNAS/`);
+console.log(`WeeNAS version ${weenasVersion}\nCopyright (c)2020 David Horton https://davescodemusings.github.io/WeeNAS/`);
 if (pidFile) {
   fs.writeFile(pidFile, process.pid, (error) => {
     if (!error) log(`PID ${process.pid} written to ${pidFile}`);
@@ -29,7 +31,7 @@ if (pidFile) {
 }
 
 // Prepare for secure web server start up by fetching the SSL certificate and key. 
-const certPath = '/usr/local/etc/ssl';
+const certPath = path.join(installationBase, 'etc', 'weenas');
 const hostname = os.hostname();
 const httpsOptions = {
   cert: '',
@@ -52,7 +54,7 @@ catch {
 
 // Fetch WeeNAS user secrets from wnpasswd.
 var wnpasswd = {};
-const wnpasswdFile = path.join(__dirname, 'etc', 'wnpasswd');
+const wnpasswdFile = path.join(installationBase, 'etc', 'weenas', 'wnpasswd');
 try {
   wnpasswd = fs.readFileSync(wnpasswdFile);
 }
@@ -63,7 +65,7 @@ catch {
 
 // API commands and their corresponding shell commands.
 var apiCmds = {};
-const apiCmdsFile = path.join(__dirname, 'etc', 'api_cmds.json');
+const apiCmdsFile = path.join(installationBase, 'etc', 'weenas', 'api_cmds.json');
 try {
   apiCmds = JSON.parse(fs.readFileSync(apiCmdsFile));
 }
@@ -74,7 +76,7 @@ catch {
 
 // Filename extension to MIME type look-up the few filetypes served.
 var mimeTypes = {};
-const mimeTypesFile = path.join(__dirname, 'etc', 'mime_types.json');
+const mimeTypesFile = path.join(installationBase, 'etc', 'weenas', 'mime_types.json');
 try {
   mimeTypes = JSON.parse(fs.readFileSync(mimeTypesFile));
 }
@@ -178,7 +180,7 @@ function runApiCommand(user, apiCmd, apiBody) {
       // Run the shell command, capturing stdout.
       log('Running: ' + shellCmd);
       try {
-        result = childProcess.execSync(shellCmd, { cwd: __dirname, env: { "API_USER": user}, input: apiBody });
+        result = childProcess.execSync(shellCmd, { cwd: __dirname, env: { "API_USER": user }, input: apiBody });
       }
       catch {
         result = 'Command failed: ' + result;
@@ -196,7 +198,7 @@ const server = https.createServer(httpsOptions, (request, response) => {
 
   // Keep adding chunks of data to the body unless invalid chars are encountered.
   request.on('data', chunk => {
-    let permittedCharsRegex = /^[A-Za-z0-9 ~!@#\$%\^-_=+\[\{\]\}:;"',.\/\r\n]*$/;
+    let permittedCharsRegex = /^[A-Za-z0-9 ~!@#\$%&\^-_=+\[\{\]\}:;"',.\/\r\n]*$/;
     if (chunk.match(permittedCharsRegex)) {
       body += chunk;
     }
@@ -211,59 +213,65 @@ const server = https.createServer(httpsOptions, (request, response) => {
   request.on('end', () => {
     let authorizedUser = validateCredentials(request.headers.authorization);
 
-    let filePath = '';
-
-    // Simple GET of static content in htdocs requires no auth token. Everything else does.
-    if (request.url.match(staticContentRegEx)) {
-      if (request.method == 'GET') {
-        filePath = path.join(__dirname, 'htdocs', request.url);
-        serveStaticContent(filePath, request, response);
-      }
-      else {
-        response.writeHead(405, 'Method Not Allowed');
-        response.end();
-      }
+    // Redirect to index.html when no file is specified.
+    if (request.url == '/') {
+      response.writeHead(302, 'Found', { 'Location': 'index.html' });
+      response.end();
     }
-    else if (authorizedUser) {
+    else {
+      let filePath = '';
 
-      // Log files are static content, but only authorized users can view them.
-      for (url in logRedirects) {
-        if (url == request.url) {
-          filePath = logRedirects[url];
-          if (request.method == 'GET') {
-            serveStaticContent(filePath, request, response);
-          }
-        }
-      }
-
-      // If no filepath was matched, check API calls.
-      if (!filePath) {
-        apiVerb = apiVerbDict[request.method] || '';
-        if (apiVerb) {
-          cmd = apiVerb + request.url.replace(/\//g, ' ').trimEnd();
-
-          // API calls have the request body passed as well for possible POST and/or PUT.
-          let result = runApiCommand(authorizedUser, cmd, body);
-          if (result != EGENERIC) {
-            response.writeHead(200, 'OK', { 'Content-Type': 'application/json' });
-            response.end(result);
-          }
-          else {
-            response.writeHead(404, 'Not Found', { 'Content-Type': 'text/plain' })
-            response.end(result);
-          }
+      // Simple GET of static content in htdocs requires no auth token. Everything else does.
+      if (request.url.match(staticContentRegEx)) {
+        if (request.method == 'GET') {
+          filePath = path.join(installationBase, 'share', 'weenas', 'htdocs', request.url);
+          serveStaticContent(filePath, request, response);
         }
         else {
-          response.writeHead(405, 'Method Not Allowed', { 'Content-Type': 'text/plain' });
-          response.end('The API does not support that method.');
+          response.writeHead(405, 'Method Not Allowed');
+          response.end();
         }
       }
-    }
+      else if (authorizedUser) {
 
-    // Complain if no authorization was provided.
-    else {
-      response.writeHead(401, 'Unauthorized', { 'WWW-Authenticate': 'Basic' });
-      response.end('You need to be logged in.');
+        // Log files are static content, but only authorized users can view them.
+        for (url in logRedirects) {
+          if (url == request.url) {
+            filePath = logRedirects[url];
+            if (request.method == 'GET') {
+              serveStaticContent(filePath, request, response);
+            }
+          }
+        }
+
+        // If no filepath was matched, check API calls.
+        if (!filePath) {
+          apiVerb = apiVerbDict[request.method] || '';
+          if (apiVerb) {
+            cmd = apiVerb + request.url.replace(/\//g, ' ').trimEnd();
+
+            // API calls have the request body passed as well for possible POST and/or PUT.
+            let result = runApiCommand(authorizedUser, cmd, body);
+            if (result != EGENERIC) {
+              response.writeHead(200, 'OK', { 'Content-Type': 'application/json' });
+              response.end(result);
+            }
+            else {
+              response.writeHead(404, 'Not Found', { 'Content-Type': 'text/plain' })
+              response.end(result);
+            }
+          }
+          else {
+            response.writeHead(405, 'Method Not Allowed', { 'Content-Type': 'text/plain' });
+            response.end('The API does not support that method.');
+          }
+        }
+      }
+      // Complain if no authorization was provided.
+      else {
+        response.writeHead(401, 'Unauthorized', { 'WWW-Authenticate': 'Basic' });
+        response.end('You need to be logged in.');
+      }
     }
   });
 }).listen(port);
