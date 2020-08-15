@@ -110,7 +110,7 @@ fi
 # Set hostname and generate self-signed TLS certificate.
 TITLE="Identity"
 echo "$TITLE" >>$LOGFILE 2>&1
-if [ "$NEW_HOSTNAME" != "$(hostname)" ] || ! [ -f "/usr/local/etc/ssl/${NEW_HOSTNAME}.cer" ]; then
+if [ "$NEW_HOSTNAME" != "$(hostname)" ] || ! [ -f "/usr/local/etc/weenas/${NEW_HOSTNAME}.cer" ]; then
   echo "$TITLE: setting new hostname and TLS certificate for $NEW_HOSTNAME" >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up identity.  Please be patient, this can take some time.\n\n  [ ] Set hostname to $NEW_HOSTNAME\n  [ ] Create TLS certificate." 8 $BOX_W
@@ -119,7 +119,7 @@ if [ "$NEW_HOSTNAME" != "$(hostname)" ] || ! [ -f "/usr/local/etc/ssl/${NEW_HOST
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up identity. Please be patient, this can take some time.\n\n  [x] Set hostname to $NEW_HOSTNAME\n  [ ] Create TLS certificate." 8 $BOX_W
   install -o0 -g0 -m755 -d /usr/local/etc/weenas
-  openssl req -x509 -newkey rsa:4096 -keyout /usr/local/etc/weenas/${NEW_HOSTNAME}.key -out /usr/local/weenas/ssl/${NEW_HOSTNAME}.cer -days 730 -nodes -subj "/CN=$NEW_HOSTNAME" >>$LOGFILE 2>&1
+  openssl req -x509 -newkey rsa:4096 -keyout /usr/local/etc/weenas/${NEW_HOSTNAME}.key -out /usr/local/etc/weenas/${NEW_HOSTNAME}.cer -days 730 -nodes -subj "/CN=$NEW_HOSTNAME" >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up identity. Please be patient, this can take some time.\n\n  [x] Set hostname to $NEW_HOSTNAME\n  [x] Create TLS certificate." 8 $BOX_W
 else
@@ -134,7 +134,7 @@ echo "$TITLE: installing pkg and updating repositories." >>$LOGFILE 2>&1
 if ! pkg bootstrap -y | grep 'already bootstrapped'; then
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Installing pkg and updating repositories.\n\n  [ ] Bootstrap pkg.\n  [ ] Update repositories." 7 $BOX_W
-  pkg bootstrap >>$LOGFILE 2>&1
+  pkg bootstrap -y >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Installing pkg and updating repositories.\n\n  [x] Bootstrap pkg.\n  [ ] Update repositories." 7 $BOX_W
   pkg update >>$LOGFILE 2>&1
