@@ -94,14 +94,14 @@
 </head>
 
 <body
-  onload="AJAX('GET', '/system/health/summary/program', displayAccountHealth); AJAX('GET', '/system/account', displayAccountList);">
+  onload="AJAX('GET', '/system/health/program', displayAccountHealth); AJAX('GET', '/system/account', displayAccountList);">
   <p class="caution">
     This is a partially functioning mock-up. User accounts cannot be created or updated.</p>
 
   <form>
     <fieldset>
       <legend>User Account Health</legend>
-      <button class="refresh" onclick="AJAX('GET', '/system/health/summary/program', displayAccountHealth);"
+      <button class="refresh" onclick="AJAX('GET', '/system/health/program', displayAccountHealth);"
         type="button">&#x1F504;</button>
       <table>
         <colgroup>
