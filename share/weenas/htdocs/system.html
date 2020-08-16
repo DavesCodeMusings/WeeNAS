@@ -1,7 +1,5 @@
 <!DOCTYPE html>
 
-<!-- Mockup of new WeeNAS admin interface. -->
-
 <html lang="en-US">
 
 <head>
@@ -10,7 +8,15 @@
   <link href="common.css" rel="stylesheet" type="text/css">
   <script src="common.js"></script>
   <script>
-    var hostname = location.hostname; // An unreliable source for hostname. Updated later by
+    var hostname = location.hostname; // An unreliable source for hostname. Updated later by displayOSInfo().
+
+    function displayOSInfo(osInfo) {
+      hostname = osInfo.name;
+      document.getElementById('hostname').innerHTML = `<a href="health-detail.html?${osInfo.name}">${osInfo.name}</a>`;
+      document.getElementById('os-info').innerHTML = `${osInfo.machine} ${osInfo.release} on ${osInfo.system} architecture.`
+      AJAX('GET', `/system/health/${hostname}/detail`, displaySystemHealth);
+    }
+
     function displayRpiInfo(revCode) {
       let board = {};
       board.revisionCode = revCode;
@@ -37,16 +43,6 @@
       piInfo += `<span class="no-break">Manufactured&nbsp;by&nbsp;${board.manufacturer}.&nbsp;</span>`
       piInfo += `<span class="no-break">Warranty&nbsp;is&nbsp;${board.warranty}.&nbsp;</span>`;
       document.getElementById('pi-specs').innerHTML = piInfo;
-    }
-
-    function displayOSInfo(osInfo) {
-      hostname = osInfo.name;
-      let info = '';
-      info += `<a href="health-detail.html?${osInfo.name}">${osInfo.name}</a>`;
-      info += '<br>';
-      info += `${osInfo.machine} ${osInfo.release} on ${osInfo.system} architecture.`
-      document.getElementById('os-info').innerHTML = info;
-      AJAX('GET', `/system/health/${hostname}/detail`, displaySystemHealth);
     }
 
     function displaySystemHealth(systemHealth) {
@@ -84,6 +80,7 @@
     <fieldset>
       <legend>System Health</legend>
       <button class="refresh" onclick="AJAX('GET', `/system/health/${hostname}/detail`, displaySystemHealth);" type="button">&#x1F504;</button>
+      <p id="hostname"></p>
       <table>
         <thead id="system-health-head"></thead>
         <tbody id="system-health-body"></tbody>
