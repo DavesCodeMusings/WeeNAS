@@ -235,7 +235,7 @@ if ! service weenas_api onestatus >/dev/null 2>&1; then
   sysrc weenas_api_dir="/usr/local/libexec" >>$LOGFILE 2>&1
   install -o0 -g0 -m755 -d /usr/local/etc/weenas && cp -R etc/weenas/* /usr/local/etc/weenas
   cp libexec/weenas_api.js /usr/local/libexec
-  install -o0 -g0 -m755 -d /usr/local/share/weenas/htdocs && cp -R etc/weenas/share/htdocs/* /usr/local/share/weenas/htdocs
+  install -o0 -g0 -m755 -d /usr/local/share/weenas/htdocs && cp -R share/weenas/htdocs/* /usr/local/share/weenas/htdocs
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up WeeNAS administration.\n\n  [x] Install Node.js\n  [x] Install weenas_api service.\n  [ ] Start service." 8 $BOX_W
   service weenas_api start >>$LOGFILE 2>&1
