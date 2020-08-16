@@ -10,6 +10,7 @@
   <link href="common.css" rel="stylesheet" type="text/css">
   <script src="common.js"></script>
   <script>
+    var hostname = location.hostname; // An unreliable source for hostname. Updated later by
     function displayRpiInfo(revCode) {
       let board = {};
       board.revisionCode = revCode;
@@ -39,11 +40,13 @@
     }
 
     function displayOSInfo(osInfo) {
+      hostname = osInfo.name;
       let info = '';
-      info += `<a href="https://${osInfo.name}:4200" target="_blank" title="Open web-based terminal.">${osInfo.name}</a>`;
+      info += `<a href="health-detail.html?${osInfo.name}">${osInfo.name}</a>`;
       info += '<br>';
       info += `${osInfo.machine} ${osInfo.release} on ${osInfo.system} architecture.`
       document.getElementById('os-info').innerHTML = info;
+      AJAX('GET', `/system/health/${hostname}/detail`, displaySystemHealth);
     }
 
     function displaySystemHealth(systemHealth) {
@@ -76,11 +79,11 @@
   </script>
 </head>
 
-<body onload="AJAX('GET', `/system/health/status/${location.hostname}`, displaySystemHealth); AJAX('GET', '/system/board/revcode', displayRpiInfo); AJAX('GET', '/system/os', displayOSInfo); AJAX('GET', '/system/processes/top', displayTopProc);">
+<body onload="AJAX('GET', '/system/board/revcode', displayRpiInfo); AJAX('GET', '/system/os', displayOSInfo); AJAX('GET', '/system/processes/top', displayTopProc);">
   <form>
     <fieldset>
       <legend>System Health</legend>
-      <button class="refresh" onclick="AJAX('GET', `/system/health/status/${location.hostname}`, displaySystemHealth);" type="button">&#x1F504;</button>
+      <button class="refresh" onclick="AJAX('GET', `/system/health/${hostname}/detail`, displaySystemHealth);" type="button">&#x1F504;</button>
       <table>
         <thead id="system-health-head"></thead>
         <tbody id="system-health-body"></tbody>

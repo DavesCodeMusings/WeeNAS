@@ -16,7 +16,7 @@
       // Sort in alpha order for readability.
       let filesystems = Object.keys(fsHealth).sort();
       for (let i=0; i<filesystems.length; i++) {
-        tbody += `<tr><td>${filesystems[i]}</td><td>${fsHealth[filesystems[i]]}</td></tr>`;
+        tbody += `<tr><td><a href="health-detail.html?${filesystems[i]}">${filesystems[i]}</a></td><td>${fsHealth[filesystems[i]]}</td></tr>`;
       }
       document.getElementById('fs-health-body').innerHTML = tbody;
     }
@@ -53,11 +53,11 @@
   </script>
 </head>
 
-<body onload="AJAX('GET', '/system/health/summary/filesystem', displayFsHealth); AJAX('GET', '/filesystem/stats', displayFsStats); AJAX('GET', '/filesystem/table', displayFstab);">
+<body onload="AJAX('GET', '/system/health/filesystem', displayFsHealth); AJAX('GET', '/filesystem/stats', displayFsStats); AJAX('GET', '/filesystem/table', displayFstab);">
   <form>
     <fieldset>
       <legend>Filesystem Health</legend>
-      <button class="refresh" onclick="AJAX('GET', '/system/health/summary/filesystem', displayFsHealth);" type="button">&#x1F504;</button>
+      <button class="refresh" onclick="AJAX('GET', '/system/health/filesystem', displayFsHealth);" type="button">&#x1F504;</button>
 
       <!-- TODO: add links for detail drilldown with buttons for umount, fsck, & mount. -->
       <table>

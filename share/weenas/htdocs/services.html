@@ -16,7 +16,7 @@
       // Sort the services in alpha order for readability.
       let services = Object.keys(serviceHealth).sort();
       for (let i=0; i<services.length; i++) {
-        tbody += `<tr><td>${services[i]}</td><td>${serviceHealth[services[i]]}</td></tr>`;
+        tbody += `<tr><td><a href="health-detail.html?${services[i]}">${services[i]}</a></td><td>${serviceHealth[services[i]]}</td></tr>`;
       }
       document.getElementById('service-health-body').innerHTML = tbody;
     }
@@ -34,11 +34,11 @@
   </script>
 </head>
 
-<body onload="AJAX('GET', '/system/health/summary/process', displayServiceHealth); AJAX('GET', '/system/service', displayServiceList);">
+<body onload="AJAX('GET', '/system/health/process', displayServiceHealth); AJAX('GET', '/system/service', displayServiceList);">
   <form>
     <fieldset>
       <legend>Service Health</legend>
-      <button class="refresh" onclick="AJAX('GET', '/system/health/summary/process', displayServiceHealth);" type="button">&#x1F504;</button>
+      <button class="refresh" onclick="AJAX('GET', '/system/health/process', displayServiceHealth);" type="button">&#x1F504;</button>
 
       <!-- TODO: Add links for detail drilldown with start/stop buttons. -->
       <table>

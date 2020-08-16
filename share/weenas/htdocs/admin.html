@@ -11,22 +11,29 @@
   <link href="common.css" rel="stylesheet" type="text/css">
   <script src="common.js"></script>
   <script>
-    function displayHealthSummary(healthSummary) {
+    function displaySystemHealth(systemHealth) {
       let list='';
+      let systemStatusAlt = 'Status Unknown';
       let systemStatusIcon = 'dialog-question.svg';
+      let serviceStatusAlt = 'Status Unknown';
       let serviceStatusIcon ='dialog-question.svg';
       let serviceFailures = 0;
+      let storageStatusAlt = 'Status Unknown';
       let storageStatusIcon = 'dialog-question.svg';
       let filesystemFailures = 0;
+      let fileShareStatusAlt = 'Status Unknown';
       let fileShareStatusIcon = 'dialog-question.svg';
+      let fileShareFailures = 0;
+      let userAccountStatusAlt = 'Status Unknown';
       let userAccountStatusIcon = 'dialog-question.svg';
+      let userAccountFailures = 0;
 
       // Look for evidence to the contrary.
-      for (var component in healthSummary) {
+      for (var component in systemHealth) {
 
         /* System (Host) */
-        if (component == window.location.hostname) {
-          if (healthSummary[window.location.hostname].status == 'ok') {
+        if (systemHealth[component].type == 'system') {
+          if (systemHealth[component].status == 'ok') {
             systemStatusAlt = 'Status OK';
             systemStatusIcon = 'dialog-positive.svg';
           }
@@ -38,8 +45,8 @@
 
         /* Storage
            There can be more than one filesystem. A single failure indicates warning. */
-        if (healthSummary[component].type == 'filesystem') {
-          if (healthSummary[component].status == 'ok' && filesystemFailures == 0) {
+        if (systemHealth[component].type == 'filesystem') {
+          if (systemHealth[component].status == 'ok' && filesystemFailures == 0) {
             storageStatusAlt = 'Status OK';
             storageStatusIcon = 'dialog-positive.svg';
           }
@@ -52,36 +59,39 @@
 
         /* Services
           There is more than one service. A single failure indicates warning. */
-        if (healthSummary[component].type == 'process') {
-          if (healthSummary[component].status != 'ok' && serviceFailures == 0) {
+        if (systemHealth[component].type == 'process') {
+          if (systemHealth[component].status == 'ok' && serviceFailures == 0) {
             serviceStatusAlt = 'Status OK';
             serviceStatusIcon = 'dialog-positive.svg';
           }
           else {
+            serviceFailures++;
             serviceStatusAlt = 'Status Warning';
             serviceStatusIcon = 'dialog-warning.svg';
           }
         }
 
         /* File Shares */
-        if (component == 'smbd' || component == 'nmbd' || component == 'smbconf') {
-          if (healthSummary[component].status == 'ok') {
+        if (component == 'smbd' || component == 'nmbd' || component == 'smbconf' && fileShareFailures == 0) {
+          if (systemHealth[component].status == 'ok') {
             fileShareStatusAlt = 'Status OK';
             fileShareStatusIcon = 'dialog-positive.svg';
           }
           else {
+            fileShareFailures++;
             fileShareStatusAlt = 'Status Warning';
             fileShareStatusIcon = 'dialog-warning.svg';
           }
         }
 
         /* User Accounts */
-        if (component == 'failed_ssh' || component == 'failed_su') {
-          if (healthSummary[component].status == 'ok') {
+        if (component == 'failed_ssh' || component == 'failed_su' && userAccountFailures ==0) {
+          if (systemHealth[component].status == 'ok') {
             userAccountStatusAlt = 'Status OK';
             userAccountStatusIcon = 'dialog-positive.svg';
           }
           else {
+            userAccountFailures++;
             userAccountStatusAlt = 'Status Warning';
             userAccountStatusIcon = 'dialog-warning.svg';
           }
@@ -96,29 +106,44 @@
       document.getElementById('user-account-status-icon').src = userAccountStatusIcon;
     }
 
+    /* Validate the user by checking that account info was received from the API call. */
+    function validateCredentials(accountInfo) {
+      let usernameField = document.getElementById('username');
+      let passwordField = document.getElementById('password');
+      if (accountInfo) {
+        usernameField.value = '';
+        passwordField.value = '';
+        usernameField.style.display = 'none';
+        passwordField.style.display = 'none';
+        document.getElementById('login-button').style.display = 'none';
+        document.getElementById('logout-button').style.display = 'inline';
+        document.getElementById('lock-screen').style.display = 'none';
+        document.getElementsByTagName('header')[0].style.opacity = '0.80';
+        loadFrame('Welcome');
+        AJAX('GET', '/system/health', displaySystemHealth);
+      }
+      else {
+        sessionStorage.removeItem('authToken');
+        usernameField.value = '';
+        passwordField.value = '';
+        usernameField.style.display = 'none';
+        passwordField.style.display = 'none';
+      }
+    }
+
+    /* Test the credentials with an authenticated call to the API to look up the username. */
     function processLogin() {
       let usernameField = document.getElementById('username');
       let passwordField = document.getElementById('password');
-
-      /* Create an authorization token and reset login form. */
-      sessionStorage.setItem('auth', 'Basic ' + btoa(`${usernameField.value}:${passwordField.value}`));
-      usernameField.value = '';
-      passwordField.value = '';
-      usernameField.style.display = 'none';
-      passwordField.style.display = 'none';
-      document.getElementById('login-button').style.display = 'none';
-      document.getElementById('logout-button').style.display = 'inline';
-      document.getElementById('lock-screen').style.display = 'none';
-      document.getElementsByTagName('header')[0].style.opacity = '0.80';
-      loadFrame('Welcome');
-      AJAX('GET', '/system/health/summary', displayHealthSummary);
+      sessionStorage.setItem('authToken', 'Basic ' + btoa(`${usernameField.value}:${passwordField.value}`));
+      AJAX('GET', '/account/' + usernameField.value, validateCredentials);
     }
 
+    /* Remove authentication token and lock the screen. */
     function processLogout() {
+      sessionStorage.removeItem('authToken');
       let usernameField = document.getElementById('username');
       let passwordField = document.getElementById('password');
-
-      /* Process logout. */
       usernameField.value = '';
       passwordField.value = '';
       usernameField.style.display = 'inline';

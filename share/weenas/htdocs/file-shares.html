@@ -12,9 +12,9 @@
   <script>
     function displayServiceHealth(serviceHealth) {
       let tbody = '';
-      tbody += `<tr><td>nmbd</td><td>${serviceHealth.nmbd.status}</td></tr>`;
-      tbody += `<tr><td>smbd</td><td>${serviceHealth.smbd.status}</td></tr>`;
-      tbody += `<tr><td>smb4.conf</td><td>${serviceHealth.smbconf.status}</td></tr>`;
+      tbody += `<tr><td><a href="health-detail.html?nmbd">nmbd</a></td><td>${serviceHealth.nmbd.status}</td></tr>`;
+      tbody += `<tr><td><a href="health-detail.html?smbd">smbd</a></td><td>${serviceHealth.smbd.status}</td></tr>`;
+      tbody += `<tr><td><a href="health-detail.html?smbconf">smb4.conf</a></td><td>${serviceHealth.smbconf.status}</td></tr>`;
       document.getElementById('smb-service-status').innerHTML = tbody;
     }
 
@@ -86,12 +86,12 @@
 </head>
 
 <body
-  onload="AJAX('GET', '/system/health/summary', displayServiceHealth); AJAX('GET', '/smb/config/section', displayConfigShares); AJAX('GET', '/smb/config/section/global', displayConfigGlobal);">
+  onload="AJAX('GET', '/system/health', displayServiceHealth); AJAX('GET', '/smb/config/section', displayConfigShares); AJAX('GET', '/smb/config/section/global', displayConfigGlobal);">
   <p class="caution">This is a partially functioning mock-up. Shares cannot be created or deleted.</p>
   <form>
     <fieldset>
       <legend>SMB Service Health</legend>
-      <button class="refresh" onclick="AJAX('GET', '/system/health/summary', displayServiceHealth);"
+      <button class="refresh" onclick="AJAX('GET', '/system/health', displayServiceHealth);"
         type="button">&#x1F504;</button>
       <table>
         <colgroup>
