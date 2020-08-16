@@ -88,9 +88,9 @@ echo "Proceeding with installation." >>$LOGFILE
 # Start ntpd time sync.
 TITLE="Time Sync"
 echo "$TITLE: starting ntpd." >>$LOGFILE
+dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+ --infobox "Configuring NTP time synchronization.\n\n  [ ] Enable NTP.\n  [ ] Set UTC timezone.\n  [ ] Start NTP service." 8 $BOX_W
 if ! service ntpd onestatus >/dev/null 2>&1; then
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Configuring NTP time synchronization.\n\n  [ ] Enable NTP.\n  [ ] Set UTC timezone.\n  [ ] Start NTP service." 8 $BOX_W
   sysrc ntpd_enable="YES" >>$LOGFILE 2>&1
   sysrc ntpd_sync_on_start="YES" >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
@@ -110,18 +110,18 @@ fi
 # Set hostname and generate self-signed TLS certificate.
 TITLE="Identity"
 echo "$TITLE" >>$LOGFILE 2>&1
+dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+ --infobox "Setting up identity.\n\n  [ ] Set hostname to $NEW_HOSTNAME\n  [ ] Create TLS certificate." 8 $BOX_W
 if [ "$NEW_HOSTNAME" != "$(hostname)" ] || ! [ -f "/usr/local/etc/weenas/${NEW_HOSTNAME}.cer" ]; then
   echo "$TITLE: setting new hostname and TLS certificate for $NEW_HOSTNAME" >>$LOGFILE 2>&1
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Setting up identity.  Please be patient, this can take some time.\n\n  [ ] Set hostname to $NEW_HOSTNAME\n  [ ] Create TLS certificate." 8 $BOX_W
   /bin/hostname $NEW_HOSTNAME >>$LOGFILE 2>&1
   sysrc hostname="$NEW_HOSTNAME" >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Setting up identity. Please be patient, this can take some time.\n\n  [x] Set hostname to $NEW_HOSTNAME\n  [ ] Create TLS certificate." 8 $BOX_W
+   --infobox "Setting up identity.\n\n  [x] Set hostname to $NEW_HOSTNAME\n  [ ] Create TLS certificate." 8 $BOX_W
   install -o0 -g0 -m755 -d /usr/local/etc/weenas
   openssl req -x509 -newkey rsa:4096 -keyout /usr/local/etc/weenas/${NEW_HOSTNAME}.key -out /usr/local/etc/weenas/${NEW_HOSTNAME}.cer -days 730 -nodes -subj "/CN=$NEW_HOSTNAME" >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Setting up identity. Please be patient, this can take some time.\n\n  [x] Set hostname to $NEW_HOSTNAME\n  [x] Create TLS certificate." 8 $BOX_W
+   --infobox "Setting up identity.\n\n  [x] Set hostname to $NEW_HOSTNAME\n  [x] Create TLS certificate." 8 $BOX_W
 else
   echo "$TITLE: skipped." >>$LOGFILE
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "Skipped: keeping existing identity." \
@@ -130,11 +130,11 @@ fi
 
 # Bootstrap / update package manager.
 TITLE="Package Manager"
-echo "$TITLE: installing pkg and updating repositories." >>$LOGFILE 2>&1
+echo "$TITLE" >>$LOGFILE 2>&1
+dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+ --infobox "Installing pkg and updating repositories.\n\n  [ ] Bootstrap pkg.\n  [ ] Update repositories." 7 $BOX_W
 if ! pkg bootstrap -y | grep 'already bootstrapped'; then
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Installing pkg and updating repositories.\n\n  [ ] Bootstrap pkg.\n  [ ] Update repositories." 7 $BOX_W
-  pkg bootstrap -y >>$LOGFILE 2>&1
+  echo "$TITLE: installing pkg and updating repositories." >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Installing pkg and updating repositories.\n\n  [x] Bootstrap pkg.\n  [ ] Update repositories." 7 $BOX_W
   pkg update >>$LOGFILE 2>&1
@@ -149,9 +149,9 @@ fi
 # Install system monitor.
 TITLE="System Monitoring"
 echo "$TITLE: installing Monit" >>$LOGFILE 2>&1
+dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+ --infobox "Setting up system monitoring.\n\n  [ ] Install Monit.\n  [ ] Create configuration files.\n  [ ] Start service." 8 $BOX_W
 if ! service monit onestatus; then
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Setting up system monitoring.\n\n  [ ] Install Monit.\n  [ ] Create configuration files.\n  [ ] Start service." 8 $BOX_W
   pkg info monit >>$LOGFILE 2>&1 || pkg install -y monit >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up system monitoring.\n\n  [x] Install Monit.\n  [ ] Create configuration files.\n  [ ] Start service." 8 $BOX_W
@@ -173,9 +173,9 @@ fi
 # Install and configure fusefs and devd for flash drive auto-mount.
 TITLE="Hot-Plug USB"
 echo "$TITLE" >>$LOGFILE
+dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+ --infobox "Configuring fusefs and devd.\n\n  [ ] Install fusefs package.\n  [ ] Enable fusefs.\n  [ ] Configure devd for hot-plug.\n  [ ] Restart devd." 9 $BOX_W
 if ! kldstat | grep fuse >>$LOGFILE 2>&1; then
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Configuring fusefs and devd.\n\n  [ ] Install fusefs package.\n  [ ] Enable fusefs.\n  [ ] Configure devd for hot-plug.\n  [ ] Restart devd." 9 $BOX_W
   pkg info fusefs-ntfs >>$LOGFILE 2>&1 || pkg install -y fusefs-ntfs >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Configuring fusefs and devd.\n\n  [x] Install fusefs package.\n  [ ] Enable fusefs.\n  [ ] Configure devd for hot-plug.\n  [ ] Restart devd." 9 $BOX_W
@@ -202,9 +202,9 @@ echo "$TITLE" >>$LOGFILE
 
 # Multiple daemons make "service samba_server onestatus" prone to inconclusive results.
 echo "$TITLE: Checking for running smbd, nmbd" >>$LOGFILE
+dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+ --infobox "Setting up SMB/CIFS file sharing.\n\n  [ ] Install Samba.\n  [ ] Create basic configuration file.\n  [ ] Start services." 8 $BOX_W
 if ! pgrep smbd >>$LOGFILE 2>&1 && ! pgrep nmbd >>$LOGFILE 2>&1; then
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Setting up SMB/CIFS file sharing.\n\n  [ ] Install Samba.\n  [ ] Create basic configuration file.\n  [ ] Start services." 8 $BOX_W
   pkg info samba410 >>$LOGFILE 2>&1 || pkg install -y samba410 >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up SMB/CIFS file sharing.\n\n  [x] Install Samba.\n  [ ] Create basic configuration file.\n  [ ] Start services." 8 $BOX_W
@@ -224,9 +224,9 @@ fi
 # WeeNAS Administration
 TITLE="WeeNAS Administration Tool"
 echo "$TITLE" >>$LOGFILE
+dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" \
+ --infobox "Setting up WeeNAS administration.\n\n  [ ] Install Node.js\n  [ ] Install weenas_api service.\n  [ ] Start service." 8 $BOX_W
 if ! service weenas_api onestatus >/dev/null 2>&1; then
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" \
-   --infobox "Setting up WeeNAS administration.\n\n  [ ] Install Node.js\n  [ ] Install weenas_api service.\n  [ ] Start service." 8 $BOX_W
   pkg info node12 >>$LOGFILE 2>&1 || pkg install -y node12 >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up WeeNAS administration.\n\n  [x] Install Node.js\n  [ ] Install weenas_api service.\n  [ ] Start service." 8 $BOX_W
@@ -234,7 +234,7 @@ if ! service weenas_api onestatus >/dev/null 2>&1; then
   sysrc weenas_api_enable="YES" >>$LOGFILE 2>&1
   sysrc weenas_api_dir="/usr/local/libexec" >>$LOGFILE 2>&1
   install -o0 -g0 -m755 -d /usr/local/etc/weenas && cp -R etc/weenas/* /usr/local/etc/weenas
-  cp libexec/weenas_api.js /usr/local/libexec
+  install -o0 -g0 -m755 libexec/weenas_api.js /usr/local/libexec/weenas_api.js
   install -o0 -g0 -m755 -d /usr/local/share/weenas/htdocs && cp -R share/weenas/htdocs/* /usr/local/share/weenas/htdocs
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up WeeNAS administration.\n\n  [x] Install Node.js\n  [x] Install weenas_api service.\n  [ ] Start service." 8 $BOX_W
@@ -249,11 +249,11 @@ fi
 
 # Partition and format USB device.
 TITLE="USB Storage"
-echo "$TITLE: Writing partition table and filesystem." >>$LOGFILE
 if [ "$STORAGE_STATE" == "overwritten" ]; then
-  mount | grep homefs >/dev/null && { echo "Cowardly refusing to overwrite a mounted filesystem."; mount | grep homefs; exit 1; }
+  echo "$TITLE: Writing partition table and filesystem." >>$LOGFILE
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Configuring $DEVICE.\n\n  [ ] Write new GPT partition scheme.\n  [ ] Create FreeBSD-UFS filesystem." 7 $BOX_W
+  mount | grep homefs >/dev/null && { echo "Cowardly refusing to overwrite a mounted filesystem."; mount | grep homefs; exit 1; }
   gpart destroy -F $DEVICE >>$LOGFILE 2>&1
   gpart create -s GPT $DEVICE >>$LOGFILE 2>&1
   gpart add -t freebsd-ufs $DEVICE >>$LOGFILE 2>&1
@@ -270,9 +270,9 @@ fi
 TITLE="Home Filesystem"
 echo "$TITLE: fsck and mount homefs." >>$LOGFILE
 sysrc fsck_y_enable="YES" >>$LOGFILE 2>&1;
+dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+ --infobox "Preparing homefs.\n\n  [ ] Add to /etc/fstab.\n  [ ] Mount filesystem.\n  [ ] Create shared drive." 8 $BOX_W
 if ! mount | grep homefs >>$LOGFILE 2>&1; then
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Preparing homefs.\n\n  [ ] Add to /etc/fstab.\n  [ ] Mount filesystem.\n  [ ] Create shared drive." 8 $BOX_W
   grep homefs /etc/fstab >>$LOGFILE 2>&1 || echo "/dev/ufs/homefs   /home   ufs   rw,noatime   1   2" >> /etc/fstab
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Preparing homefs.\n\n  [x] Add to /etc/fstab.\n  [ ] Mount filesystem.\n  [ ] Create shared drive." 8 $BOX_W
