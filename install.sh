@@ -273,7 +273,7 @@ sysrc fsck_y_enable="YES" >>$LOGFILE 2>&1;
 if ! mount | grep homefs >>$LOGFILE 2>&1; then
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Preparing homefs.\n\n  [ ] Add to /etc/fstab.\n  [ ] Mount filesystem.\n  [ ] Create shared drive." 8 $BOX_W
-  grep homefs /etc/fstab  >>$LOGFILE 2>&1 || echo "/dev/ufs/homefs   /home   ufs   rw,noatime   1   2" >> /etc/fstab
+  grep homefs /etc/fstab >>$LOGFILE 2>&1 || echo "/dev/ufs/homefs   /home   ufs   rw,noatime   1   2" >> /etc/fstab
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Preparing homefs.\n\n  [x] Add to /etc/fstab.\n  [ ] Mount filesystem.\n  [ ] Create shared drive." 8 $BOX_W
   fsck -fpy /dev/ufs/homefs >>$LOGFILE 2>&1
