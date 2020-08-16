@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+
+<!-- Mockup of new WeeNAS admin interface. -->
+
+<html lang="en-US">
+
+<head>
+  <title>Services</title>
+  <meta charset="utf-8">
+  <link href="common.css" rel="stylesheet" type="text/css">
+  <script src="common.js"></script>
+  <script>
+    function displayComponentName(name) {
+      if (name) {
+        document.getElementById('component-name').innerHTML = name;
+      }
+    }
+
+    function displayHealthDetail(healthDetail) {
+      let tbody = '';
+
+      // Sort the services in alpha order for readability.
+      let healthIndicator = Object.keys(healthDetail).sort();
+      for (let i=0; i<healthIndicator.length; i++) {
+        tbody += `<tr><td>${healthIndicator[i]}</td><td>${healthDetail[healthIndicator[i]]}</td></tr>`;
+      }
+      document.getElementById('service-health-body').innerHTML = tbody;
+    }
+  </script>
+  <style>
+    tr th, tr:nth-child(even) { 
+      background-color: whitesmoke;
+    }
+  </style>
+</head>
+
+<!-- The query string part of the URL indicates the component to fetch details for. -->
+<body onload="displayComponentName(window.location.search.substring(1)); AJAX('GET', `/system/health/${window.location.search.substring(1)}/detail`, displayHealthDetail);">
+  <form>
+    <fieldset>
+      <legend>Health Details <span id="component-name"></span></legend>
+      <button class="refresh" onclick="AJAX('GET', `/system/health/${window.location.search.substring(1)}/detail`, displayHealthDetail);" type="button">&#x1F504;</button>
+      <table>
+        <colgroup>
+          <col style="width: 50%;">
+          <col>
+        </colgroup>
+        <thead><tr><th>Indicator</th><th>Status</th></tr></thead>
+        <tbody id="service-health-body"></tbody>
+      </table>
+    </fieldset>
+  </form>
+</body>
+
+</html>

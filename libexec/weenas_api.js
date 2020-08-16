@@ -91,6 +91,7 @@ var mimeTypeList = "";
 for (var fileExt in mimeTypes) {
   mimeTypeList += `${fileExt}|`;
 }
+mimeTypeList += 'html?[a-z]+';  // For html with query strings.
 var staticContentRegEx = new RegExp(`^/[A-Za-z0-9_-]+.(?:${mimeTypeList.slice(0, -1)})`);
 
 // A list of URLs and the log files they refer to let them be served as 'text/plain' static files.
@@ -222,9 +223,13 @@ const server = https.createServer(httpsOptions, (request, response) => {
       let filePath = '';
 
       // Simple GET of static content in htdocs requires no auth token. Everything else does.
+      // Also be on the look out for query strings (?query) and chop them off the file path.
       if (request.url.match(staticContentRegEx)) {
         if (request.method == 'GET') {
           filePath = path.join(installationBase, 'share', 'weenas', 'htdocs', request.url);
+          if (filePath.indexOf('?') > -1) {
+            filePath = filePath.substr(0, filePath.indexOf('?'));
+          }
           serveStaticContent(filePath, request, response);
         }
         else {
