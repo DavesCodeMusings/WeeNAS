@@ -8,7 +8,7 @@
 #
 # weenas_api_enable (boolean):
 #   Set to YES to enable.
-# weenas_api_home (path):
+# weenas_api_dir (path):
 #   /root/weenas by default. Set to the parent path of weenas-api.js.
 #
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
@@ -17,10 +17,10 @@ name="weenas_api"
 desc="WeeNAS API"
 rcvar=weenas_api_enable
 load_rc_config $name
-: ${weenas_api_home:=/root/weenas}
+: ${weenas_api_dir:=/usr/local/libexec}
 command_interpreter=node
-command=${weenas_api_home}/${name}.js
-command_args="${weenas_api_home}/${name}.js"
+command=${weenas_api_dir}/${name}.js
+command_args="${weenas_api_dir}/${name}.js"
 pidfile=/var/run/${name}.pid
 pid=`pgrep -F /var/run/${name}.pid 2>/dev/null`
 
@@ -33,7 +33,6 @@ weenas_api_start()
   echo "Starting ${name}."
   if [ "$pid" == "" ]; then
     ${command_interpreter} ${command_args} >>/var/log/${name}.log 2>&1 &
-    pgrep -F /var/run/${name}.pid 2>/dev/null || echo "Start failed."
   else
     echo "${name} is already running as PID: $pid."
   fi
@@ -54,7 +53,6 @@ weenas_api_stop()
   echo "Stopping ${name}."
   if [ "$pid" != "" ]; then
     pkill -F /var/run/${name}.pid
-    pgrep -F /var/run/${name}.pid 2>/dev/null && echo "Stop failed."
   else
     echo "${name} is not running."
   fi
