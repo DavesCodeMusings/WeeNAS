@@ -110,6 +110,8 @@
     function validateCredentials(accountInfo) {
       let usernameField = document.getElementById('username');
       let passwordField = document.getElementById('password');
+
+      /* If account is valid, remove the lock screen, load the welcome page, and run a health check. */
       if (accountInfo) {
         usernameField.value = '';
         passwordField.value = '';
@@ -121,6 +123,7 @@
         document.getElementsByTagName('header')[0].style.opacity = '0.80';
         loadFrame('Welcome');
         AJAX('GET', '/system/health', displaySystemHealth);
+        healthCheck = window.setInterval(function(){ AJAX('GET', '/system/health', displaySystemHealth); }, 60000);
       }
       else {
         sessionStorage.removeItem('authToken');
@@ -141,6 +144,7 @@
 
     /* Remove authentication token and lock the screen. */
     function processLogout() {
+      clearInterval(healthCheck);
       sessionStorage.removeItem('authToken');
       let usernameField = document.getElementById('username');
       let passwordField = document.getElementById('password');
