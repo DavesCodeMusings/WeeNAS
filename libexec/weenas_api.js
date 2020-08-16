@@ -8,7 +8,7 @@ const childProcess = require('child_process');
 const crypto = require('crypto');
 const process = require('process');
 
-const installationBase = '/root/weenas';
+const installationBase = '/usr/local';
 const port = 9000;
 
 const weenasVersion = '0.2 dev'
