@@ -57,7 +57,7 @@
   <form>
     <fieldset>
       <legend>Filesystem Health</legend>
-      <button class="refresh" onclick="AJAX('GET', '/system/health/filesystem', displayFsHealth);" type="button">&#x1F504;</button>
+      <button class="refresh" onclick="AJAX('GET', '/system/health/filesystem', displayFsHealth);" type="button">&nbsp;</button>
 
       <!-- TODO: add links for detail drilldown with buttons for umount, fsck, & mount. -->
       <table>
@@ -71,7 +71,7 @@
     </fieldset>
     <fieldset>
       <legend>Mounted Filesystems</legend>
-      <button class="refresh" onclick="AJAX('GET', '/filesystem/stats', displayFsStats);" type="button">&#x1F504;</button>
+      <button class="refresh" onclick="AJAX('GET', '/filesystem/stats', displayFsStats);" type="button">&nbsp;</button>
       <table>
         <colgroup>
           <col style="width: 30%;">
@@ -84,7 +84,7 @@
     </fieldset>
     <fieldset>
       <legend>Configured Filesystems</legend>
-      <button class="refresh" onclick="AJAX('GET', '/filesystem/table', displayFstab);" type="button">&#x1F504;</button>
+      <button class="refresh" onclick="AJAX('GET', '/filesystem/table', displayFstab);" type="button">&nbsp;</button>
       <table>
         <colgroup>
           <col style="width: 30%;">

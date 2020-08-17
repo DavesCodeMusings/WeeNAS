@@ -79,7 +79,7 @@
   <form>
     <fieldset>
       <legend>System Health</legend>
-      <button class="refresh" onclick="AJAX('GET', `/system/health/${hostname}/detail`, displaySystemHealth);" type="button">&#x1F504;</button>
+      <button class="refresh" onclick="AJAX('GET', `/system/health/${hostname}/detail`, displaySystemHealth);" type="button">&nbsp;</button>
       <p id="hostname"></p>
       <table>
         <thead id="system-health-head"></thead>
@@ -93,7 +93,7 @@
     </fieldset>
     <fieldset>
       <legend>Top Processes</legend>
-      <button class="refresh" onclick="AJAX('GET', '/system/processes/top', displayTopProc);" type="button">&#x1F504;</button>
+      <button class="refresh" onclick="AJAX('GET', '/system/processes/top', displayTopProc);" type="button">&nbsp;</button>
 
       <!-- TODO: Add option to select and kill process. -->
       <table id="top-info">

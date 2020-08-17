@@ -102,7 +102,7 @@
     <fieldset>
       <legend>User Account Health</legend>
       <button class="refresh" onclick="AJAX('GET', '/system/health/program', displayAccountHealth);"
-        type="button">&#x1F504;</button>
+        type="button">&nbsp;</button>
       <table>
         <colgroup>
           <col style="width: 20%;">
@@ -113,11 +113,11 @@
           <th>Status</th>
         </tr>
         <tr>
-          <td>ssh</td>
+          <td><a href="health-detail.html?failed_ssh">ssh</a></td>
           <td id="ssh-auth-failed"></td>
         </tr>
         <tr>
-          <td>su</td>
+          <td><a href="health-detail.html?failed_su">su</a></td>
           <td id="su-auth-failed"></td>
         </tr>
       </table>
@@ -126,7 +126,7 @@
     <fieldset>
       <legend>User Account Management</legend>
       <button class="refresh" onclick="AJAX('GET', '/system/account', displayAccountList);"
-        type="button">&#x1F504;</button>
+        type="button">&nbsp;</button>
       <table>
         <colgroup>
           <col style="width: 20%;">
@@ -166,16 +166,16 @@
           </tr>
           <tr>
             <td><input class="optional" id="account-email-alt" placeholder="Alt. Email" type="text">
-              <span id="account-locked" style="display: none;">&#x1F512;&nbsp;Locked</span></td>
+              <span id="account-locked" style="display: none;"><img alt="padlock" class="icon" src="icon_lock.svg">&nbsp;Locked</span></td>
           </tr>
         </tbody>
         <tfoot>
           <tr>
             <td colspan="2">
-              <button id="create-button" onclick="alert('Update User');">&#x02705;<span
+              <button id="create-button" onclick="alert('Update User');"><img alt="OK" class="icon" src="icon_check.svg"><span
                   class="collapsible">&nbsp;Create</span></button>
               <button id="update-button" onclick="alert('Update User');"
-                style="display: none;">&#x1F4DD;<span class="collapsible">&nbsp;Update</span></button>
+                style="display: none;"><img alt="OK" class="icon" src="icon_check.svg"><span class="collapsible">&nbsp;Update</span></button>
             </td>
           </tr>
         </tfoot>
