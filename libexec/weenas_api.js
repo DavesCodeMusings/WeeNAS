@@ -91,8 +91,8 @@ var mimeTypeList = "";
 for (var fileExt in mimeTypes) {
   mimeTypeList += `${fileExt}|`;
 }
-mimeTypeList += 'html?[a-z]+';  // For html with query strings.
-var staticContentRegEx = new RegExp(`^/[A-Za-z0-9_-]+.(?:${mimeTypeList.slice(0, -1)})`);
+mimeTypeList += 'html?[a-z_]+';  // For html with query strings.
+var staticContentRegEx = new RegExp(`^/[A-Za-z0-9_-]+.(?:${mimeTypeList})`);
 
 // A list of URLs and the log files they refer to let them be served as 'text/plain' static files.
 const logRedirects = {
