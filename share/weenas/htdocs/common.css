@@ -55,7 +55,7 @@ input[type="text"].optional {
   display: inline-block;
 }
 
-p {
+h1, h2, p {
   padding-bottom: 0.25em;
   padding-top: 0.25em;
 }
