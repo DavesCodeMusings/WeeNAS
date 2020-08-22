@@ -7,7 +7,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-      background-color: #33333333;
       background-attachment: fixed;
       background-image: url('wallpaper.jpg');
       background-size: cover;
@@ -22,7 +21,7 @@
     }
 
     input {
-      width: 14em;
+      width: 20em;
     }
 
     #login-box {
@@ -34,7 +33,7 @@
       margin-top: 30vh;
       opacity: 0.80;
       text-align: center;
-      width: 15em;
+      width: 21em;
     }
 
     #login-help {
@@ -77,11 +76,11 @@
       <input id="secret" name="secret" type="password" placeholder="Tell me a secret." tabindex="2"><br>
       <br>
       <input id="password" name="password" type="password" placeholder="Tell me your new password." tabindex="3"><br>
-      <br> 
-      <button onclick="showLoginHelp();" title="Get Help" type="button">&#x02753;</button>
-      <button title="Change Password" type="submit" tabindex="4">&#x02714;</button>
+      <br>
+      <button onclick="showLoginHelp();" title="Get Help" type="button"><img alt="?" class="icon" src="icon_help.svg"></button>
+      <button title="Change Password" type="submit" tabindex="4"><img alt="OK" class="icon" src="icon_check.svg"></button>
       <button onmousedown="revealSecret();" onmouseup="hideSecret();" title="Show Secret and Password"
-        type="button">&#x1F440;&#x0FE0F;</button>
+        type="button"><img alt="Eye" class="icon" src="icon_eye.svg"></button>
     </fieldset>
   </form>
   <div id="login-help">
@@ -104,8 +103,8 @@
       help you set your initial passwords, too.
     </p>
     <p>
-      If you don't have a secret yet, think of a good one. Type it in the box and hit
-      <button type="button">&#x02714;</button>. I'll remember your secret for next time. Make sure you do too.
+      If you don't have a secret yet, think of a good one. Type it in the box and I'll remember your secret for next
+      time. Make sure you do too.
     </p>
   </div>
 </body>
