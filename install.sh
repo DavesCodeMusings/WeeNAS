@@ -280,7 +280,7 @@ if ! mount | grep homefs >>$LOGFILE 2>&1; then
   mount /dev/ufs/homefs >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Preparing homefs.\n\n  [x] Add to /etc/fstab.\n  [x] Mount filesystem.\n  [ ] Create shared drive." 8 $BOX_W
-  install -d -g 1000 -m 1775 /home/shared >>$LOGFILE 2>&1
+  install -d -g1000 -m1775 /home/shared >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Preparing homefs.\n\n  [x] Add to /etc/fstab.\n  [x] Mount filesystem.\n  [x] Create shared drive." 8 $BOX_W
 else
@@ -293,17 +293,17 @@ fi
 TITLE="User Accounts"
 echo "$TITLE" >>$LOGFILE
 dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
- --infobox "Configuring users.\n\n  [ ] Create shared group.\n  [ ] Lock backdoor toor account.\n  [ ] Secure wnpasswd." 8 $BOX_W
+ --infobox "Configuring users.\n\n  [ ] Create shared group.\n  [ ] Lock backdoor toor account.\n  [ ] Create wnpasswd." 8 $BOX_W
 grep shared /etc/group >>/dev/null 2>&1 || pw groupadd shared -g 1000
 dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
- --infobox "Configuring users.\n\n  [x] Create shared group.\n  [ ] Lock backdoor toor account.\n  [ ] Secure wnpasswd." 8 $BOX_W
+ --infobox "Configuring users.\n\n  [x] Create shared group.\n  [ ] Lock backdoor toor account.\n  [ ] Create wnpasswd." 8 $BOX_W
 pw lock toor >>$LOGFILE 2>&1
 dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
- --infobox "Configuring users.\n\n  [x] Create shared group.\n  [x] Lock backdoor toor account.\n  [ ] Secure wnpasswd." 8 $BOX_W
-chmod 600 etc/fnpasswd
-pw user mod freebsd -c "FreeBSD User,$(sha1 -qs 'freebsd')"
+ --infobox "Configuring users.\n\n  [x] Create shared group.\n  [x] Lock backdoor toor account.\n  [ ] Create wnpasswd." 8 $BOX_W
+[ -f /usr/local/etc/weenas/wnpasswd ] || printf '{\n "%s": "%s"\n}' freebsd `sha512 -qs freebsd` >/usr/local/etc/weenas/wnpasswd 2>$LOGFILE
+chmod 600 /usr/local/etc/weenas/wnpasswd
 dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
- --infobox "Configuring users.\n\n  [x] Create shared group.\n  [x] Lock backdoor toor account.\n  [x] Secure wnpasswd." 8 $BOX_W
+ --infobox "Configuring users.\n\n  [x] Create shared group.\n  [x] Lock backdoor toor account.\n  [x] Create wnpasswd." 8 $BOX_W
 
 # Optionally set the root password. Loop through until either successful return from pw or Cancel in dialog.
 echo "$TITLE: root password" >>$LOGFILE

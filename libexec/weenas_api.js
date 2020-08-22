@@ -56,7 +56,7 @@ catch {
 var wnpasswd = {};
 const wnpasswdFile = path.join(installationBase, 'etc', 'weenas', 'wnpasswd');
 try {
-  wnpasswd = fs.readFileSync(wnpasswdFile);
+  wnpasswd = JSON.parse(fs.readFileSync(wnpasswdFile));
 }
 catch {
   log(`Unable to read user accounts from ${wnpasswdFile}. Your installation is corrupt.`);
@@ -123,15 +123,9 @@ function validateCredentials(authHeader) {
     if (authType == 'Basic') {
       credentialsDecoded = Buffer.from(authCredentials, 'base64').toString('ascii');
       let [user, pass] = credentialsDecoded.split(':');
-      let storedCredentials = '';
-      try {
-        storedCredentials = JSON.parse(childProcess.execSync(`pw user show ${user} 2>/dev/null | awk -F: 'BEGIN { printf "{\\n" } { split($8, gecos, ","); printf "  \\"auth\\": \\"%s\\",\\n", gecos[2]; printf "  \\"trusted\\": %i\\n", ($10 != "/sbin/nologin") } END { printf "}\\n" }'`));
-      }
-      catch {
-        log(`Unable to retreive credentials for ${user}`);
-      }
-      let sha1Hash = crypto.createHash('sha1').update(pass).digest('hex');
-      if (sha1Hash == storedCredentials.auth) {
+      let storedCredentials = wnpasswd(user) || 'x';
+      let sha512Hash = crypto.createHash('sha512').update(pass).digest('hex');
+      if (sha512Hash == storedCredentials.auth) {
         authorizedUser = user;
       }
     }
