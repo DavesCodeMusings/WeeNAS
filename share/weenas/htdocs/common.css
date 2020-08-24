@@ -20,8 +20,8 @@ body {
   font-family: sans-serif;
 }
 
-button {
-  padding: 0.2em;
+button, input, select {
+  padding: 0.1em;
 }
 
 button.refresh {
