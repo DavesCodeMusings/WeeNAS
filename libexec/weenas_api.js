@@ -92,15 +92,6 @@ for (var fileExt in mimeTypes) {
 mimeTypeList += 'html?[a-z_]+';  // For html with query strings.
 var staticContentRegEx = new RegExp(`^/[A-Za-z0-9_-]+.(?:${mimeTypeList})`);
 
-// A list of URLs and the log files they refer to let them be served as 'text/plain' static files.
-const logRedirects = {
-  "/system/log/cron": "/var/log/cron",
-  "/system/log/messages": "/var/log/messages",
-  "/system/log/nmbd": "/var/log/samba4/log.nmbd",
-  "/system/log/smbd": "/var/log/samba4/log.smbd",
-  "/system/log/weenas_api": "/var/log/weenas_api.log"
-};
-
 // Mapping HTTP verbs to API verbs.
 var apiVerbDict = {
   'GET': 'get',
@@ -230,16 +221,6 @@ const server = https.createServer(httpsOptions, (request, response) => {
         }
       }
       else if (authorizedUser) {
-
-        // Log files are static content, but only authorized users can view them.
-        for (url in logRedirects) {
-          if (url == request.url) {
-            filePath = logRedirects[url];
-            if (request.method == 'GET') {
-              serveStaticContent(filePath, request, response);
-            }
-          }
-        }
 
         // If no filepath was matched, check API calls.
         if (!filePath) {
