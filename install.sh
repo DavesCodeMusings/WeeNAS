@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Defaults for dialog boxes.
-BACKTITLE="WeeNAS Network Attached Storage"
+BACKTITLE="WeeNAS: Tiny Network Attached Storage"
 BOX_W=60
 INFO_PAUSE="2"
 
