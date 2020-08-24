@@ -122,8 +122,8 @@
         document.getElementById('lock-screen').style.display = 'none';
         document.getElementsByTagName('header')[0].style.opacity = '0.80';
         loadFrame('Welcome');
-        AJAX('GET', '/system/health', displaySystemHealth);
-        healthCheck = window.setInterval(function(){ AJAX('GET', '/system/health', displaySystemHealth); }, 60000);
+        apiGet('/system/health', displaySystemHealth);
+        healthCheck = window.setInterval(function(){ apiGet('/system/health', displaySystemHealth); }, 60000);
       }
       else {
         sessionStorage.removeItem('authToken');
@@ -139,7 +139,7 @@
       let usernameField = document.getElementById('username');
       let passwordField = document.getElementById('password');
       sessionStorage.setItem('authToken', 'Basic ' + btoa(`${usernameField.value}:${passwordField.value}`));
-      AJAX('GET', '/account/' + usernameField.value, validateCredentials);
+      apiGet('/account/' + usernameField.value, validateCredentials);
     }
 
     /* Remove authentication token and lock the screen. */

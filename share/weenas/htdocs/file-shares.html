@@ -79,19 +79,19 @@
       else {
         document.getElementById('create-button').style.display = 'none';
         document.getElementById('update-delete-buttons').style.display = 'inline';
-        AJAX('GET', '/smb/config/section/' + smbShareName, displaySmbShareDetails);
+        apiGet('/smb/config/section/' + smbShareName, displaySmbShareDetails);
       }
     }
   </script>
 </head>
 
 <body
-  onload="AJAX('GET', '/system/health', displayServiceHealth); AJAX('GET', '/smb/config/section', displayConfigShares); AJAX('GET', '/smb/config/section/global', displayConfigGlobal);">
+  onload="apiGet('/system/health', displayServiceHealth); apiGet('/smb/config/section', displayConfigShares); apiGet('/smb/config/section/global', displayConfigGlobal);">
   <p class="caution">This is a partially functioning mock-up. Shares cannot be created or deleted.</p>
   <form>
     <fieldset>
       <legend>SMB Service Health</legend>
-      <button class="refresh" onclick="AJAX('GET', '/system/health', displayServiceHealth);"
+      <button class="refresh" onclick="apiGet('/system/health', displayServiceHealth);"
         type="button">&nbsp;</button>
       <table>
         <colgroup>
@@ -110,7 +110,7 @@
 
     <fieldset>
       <legend>Global Parameters</legend>
-      <button class="refresh" onclick="AJAX('GET', '/smb/config/section/global', displayConfigGlobal);" type="button">&nbsp;</button>
+      <button class="refresh" onclick="apiGet('/smb/config/section/global', displayConfigGlobal);" type="button">&nbsp;</button>
       <table>
         <colgroup>
           <col style="width: 20%">
@@ -128,7 +128,7 @@
 
     <fieldset>
       <legend>Share Management</legend>
-      <button class="refresh" onclick="AJAX('GET', '/smb/config/section', displayConfigShares);" type="button">&nbsp;</button>
+      <button class="refresh" onclick="apiGet('/smb/config/section', displayConfigShares);" type="button">&nbsp;</button>
       <table>
         <colgroup>
           <col style="width: 20%">

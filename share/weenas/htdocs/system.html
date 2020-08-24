@@ -14,7 +14,7 @@
       hostname = osInfo.name;
       document.getElementById('hostname').innerHTML = `<a href="health-detail.html?${osInfo.name}">${osInfo.name}</a>`;
       document.getElementById('os-info').innerHTML = `${osInfo.machine} ${osInfo.release} on ${osInfo.system} architecture.`
-      AJAX('GET', `/system/health/${hostname}/detail`, displaySystemHealth);
+      apiGet(`/system/health/${hostname}/detail`, displaySystemHealth);
     }
 
     function displayRpiInfo(revCode) {
@@ -75,11 +75,11 @@
   </script>
 </head>
 
-<body onload="AJAX('GET', '/system/board/revcode', displayRpiInfo); AJAX('GET', '/system/os', displayOSInfo); AJAX('GET', '/system/processes/top', displayTopProc);">
+<body onload="apiGet('/system/board/revcode', displayRpiInfo); apiGet('/system/os', displayOSInfo); apiGet('/system/processes/top', displayTopProc);">
   <form>
     <fieldset>
       <legend>System Health</legend>
-      <button class="refresh" onclick="AJAX('GET', `/system/health/${hostname}/detail`, displaySystemHealth);" type="button">&nbsp;</button>
+      <button class="refresh" onclick="apiGet(`/system/health/${hostname}/detail`, displaySystemHealth);" type="button">&nbsp;</button>
       <p id="hostname"></p>
       <table>
         <thead id="system-health-head"></thead>
@@ -93,7 +93,7 @@
     </fieldset>
     <fieldset>
       <legend>Top Processes</legend>
-      <button class="refresh" onclick="AJAX('GET', '/system/processes/top', displayTopProc);" type="button">&nbsp;</button>
+      <button class="refresh" onclick="apiGet('/system/processes/top', displayTopProc);" type="button">&nbsp;</button>
 
       <!-- TODO: Add option to select and kill process. -->
       <table id="top-info">

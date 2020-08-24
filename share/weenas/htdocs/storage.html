@@ -53,11 +53,11 @@
   </script>
 </head>
 
-<body onload="AJAX('GET', '/system/health/filesystem', displayFsHealth); AJAX('GET', '/filesystem/stats', displayFsStats); AJAX('GET', '/filesystem/table', displayFstab);">
+<body onload="apiGet('/system/health/filesystem', displayFsHealth); apiGet('/filesystem/stats', displayFsStats); apiGet('/filesystem/table', displayFstab);">
   <form>
     <fieldset>
       <legend>Filesystem Health</legend>
-      <button class="refresh" onclick="AJAX('GET', '/system/health/filesystem', displayFsHealth);" type="button">&nbsp;</button>
+      <button class="refresh" onclick="apiGet('/system/health/filesystem', displayFsHealth);" type="button">&nbsp;</button>
 
       <!-- TODO: add links for detail drilldown with buttons for umount, fsck, & mount. -->
       <table>
@@ -71,7 +71,7 @@
     </fieldset>
     <fieldset>
       <legend>Mounted Filesystems</legend>
-      <button class="refresh" onclick="AJAX('GET', '/filesystem/stats', displayFsStats);" type="button">&nbsp;</button>
+      <button class="refresh" onclick="apiGet('/filesystem/stats', displayFsStats);" type="button">&nbsp;</button>
       <table>
         <colgroup>
           <col style="width: 30%;">
@@ -84,7 +84,7 @@
     </fieldset>
     <fieldset>
       <legend>Configured Filesystems</legend>
-      <button class="refresh" onclick="AJAX('GET', '/filesystem/table', displayFstab);" type="button">&nbsp;</button>
+      <button class="refresh" onclick="apiGet('/filesystem/table', displayFstab);" type="button">&nbsp;</button>
       <table>
         <colgroup>
           <col style="width: 30%;">

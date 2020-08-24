@@ -35,11 +35,11 @@
 </head>
 
 <!-- The query string part of the URL indicates the component to fetch details for. -->
-<body onload="displayComponentName(window.location.search.substring(1)); AJAX('GET', `/system/health/${window.location.search.substring(1)}/detail`, displayHealthDetail);">
+<body onload="displayComponentName(window.location.search.substring(1)); apiGet(`/system/health/${window.location.search.substring(1)}/detail`, displayHealthDetail);">
   <form>
     <fieldset>
       <legend>Health Details <span id="component-name"></span></legend>
-      <button class="refresh" onclick="AJAX('GET', `/system/health/${window.location.search.substring(1)}/detail`, displayHealthDetail);" type="button">&nbsp;</button>
+      <button class="refresh" onclick="apiGet(`/system/health/${window.location.search.substring(1)}/detail`, displayHealthDetail);" type="button">&nbsp;</button>
       <table>
         <colgroup>
           <col style="width: 50%;">
