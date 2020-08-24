@@ -146,30 +146,6 @@ else
    --infobox "Installing pkg and updating repositories.\n\n  [s] Bootstrap pkg.\n  [s] Update repositories." 7 $BOX_W
 fi
 
-# Install system monitor.
-TITLE="System Monitoring"
-echo "$TITLE: installing Monit" >>$LOGFILE 2>&1
-dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
- --infobox "Setting up system monitoring.\n\n  [ ] Install Monit.\n  [ ] Create configuration files.\n  [ ] Start service." 8 $BOX_W
-if ! service monit onestatus; then
-  pkg info monit >>$LOGFILE 2>&1 || pkg install -y monit >>$LOGFILE 2>&1
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Setting up system monitoring.\n\n  [x] Install Monit.\n  [ ] Create configuration files.\n  [ ] Start service." 8 $BOX_W
-  [ -f /usr/local/etc/monitrc ] || sed -e 's|^#  include /etc/monit.d/\*|include /usr/local/etc/monit.d/\*.conf|' /usr/local/etc/monitrc.sample >/usr/local/etc/monitrc
-  chmod 600 /usr/local/etc/monitrc
-  [ -d /usr/local/etc/monit.d ] || cp -r etc/monit.d /usr/local/etc/monit.d
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Setting up system monitoring.\n\n  [x] Install Monit.\n  [x] Create configuration files.\n  [ ] Start service." 8 $BOX_W
-  sysrc monit_enable="YES" >>$LOGFILE 2>&1;
-  service monit start >>$LOGFILE 2>&1
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
-   --infobox "Setting up system monitoring.\n\n  [x] Install Monit.\n  [x] Create configuration files.\n  [x] Start service." 8 $BOX_W
-else
-  echo "$TITLE: skipped." >>$LOGFILE
-  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "Skipped: Monit already running." \
-   --infobox "Setting up system monitoring.\n\n  [s] Install Monit.\n  [s] Create configuration files.\n  [s] Start service." 8 $BOX_W
-fi
-
 # Install and configure fusefs and devd for flash drive auto-mount.
 TITLE="Hot-Plug USB"
 echo "$TITLE" >>$LOGFILE
@@ -287,6 +263,30 @@ else
   echo "$TITLE: skipped." >>$LOGFILE
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "Skipped: homefs already mounted." \
    --infobox "Preparing homefs.\n\n  [s] Add to /etc/fstab.\n  [s] Mount filesystem.\n  [s] Create shared drive." 8 $BOX_W
+fi
+
+# Install system monitor.
+TITLE="System Monitoring"
+echo "$TITLE: installing Monit" >>$LOGFILE 2>&1
+dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+ --infobox "Setting up system monitoring.\n\n  [ ] Install Monit.\n  [ ] Create configuration files.\n  [ ] Start service." 8 $BOX_W
+if ! service monit onestatus >/dev/null 2>&1; then
+  pkg info monit >>$LOGFILE 2>&1 || pkg install -y monit >>$LOGFILE 2>&1
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+   --infobox "Setting up system monitoring.\n\n  [x] Install Monit.\n  [ ] Create configuration files.\n  [ ] Start service." 8 $BOX_W
+  [ -f /usr/local/etc/monitrc ] || sed -e 's|^#  include /etc/monit.d/\*|include /usr/local/etc/monit.d/\*.conf|' /usr/local/etc/monitrc.sample >/usr/local/etc/monitrc
+  chmod 600 /usr/local/etc/monitrc
+  [ -d /usr/local/etc/monit.d ] || cp -r etc/monit.d /usr/local/etc/monit.d
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+   --infobox "Setting up system monitoring.\n\n  [x] Install Monit.\n  [x] Create configuration files.\n  [ ] Start service." 8 $BOX_W
+  sysrc monit_enable="YES" >>$LOGFILE 2>&1;
+  service monit start >>$LOGFILE 2>&1
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
+   --infobox "Setting up system monitoring.\n\n  [x] Install Monit.\n  [x] Create configuration files.\n  [x] Start service." 8 $BOX_W
+else
+  echo "$TITLE: skipped." >>$LOGFILE
+  dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE --hline "Skipped: Monit already running." \
+   --infobox "Setting up system monitoring.\n\n  [s] Install Monit.\n  [s] Create configuration files.\n  [s] Start service." 8 $BOX_W
 fi
 
 # Set up users.
