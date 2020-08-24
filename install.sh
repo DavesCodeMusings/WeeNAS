@@ -119,7 +119,7 @@ if [ "$NEW_HOSTNAME" != "$(hostname)" ] || ! [ -f "/usr/local/etc/weenas/${NEW_H
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up identity.\n\n  [x] Set hostname to $NEW_HOSTNAME\n  [ ] Create TLS certificate." 8 $BOX_W
   install -o0 -g0 -m755 -d /usr/local/etc/weenas
-  openssl req -x509 -newkey rsa:4096 -keyout /usr/local/etc/weenas/${NEW_HOSTNAME}.key -out /usr/local/etc/weenas/${NEW_HOSTNAME}.cer -days 730 -nodes -subj "/CN=$NEW_HOSTNAME" >>$LOGFILE 2>&1
+  openssl req -x509 -newkey rsa:4096 -keyout /usr/local/etc/weenas/weenas_api.key -out /usr/local/etc/weenas/weenas_api.cer -days 730 -nodes -subj "/CN=$NEW_HOSTNAME" >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Setting up identity.\n\n  [x] Set hostname to $NEW_HOSTNAME\n  [x] Create TLS certificate." 8 $BOX_W
 else

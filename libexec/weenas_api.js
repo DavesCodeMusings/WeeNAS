@@ -3,7 +3,6 @@
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
 const childProcess = require('child_process');
 const crypto = require('crypto');
 const process = require('process');
@@ -32,23 +31,22 @@ if (pidFile) {
 
 // Prepare for secure web server start up by fetching the SSL certificate and key. 
 const certPath = path.join(installationBase, 'etc', 'weenas');
-const hostname = os.hostname();
 const httpsOptions = {
   cert: '',
   key: ''
 };
 try {
-  httpsOptions.cert = fs.readFileSync(path.join(certPath, `${hostname}.cer`));
+  httpsOptions.cert = fs.readFileSync(path.join(certPath, 'weenas_api.cer'));
 }
 catch {
-  log(`Unable to read SSL cert from ${certPath}/${hostname}.cer`);
+  log(`Unable to read SSL cert from ${certPath}/weenas_api.cer`);
   process.exit(2);
 }
 try {
-  httpsOptions.key = fs.readFileSync(path.join(certPath, `${hostname}.key`));
+  httpsOptions.key = fs.readFileSync(path.join(certPath, 'weenas_api.key'));
 }
 catch {
-  log(`Unable to read SSL private key from ${certPath}/${hostname}.key.`);
+  log(`Unable to read SSL private key from ${certPath}/weenas_api.key.`);
   process.exit(2);
 }
 
