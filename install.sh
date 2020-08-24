@@ -36,7 +36,7 @@ TITLE="Identity"
 echo "$TITLE: hostname input." >>$LOGFILE
 TMP_FILE=$(mktemp)
 dialog --no-lines --backtitle "$BACKTITLE" --title "Hostname" \
- --form "If you'd like to set a new DNS identity for your WeeNAS device (e.g. weenas.mydomain.com) type it below. Or select cancel to keep the default." 9 60 1 "hostname:" 0 2 "$(hostname)" 0 12 42 42 2>$TMP_FILE
+ --form "If you'd like to set a new DNS identity for your WeeNAS device (e.g. weenas.mydomain.com) type it below. Or select cancel to keep the existing identity." 9 60 1 "hostname:" 0 2 "weenas.local" 0 12 42 42 2>$TMP_FILE
 NEW_HOSTNAME=$(cat $TMP_FILE)
 echo "$TITLE: $NEW_HOSTNAME" >>$LOGFILE
 rm $TMP_FILE >>$LOGFILE 2>&1
