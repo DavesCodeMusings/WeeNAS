@@ -125,7 +125,7 @@ function validateCredentials(authHeader) {
       let [user, pass] = credentialsDecoded.split(':');
       let storedCredentials = wnpasswd(user) || 'x';
       let sha512Hash = crypto.createHash('sha512').update(pass).digest('hex');
-      if (sha512Hash == storedCredentials.auth) {
+      if (sha512Hash == storedCredentials) {
         authorizedUser = user;
       }
     }
