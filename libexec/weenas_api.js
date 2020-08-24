@@ -136,7 +136,7 @@ function validateCredentials(authHeader) {
 // Serve up static content and log files (GET requests not handled by API.)
 function serveStaticContent(filePath, request, response) {
   let fileStream = fs.createReadStream(filePath);
-  let mimeType = mimeTypes[path.extname(filePath).slice(1)] || 'text/plain';
+  let mimeType = mimeTypes[path.extname(filePath).slice(1)] || 'text/plain;charset=UTF-8';
   fileStream.on('open', () => {
     log(`Serving ${request.url} from ${filePath} as ${mimeType}`);
     response.writeHead(200, { 'Content-Type': mimeType });
@@ -144,7 +144,7 @@ function serveStaticContent(filePath, request, response) {
   });
   fileStream.on('error', (e) => {
     log(JSON.stringify(e));
-    response.writeHead(404, 'Not Found', { 'Content-type': 'text/plain' });
+    response.writeHead(404, 'Not Found', { 'Content-Type': 'text/plain;charset=UTF-8' });
     response.end(`404: ${request.url}'s not here, man.`);
   });
   fileStream.on('end', () => {
@@ -198,7 +198,7 @@ const server = https.createServer(httpsOptions, (request, response) => {
       body += chunk;
     }
     else {
-      response.writeHead(400, 'Bad Request', { 'Content-Type': 'text/plain' });
+      response.writeHead(400, 'Bad Request', { 'Content-Type': 'text/plain;charset=UTF-8' });
       response.end('400: Illegal characters in request body.');
       request.destroy();
     }
@@ -252,16 +252,16 @@ const server = https.createServer(httpsOptions, (request, response) => {
             // API calls have the request body passed as well for possible POST and/or PUT.
             let result = runApiCommand(authorizedUser, cmd, body);
             if (result != EGENERIC) {
-              response.writeHead(200, 'OK', { 'Content-Type': 'application/json' });
+              response.writeHead(200, 'OK', { 'Content-Type': 'application/json;charset=UTF-8' });
               response.end(result);
             }
             else {
-              response.writeHead(404, 'Not Found', { 'Content-Type': 'text/plain' })
+              response.writeHead(404, 'Not Found', { 'Content-Type': 'text/plain;charset=UTF-8' })
               response.end(result);
             }
           }
           else {
-            response.writeHead(405, 'Method Not Allowed', { 'Content-Type': 'text/plain' });
+            response.writeHead(405, 'Method Not Allowed', { 'Content-Type': 'text/plain;charset=UTF-8' });
             response.end('The API does not support that method.');
           }
         }
