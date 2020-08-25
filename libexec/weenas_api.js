@@ -162,8 +162,9 @@ function runApiCommand(user, apiCmd, apiBody) {
       let match = cmdPatternRegEx.exec(apiCmd);
 
       // Substitute regex group matches into shell command %1 and %2 placeholders.
-      // And, substitute the request body into the shell command's %0 placeholder.
+      // Also, request body and the authenticated user via %0 and %u, respectively.
       shellCmd = apiCmds[cmdPattern];
+      shellCmd = shellCmd.replace(/%u/g, user);
       if (match[1]) shellCmd = shellCmd.replace(/%1/g, match[1]);
       if (match[2]) shellCmd = shellCmd.replace(/%2/g, match[2]);
       if (apiBody) shellCmd = shellCmd.replace(/%0/, apiBody);

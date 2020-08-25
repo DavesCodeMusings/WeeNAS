@@ -24,7 +24,7 @@ function apiGet(url, callback) {
 }
 
 // Make an async call to the API url and pass the parsed JSON to the callback. 
-function apiPost(url, body, callback) {
+function apiPut(url, body, callback) {
   document.body.style.cursor = 'wait';
   let authHeader = sessionStorage.getItem('authToken');
   let xhttp = new XMLHttpRequest();
@@ -39,7 +39,7 @@ function apiPost(url, body, callback) {
       document.body.style.cursor = 'default';
     }
   };
-  xhttp.open('POST', url, true);
+  xhttp.open('PUT', url, true);
   xhttp.setRequestHeader('Authorization', authHeader);
   xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
   xhttp.send(body);
