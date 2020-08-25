@@ -53,8 +53,15 @@ catch {
 // Fetch WeeNAS user secrets from wnpasswd.
 var wnpasswd = {};
 const wnpasswdFile = path.join(installationBase, 'etc', 'weenas', 'wnpasswd');
+
+// Read colon-separated key/value pairs into an object.
 try {
-  wnpasswd = JSON.parse(fs.readFileSync(wnpasswdFile));
+  for (let line of fs.readFileSync(wnpasswdFile).toString().split('\n')) {
+    if (line.charAt(0) != '#' && line.indexOf(':') != -1) {
+      entry = line.split(':');
+      wnpasswd[entry[0]] = entry[1];
+    }
+  }
 }
 catch {
   log(`Unable to read user accounts from ${wnpasswdFile}. Your installation is corrupt.`);

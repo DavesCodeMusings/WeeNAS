@@ -300,7 +300,7 @@ dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE 
 pw lock toor >>$LOGFILE 2>&1
 dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
  --infobox "Configuring users.\n\n  [x] Create shared group.\n  [x] Lock backdoor toor account.\n  [ ] Create wnpasswd." 8 $BOX_W
-[ -f /usr/local/etc/weenas/wnpasswd ] || printf '{\n "%s": "%s"\n}' freebsd `sha512 -qs freebsd` >/usr/local/etc/weenas/wnpasswd 2>>$LOGFILE
+[ -f /usr/local/etc/weenas/wnpasswd ] || printf '%s:%s\n' freebsd `sha512 -qs freebsd` >/usr/local/etc/weenas/wnpasswd 2>>$LOGFILE
 chmod 600 /usr/local/etc/weenas/wnpasswd
 dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
  --infobox "Configuring users.\n\n  [x] Create shared group.\n  [x] Lock backdoor toor account.\n  [x] Create wnpasswd." 8 $BOX_W
