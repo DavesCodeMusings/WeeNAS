@@ -119,7 +119,7 @@ function validateCredentials(authHeader) {
     if (authType == 'Basic') {
       credentialsDecoded = Buffer.from(authCredentials, 'base64').toString('ascii');
       let [user, pass] = credentialsDecoded.split(':');
-      let storedCredentials = wnpasswd(user) || 'x';
+      let storedCredentials = wnpasswd[user] || 'x';
       let sha512Hash = crypto.createHash('sha512').update(pass).digest('hex');
       if (sha512Hash == storedCredentials) {
         authorizedUser = user;
