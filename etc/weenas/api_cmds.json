@@ -1,7 +1,7 @@
 {
   "^get ping$": "echo 'pong'",
   "^new ping$": "echo '%0'",
-  "^get account ([A-Za-z0-9_]+)$": "echo \"$(id -P %1):$(id -Gn %1):$(pdbedit %1)\" | awk -F: '{ printf \"{ \\\"login\\\": \\\"%s\\\", \\\"locked\\\": %s, \\\"gecos\\\": \\\"%s\\\", \\\"shell\\\": %s, \\\"admin\\\": %s, \\\"samba\\\": %s }\", $1, ($2~/LOCKED/)?\"true\":\"false\", $8, ($10~/nologin/)?\"false\":\"true\", ($11~/(^| )wheel( |$)/)?\"true\":\"false\", ($3==$13)?\"true\":\"false\" }'",
+  "^get account ([A-Za-z0-9_]+)$": "if grep %1 /etc/passwd; then echo \"$(id -P %1):$(id -Gn %1):$(pdbedit %1)\" | awk -F: '{ printf \"{ \\\"login\\\": \\\"%s\\\", \\\"locked\\\": %s, \\\"gecos\\\": \\\"%s\\\", \\\"shell\\\": %s, \\\"admin\\\": %s, \\\"samba\\\": %s }\", $1, ($2~/LOCKED/)?\"true\":\"false\", $8, ($10~/nologin/)?\"false\":\"true\", ($11~/(^| )wheel( |$)/)?\"true\":\"false\", ($3==$13)?\"true\":\"false\" }'; else echo \"\\\"User does not exist.\\\"\"; fi",
   "^set account ([A-Za-z0-9_]+) password$": "if [ '%1' == '%u' ]; then if echo '%0' | pw usermod %u -h0 && printf '%0\\n%0\\n' | smbpasswd %u >/dev/null 2>&1; then echo true; else echo false; fi; else echo 'false'; fi",
   "^get filesystem table$": "awk 'BEGIN { printf \"[\" } /^[^#]/ { printf \"%s  { \\\"filesystem\\\": \\\"%s\\\", \\\"mountpoint\\\": \\\"%s\\\", \\\"vfstype\\\": \\\"%s\\\", \\\"mntops\\\": \\\"%s\\\", \\\"freq\\\": \\\"%s\\\", \\\"passno\\\": \\\"%s\\\" }\", (++count==1)?\"\\n\":\",\\n\", $1, $2, $3, $4, $5, $6 } END { printf \"\\n]\" }' /etc/fstab",
   "^get filesystem stats$": "df -h | awk 'BEGIN { printf \"[\" } (NR>1) { printf \"%s  { \\\"filesystem\\\": \\\"%s\\\", \\\"size\\\": \\\"%s\\\", \\\"used\\\": \\\"%s\\\", \\\"available\\\": \\\"%s\\\", \\\"capacity\\\": \\\"%s\\\", \\\"mountpoint\\\": \\\"%s\\\" }\", (++count==1)?\"\\n\":\",\\n\", $1, $2, $3, $4, $5, $6 } END { printf \"\\n]\" }'",
@@ -23,4 +23,4 @@
   "^get smb config raw$": "testparm -s 2>/dev/null | awk 'BEGIN { printf \"[\" } (NR>1) { gsub(/\t/, \"  \", $0); printf \"%s  \\\"%s\\\"\", (++count==1)?\"\\n\":\",\\n\", $0 } END { printf \"\\n]\" }'",
   "^get smb config section$": "testparm -s 2>/dev/null | awk 'BEGIN { printf \"[\" } /\\[.*\\]/ { sub(/^\\[/, \"\", $0); sub(/\\]$/, \"\", $0); printf \"%s  \\\"%s\\\"\", (++count==1)?\"\\n\":\",\\n\", $0; } END { printf \"\\n]\" }'",
   "^get smb config section ([a-z0-9]+)$": "testparm -s 2>/dev/null | tr -d '\t' | awk 'BEGIN { printf \"{\\n\" } /^\\[%1\\]$/ { name=$1; sub(/\\[/, \"\", name); sub(/\\]/, \"\", name); printf \"  \\\"name\\\": \\\"%s\\\"\", name; next } ($0==\"\") { name=\"\" } (name!=\"\") { split($0, kvp, \" = \"); printf \",\\n  \\\"%s\\\": \\\"%s\\\"\", kvp[1], kvp[2] } END { printf \"\\n}\" }'"
-  }
+}
