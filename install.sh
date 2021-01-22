@@ -133,11 +133,12 @@ TITLE="Package Manager"
 echo "$TITLE" >>$LOGFILE 2>&1
 dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
  --infobox "Installing pkg and updating repositories.\n\n  [ ] Bootstrap pkg.\n  [ ] Update repositories." 7 $BOX_W
-if ! pkg -N; then
+if ! pkg -N >>$LOGFILE 2>&1; then
   echo "$TITLE: installing pkg and updating repositories." >>$LOGFILE 2>&1
+  export ASSUME_ALWAYS_YES=true; pkg bootstrap >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Installing pkg and updating repositories.\n\n  [x] Bootstrap pkg.\n  [ ] Update repositories." 7 $BOX_W
-  export ASSUME_ALWAYS_YES=true; pkg update >>$LOGFILE 2>&1
+  pkg update >>$LOGFILE 2>&1
   dialog --no-lines --backtitle "$BACKTITLE" --title "$TITLE" --sleep $INFO_PAUSE \
    --infobox "Installing pkg and updating repositories.\n\n  [x] Bootstrap pkg.\n  [x] Update repositories." 7 $BOX_W
 else
