@@ -1,5 +1,5 @@
 # WeeNAS
-WeeNAS is no longer maintained. I have focused my home NAS efforts on my [CloudPi](https://github.com/DavesCodeMusings/CloudPi) project instead.
+**WeeNAS is no longer maintained.** I have focused my home NAS efforts on my [CloudPi](https://github.com/DavesCodeMusings/CloudPi) and [NüCloud](https://github.com/DavesCodeMusings/nucloud/blob/main/README.md) projects instead.
 
 ## What it was
 WeeNAS started out as a web-based utility to manage a Raspberry Pi running FreeBSD and Samba. The goal was file sharing on a home network using cheaper hardware than what is required for the popular (and infinitely more robust) FreeNAS. It centers mainly around an API written in Node.js. It does not use Express. I decided to build that functionality myself as a learning experience. It also includes a text-based installer and user add utility built around the [dialog](https://linux.die.net/man/1/dialog) program to give a clean, professional, semi-GUI look to it.
